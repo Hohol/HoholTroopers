@@ -24,6 +24,10 @@ public final class MyStrategy implements Strategy {
 
         teammateToFollow = getTeammateToFollow();
 
+        if (tryHealSelf()) {
+            return;
+        }
+
         if (tryShoot()) {
             return;
         }
@@ -31,6 +35,17 @@ public final class MyStrategy implements Strategy {
         if (tryMove()) {
             return;
         }
+    }
+
+    private boolean tryHealSelf() {
+        if(game.getMedikitHealSelfBonusHitpoints() > self.getActionPoints()) {
+            return false;
+        }
+        if(!self.isHoldingMedikit()) {
+            return false;
+        }
+        move.setAction(ActionType.USE_MEDIKIT);
+        return true;
     }
 
     private Trooper getTeammateToFollow() {
@@ -46,7 +61,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMove() {
-        if (self.getActionPoints() < game.getStandingMoveCost()) {
+        if (game.getStandingMoveCost() > self.getActionPoints()) {
             return false;
         }
 
@@ -118,7 +133,7 @@ public final class MyStrategy implements Strategy {
         if (trooper.getType() == TrooperType.SOLDIER) {
             return 2;
         }
-        throw new IllegalArgumentException();
+        return -7; // >_<
     }
 
     boolean tryShoot() {
