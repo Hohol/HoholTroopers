@@ -213,15 +213,37 @@ public final class MyStrategy implements Strategy {
             //moveRandom();
             //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
-            moveTo(teammateToFollow);
+            Trooper toFollow = teammateToFollow;
+            if(teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
+                toFollow = getOtherTeammate();
+            }
+            moveTo(toFollow);
         }
         return true;
     }
 
+    private Trooper getOtherTeammate() {
+        for(Trooper trooper : teammates) {
+            if(trooper.getId() != self.getId() && trooper.getId() != teammateToFollow.getId()) {
+                return trooper;
+            }
+        }
+        throw new RuntimeException();
+    }
+
+    private int distTo(Trooper trooper) {
+        return distTo(trooper.getX(), trooper.getY());
+    }
+
+    private int distTo(int x, int y) {
+        int[][] dist = bfs(self.getX(), self.getY(), x, y);
+        return dist[x][y];
+    }
+
+
     private boolean overExtended() {
-        int[][] dist = bfs(self.getX(), self.getY());
         for (Trooper trooper : teammates) {
-            if (dist[trooper.getX()][trooper.getY()] > 3) {
+            if (manhattanDist(self, trooper) >= 5) {
                 return true;
             }
         }
