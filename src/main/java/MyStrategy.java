@@ -27,13 +27,17 @@ public final class MyStrategy implements Strategy {
 
         init();
 
-        if (tryMedicHeal()) {
+        if(tryHeal()) {
+            return;
+        }
+
+        /*if (tryMedicHeal()) {
             return;
         }
 
         if (tryHealSelf()) {
             return;
-        }
+        }/**/
 
         if (tryThrowGrenade()) {
             return;
@@ -52,6 +56,62 @@ public final class MyStrategy implements Strategy {
         }
 
         move.setAction(ActionType.END_TURN);
+    }
+
+    private boolean tryHeal() {
+        Trooper target = getMostInjuredTeammate();
+        if(target == null) {
+            return false;
+        }
+        if(distTo(target) > 7) {
+            return false;
+        }
+        if(manhattanDist(self, target) <= 1) {
+            return heal(target);
+        } else {
+            if(!haveTime(getMoveCost(self))) {
+                return false;
+            }
+            moveTo(target);
+        }
+        return false;
+    }
+
+    private boolean heal(Trooper target) {
+        if(self.isHoldingMedikit() &&
+                haveTime(game.getMedikitUseCost()) &&
+                target.getMaximalHitpoints() - target.getHitpoints() >= medikitHealValue(target)) {
+            move.setAction(ActionType.USE_MEDIKIT);
+            setDirection(target);
+            return true;
+        }
+        if(self.getType() == TrooperType.FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
+            move.setAction(ActionType.HEAL);
+            setDirection(target);
+            return true;
+        }
+        return false;
+    }
+
+    private int medikitHealValue(Trooper target) {
+        if(target.getId() == self.getId()) {
+            return game.getMedikitHealSelfBonusHitpoints();
+        } else {
+            return game.getMedikitBonusHitpoints();
+        }
+    }
+
+    private Trooper getMostInjuredTeammate() {
+        Trooper r = null;
+        int maxDiff = 0;
+        for (Trooper trooper : teammates) {
+            int diff = trooper.getMaximalHitpoints() - trooper.getHitpoints();
+            if (diff > maxDiff) {
+                maxDiff = diff;
+                r = trooper;
+            }
+        }
+        return r;
     }
 
     private boolean tryDeblock() {
@@ -137,7 +197,6 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        print(lastSeen);
     }
 
     private boolean tryMedicHeal() {
@@ -264,10 +323,11 @@ public final class MyStrategy implements Strategy {
         int minDist = 0;
         int x = -1, y = -1;
 
-        int[][] dist = bfs(self.getX(), self.getY(), -1, -1);
+        int[][] dist = bfs(self.getX(), self.getY());
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
-                if (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist) {
+                if (cells[i][j] == CellType.FREE &&
+                        (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist)) {
                     minLastSeen = lastSeen[i][j];
                     minDist = dist[i][j];
                     x = i;
