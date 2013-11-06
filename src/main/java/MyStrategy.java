@@ -1,7 +1,6 @@
 import model.*;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random();
@@ -33,7 +32,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if(tryThrowGrenade()) {
+        if (tryThrowGrenade()) {
             return;
         }
 
@@ -49,10 +48,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryThrowGrenade() { //todo не надо бросать гранату в тех кто рядом с нами, и в тех, кого и так можно застрелить
-        if(!haveTime(game.getGrenadeThrowCost())) {
+        if (!haveTime(game.getGrenadeThrowCost())) {
             return false;
         }
-        if(!self.isHoldingGrenade()) {
+        if (!self.isHoldingGrenade()) {
             return false;
         }
         for (Trooper trooper : world.getTroopers()) {
@@ -83,29 +82,32 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMedicHeal() {
-        if(self.getType() != TrooperType.FIELD_MEDIC) {
+        if (self.getType() != TrooperType.FIELD_MEDIC) {
             return false;
         }
-        if(!haveTime(game.getFieldMedicHealCost())) {
+        if (!haveTime(game.getFieldMedicHealCost())) {
             return false;
         }
         Trooper target = null;
         int maxDiff = 0;
         for (Trooper trooper : teammates) {
             int diff = trooper.getMaximalHitpoints() - trooper.getHitpoints();
-            if(diff > maxDiff) {
+            if (diff > maxDiff) {
                 maxDiff = diff;
                 target = trooper;
             }
         }
-        if(target == null) {
+        if (target == null) {
             return false;
         }
-        if(manhattanDist(self, target) <= 1) {
+        if (manhattanDist(self, target) <= 1) {
             move.setAction(ActionType.HEAL);
             move.setX(target.getX());
             move.setY(target.getY());
         } else {
+            if(!haveTime(getMoveCost(self))) {
+                return false;
+            }
             moveTo(target);
         }
         return true;
@@ -116,10 +118,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryHealSelf() {
-        if(game.getMedikitHealSelfBonusHitpoints() > self.getActionPoints()) {
+        if (game.getMedikitHealSelfBonusHitpoints() > self.getActionPoints()) {
             return false;
         }
-        if(!self.isHoldingMedikit()) {
+        if (!self.isHoldingMedikit()) {
             return false;
         }
         move.setAction(ActionType.USE_MEDIKIT);
@@ -153,32 +155,103 @@ public final class MyStrategy implements Strategy {
     }
 
     private void moveTo(Trooper target) {
-         moveTo(target.getX(), target.getY());
+        moveTo(target.getX(), target.getY());
     }
 
-    private void moveTo(int x, int y) {
+    private boolean moveTo(int x, int y) {
+        if (x == self.getX() && y == self.getY()) {
+            throw new RuntimeException();
+        }
+        if(manhattanDist(self,x,y) == 1) { //todo ?
+            return false;
+        }
+        int[][] dist = bfs(x, y, self.getX(), self.getY());
+        if (dist[self.getX()][self.getY()] == -1) {
+            return false;
+        }
         for (Direction dir : dirs) {
-            if (isMoveTo(dir, x, y)) {
-                move.setAction(ActionType.MOVE);
-                move.setDirection(dir);
-                return;
+            int toX = self.getX() + dir.getOffsetX();
+            int toY = self.getY() + dir.getOffsetY();
+            if (!goodCell(toX, toY)) {
+                continue;
+            }
+            if (dist[toX][toY] == dist[self.getX()][self.getY()] - 1) {
+                moveTo(dir);
+                return true;
             }
         }
+        print(dist);
+        throw new RuntimeException();
+    }
+
+    private void print(int[][] dist) {
+        for (int j = 0; j < dist[0].length; j++) {
+            for (int i = 0; i < dist.length; i++) {
+                System.out.print(dist[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    private void moveTo(Direction dir) {
+        move.setAction(ActionType.MOVE);
+        move.setDirection(dir);
+    }
+
+    private int[][] bfs(int startX, int startY, int targetX, int targetY) {
+        Queue<Integer> qx = new ArrayDeque<>();
+        Queue<Integer> qy = new ArrayDeque<>();
+        int[][] dist = createIntMap(-1);
+        qx.add(startX);
+        qy.add(startY);
+        dist[startX][startY] = 0;
+        while (!qx.isEmpty()) {
+            int x = qx.poll();
+            int y = qy.poll();
+            if (x == targetX && y == targetY) {
+                return dist;
+            }
+            for (Direction dir : dirs) {
+                int toX = x + dir.getOffsetX();
+                int toY = y + dir.getOffsetY();
+                if(toX == targetX && toY == targetY) {
+                    dist[toX][toY] = dist[x][y] + 1;
+                    return dist;
+                }
+                if (!goodCell(toX, toY)) {
+                    continue;
+                }
+                if (dist[toX][toY] != -1) {
+                    continue;
+                }
+                qx.add(toX);
+                qy.add(toY);
+                dist[toX][toY] = dist[x][y] + 1;
+            }
+        }
+        return dist;
+    }
+
+    private int[][] createIntMap(int fillValue) {
+        int[][] r = new int[world.getWidth()][world.getHeight()];
+        for (int i = 0; i < r.length; i++) {
+            Arrays.fill(r[i], fillValue);
+        }
+        return r;
     }
 
     private int getMoveCost(Trooper self) {
-        if(self.getStance() == TrooperStance.KNEELING) {
+        if (self.getStance() == TrooperStance.KNEELING) {
             return game.getKneelingMoveCost();
         }
-        if(self.getStance() == TrooperStance.PRONE) {
+        if (self.getStance() == TrooperStance.PRONE) {
             return game.getProneMoveCost();
         }
-        if(self.getStance() == TrooperStance.STANDING) {
+        if (self.getStance() == TrooperStance.STANDING) {
             return game.getStandingMoveCost();
         }
         throw new IllegalArgumentException();
     }
-
 
 
     private boolean isMoveTo(Direction dir, int x, int y) {
@@ -186,7 +259,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
         return manhattanDist(x, y, self.getX() + dir.getOffsetX(), self.getY() + dir.getOffsetY()) <
-               manhattanDist(x, y, self.getX(), self.getY());
+                manhattanDist(x, y, self.getX(), self.getY());
     }
 
     private int manhattanDist(Trooper trooper, int x, int y) {
@@ -194,13 +267,17 @@ public final class MyStrategy implements Strategy {
     }
 
     private int manhattanDist(int x, int y, int x1, int y1) {
-        return Math.abs(x-x1) + Math.abs(y-y1);
+        return Math.abs(x - x1) + Math.abs(y - y1);
     }
 
     private boolean isValidMove(Direction dir) {
         int toX = self.getX() + dir.getOffsetX();
         int toY = self.getY() + dir.getOffsetY();
 
+        return goodCell(toX, toY);
+    }
+
+    private boolean goodCell(int toX, int toY) {
         return inField(toX, toY) && cells[toX][toY] == CellType.FREE && !occupiedByTrooper[toX][toY];
     }
 
@@ -210,14 +287,16 @@ public final class MyStrategy implements Strategy {
 
     private void moveRandom() {
         ArrayList<Direction> a = new ArrayList<>();
-        for(Direction dir : dirs) {
-            if(isValidMove(dir)) {
+        for (Direction dir : dirs) {
+            if (isValidMove(dir)) {
                 a.add(dir);
             }
         }
-        if(!a.isEmpty()) {
-            move.setAction(ActionType.MOVE);
+        move.setAction(ActionType.MOVE);
+        if (!a.isEmpty()) {
             move.setDirection(a.get(rnd.nextInt(a.size())));
+        } else {
+            move.setDirection(Direction.CURRENT_POINT);
         }
     }
 
@@ -263,7 +342,7 @@ public final class MyStrategy implements Strategy {
     public ArrayList<Trooper> getTeammates() {
         ArrayList<Trooper> r = new ArrayList<>();
         for (Trooper trooper : world.getTroopers()) {
-            if(trooper.isTeammate()) {
+            if (trooper.isTeammate()) {
                 r.add(trooper);
             }
         }
@@ -275,7 +354,7 @@ public final class MyStrategy implements Strategy {
         for (int i = 0; i < world.getWidth(); i++) {
             r[i] = new boolean[world.getHeight()];
         }
-        for(Trooper trooper : world.getTroopers()) {
+        for (Trooper trooper : world.getTroopers()) {
             r[trooper.getX()][trooper.getY()] = true;
         }
         return r;
@@ -290,15 +369,15 @@ public final class MyStrategy implements Strategy {
     }
 
     private int sqrDist(int x, int y, int x1, int y1) {
-        return sqr(x-x1) + sqr(y-y1);
+        return sqr(x - x1) + sqr(y - y1);
     }
 
     private int sqr(int x) {
-        return x*x;
+        return x * x;
     }
 
     private double sqr(double x) {
-        return x*x;
+        return x * x;
     }
 
     public void setDirection(Trooper direction) {
