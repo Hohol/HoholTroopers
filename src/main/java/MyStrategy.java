@@ -205,7 +205,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if(self.getActionPoints() <= 4) {
+            if (self.getActionPoints() <= 4 || overExtended()) {
                 standStill();
                 return true;
             }
@@ -216,6 +216,20 @@ public final class MyStrategy implements Strategy {
             moveTo(teammateToFollow);
         }
         return true;
+    }
+
+    private boolean overExtended() {
+        int[][] dist = bfs(self.getX(), self.getY());
+        for (Trooper trooper : teammates) {
+            if (dist[trooper.getX()][trooper.getY()] > 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int[][] bfs(int x, int y) {
+        return bfs(x, y, -1, -1);
     }
 
     private void standStill() {
@@ -303,19 +317,21 @@ public final class MyStrategy implements Strategy {
             for (Direction dir : dirs) {
                 int toX = x + dir.getOffsetX();
                 int toY = y + dir.getOffsetY();
-                if (toX == targetX && toY == targetY) {
-                    dist[toX][toY] = dist[x][y] + 1;
-                    return dist;
-                }
-                if (!goodCell(toX, toY)) {
+                if (!inField(toX, toY)) {
                     continue;
                 }
                 if (dist[toX][toY] != NOT_VISITED) {
                     continue;
                 }
+                dist[toX][toY] = dist[x][y] + 1;
+                if (toX == targetX && toY == targetY) {
+                    return dist;
+                }
+                if (!goodCell(toX, toY)) {
+                    continue;
+                }
                 qx.add(toX);
                 qy.add(toY);
-                dist[toX][toY] = dist[x][y] + 1;
             }
         }
         return dist;
@@ -412,7 +428,7 @@ public final class MyStrategy implements Strategy {
         }
 
         Trooper target = getTargetEnemy();
-        if(target != null) {
+        if (target != null) {
             shoot(target);
             return true;
         }
@@ -424,7 +440,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
                 if (canShoot(trooper)) {
-                    if(r == null || trooper.getHitpoints() < r.getHitpoints()) {
+                    if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
                         r = trooper;
                     }
                 }
