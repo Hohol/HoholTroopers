@@ -11,6 +11,7 @@ public final class MyStrategy implements Strategy {
     Game game;
     Move move;
     CellType[][] cells;
+    boolean[][] occupiedByTrooper;
 
     ArrayList<Trooper> teammates;
     Trooper teammateToFollow;
@@ -21,10 +22,8 @@ public final class MyStrategy implements Strategy {
         this.world = world;
         this.game = game;
         this.move = move;
-        cells = world.getCells();
 
-        teammates = getTeammates();
-        teammateToFollow = getTeammateToFollow();
+        init();
 
         if (tryMedicHeal()) {
             return;
@@ -43,6 +42,13 @@ public final class MyStrategy implements Strategy {
         }
 
         move.setAction(ActionType.END_TURN);
+    }
+
+    private void init() {
+        cells = world.getCells();
+        teammates = getTeammates();
+        teammateToFollow = getTeammateToFollow();
+        occupiedByTrooper = getOccupiedByTrooper();
     }
 
     private boolean tryMedicHeal() {
@@ -161,7 +167,7 @@ public final class MyStrategy implements Strategy {
         int toX = self.getX() + dir.getOffsetX();
         int toY = self.getY() + dir.getOffsetY();
 
-        return inField(toX, toY) && cells[toX][toY] == CellType.FREE;
+        return inField(toX, toY) && cells[toX][toY] == CellType.FREE && !occupiedByTrooper[toX][toY];
     }
 
     private boolean inField(int toX, int toY) {
@@ -195,7 +201,7 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean tryShoot() {
-        if (self.getActionPoints() < self.getShotCost()) {
+        if (self.getActionPoints() < self.getShootCost()) {
             return false;
         }
         for (Trooper trooper : world.getTroopers()) {
@@ -226,6 +232,17 @@ public final class MyStrategy implements Strategy {
             if(trooper.isTeammate()) {
                 r.add(trooper);
             }
+        }
+        return r;
+    }
+
+    public boolean[][] getOccupiedByTrooper() {
+        boolean[][] r = new boolean[world.getWidth()][world.getHeight()];
+        for (int i = 0; i < world.getWidth(); i++) {
+            r[i] = new boolean[world.getHeight()];
+        }
+        for(Trooper trooper : world.getTroopers()) {
+            r[trooper.getX()][trooper.getY()] = true;
         }
         return r;
     }
