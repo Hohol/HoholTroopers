@@ -12,6 +12,7 @@ public final class MyStrategy implements Strategy {
     Move move;
     CellType[][] cells;
 
+    ArrayList<Trooper> teammates;
     Trooper teammateToFollow;
 
     @Override
@@ -22,7 +23,12 @@ public final class MyStrategy implements Strategy {
         this.move = move;
         cells = world.getCells();
 
+        teammates = getTeammates();
         teammateToFollow = getTeammateToFollow();
+
+        if (tryMedicHeal()) {
+            return;
+        }
 
         if (tryHealSelf()) {
             return;
@@ -35,6 +41,38 @@ public final class MyStrategy implements Strategy {
         if (tryMove()) {
             return;
         }
+
+        move.setAction(ActionType.END_TURN);
+    }
+
+    private boolean tryMedicHeal() {
+        if(self.getType() != TrooperType.FIELD_MEDIC) {
+            return false;
+        }
+        Trooper target = null;
+        int maxDiff = 0;
+        for (Trooper trooper : teammates) {
+            int diff = trooper.getMaximalHitpoints() - trooper.getHitpoints();
+            if(diff > maxDiff) {
+                maxDiff = diff;
+                target = trooper;
+            }
+        }
+        if(target == null) {
+            return false;
+        }
+        if(manhattanDist(self, target) <= 1) {
+            move.setAction(ActionType.HEAL);
+            move.setX(target.getX());
+            move.setY(target.getY());
+        } else {
+            moveTo(target);
+        }
+        return true;
+    }
+
+    private int manhattanDist(Trooper self, Trooper target) {
+        return manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
     }
 
     private boolean tryHealSelf() {
@@ -61,35 +99,54 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMove() {
-        if (game.getStandingMoveCost() > self.getActionPoints()) {
+        if (getMoveCost(self) > self.getActionPoints()) {
             return false;
         }
 
-        move.setAction(ActionType.MOVE);
-
         if (self.getId() == teammateToFollow.getId()) {
             moveRandom();
+            //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
-            follow();
+            moveTo(teammateToFollow);
         }
         return true;
     }
 
-    private void follow() {
+    private void moveTo(Trooper target) {
+         moveTo(target.getX(), target.getY());
+    }
+
+    private void moveTo(int x, int y) {
         for (Direction dir : dirs) {
-            if (goodMoveToFollow(dir)) {
+            if (isMoveTo(dir, x, y)) {
+                move.setAction(ActionType.MOVE);
                 move.setDirection(dir);
                 return;
             }
         }
     }
 
-    private boolean goodMoveToFollow(Direction dir) {
+    private int getMoveCost(Trooper self) {
+        if(self.getStance() == TrooperStance.KNEELING) {
+            return game.getKneelingMoveCost();
+        }
+        if(self.getStance() == TrooperStance.PRONE) {
+            return game.getProneMoveCost();
+        }
+        if(self.getStance() == TrooperStance.STANDING) {
+            return game.getStandingMoveCost();
+        }
+        throw new IllegalArgumentException();
+    }
+
+
+
+    private boolean isMoveTo(Direction dir, int x, int y) {
         if (!isValidMove(dir)) {
             return false;
         }
-        return manhattanDist(teammateToFollow, self.getX() + dir.getOffsetX(), self.getY() + dir.getOffsetY()) <
-               manhattanDist(teammateToFollow, self.getX(), self.getY());
+        return manhattanDist(x, y, self.getX() + dir.getOffsetX(), self.getY() + dir.getOffsetY()) <
+               manhattanDist(x, y, self.getX(), self.getY());
     }
 
     private int manhattanDist(Trooper trooper, int x, int y) {
@@ -119,6 +176,7 @@ public final class MyStrategy implements Strategy {
             }
         }
         if(!a.isEmpty()) {
+            move.setAction(ActionType.MOVE);
             move.setDirection(a.get(rnd.nextInt(a.size())));
         }
     }
@@ -160,5 +218,15 @@ public final class MyStrategy implements Strategy {
     private boolean canShoot(Trooper trooper) {
         return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(),
                 trooper.getX(), trooper.getY(), trooper.getStance());
+    }
+
+    public ArrayList<Trooper> getTeammates() {
+        ArrayList<Trooper> r = new ArrayList<>();
+        for (Trooper trooper : world.getTroopers()) {
+            if(trooper.isTeammate()) {
+                r.add(trooper);
+            }
+        }
+        return r;
     }
 }
