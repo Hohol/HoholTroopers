@@ -33,6 +33,10 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        if(tryThrowGrenade()) {
+            return;
+        }
+
         if (tryShoot()) {
             return;
         }
@@ -44,6 +48,33 @@ public final class MyStrategy implements Strategy {
         move.setAction(ActionType.END_TURN);
     }
 
+    private boolean tryThrowGrenade() { //todo не надо бросать гранату в тех кто рядом с нами, и в тех, кого и так можно застрелить
+        if(!haveTime(game.getGrenadeThrowCost())) {
+            return false;
+        }
+        if(!self.isHoldingGrenade()) {
+            return false;
+        }
+        for (Trooper trooper : world.getTroopers()) {
+            if (!trooper.isTeammate()) {
+                if (canThrowGrenade(trooper)) {
+                    throwGrenade(trooper);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void throwGrenade(Trooper trooper) {
+        move.setAction(ActionType.THROW_GRENADE);
+        setDirection(trooper);
+    }
+
+    private boolean haveTime(int actionCost) {
+        return self.getActionPoints() >= actionCost;
+    }
+
     private void init() {
         cells = world.getCells();
         teammates = getTeammates();
@@ -53,6 +84,9 @@ public final class MyStrategy implements Strategy {
 
     private boolean tryMedicHeal() {
         if(self.getType() != TrooperType.FIELD_MEDIC) {
+            return false;
+        }
+        if(!haveTime(game.getFieldMedicHealCost())) {
             return false;
         }
         Trooper target = null;
@@ -105,7 +139,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMove() {
-        if (getMoveCost(self) > self.getActionPoints()) {
+        if (!haveTime(getMoveCost(self))) {
             return false;
         }
 
@@ -201,7 +235,7 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean tryShoot() {
-        if (self.getActionPoints() < self.getShootCost()) {
+        if (!haveTime(self.getShootCost())) {
             return false;
         }
         for (Trooper trooper : world.getTroopers()) {
@@ -246,4 +280,46 @@ public final class MyStrategy implements Strategy {
         }
         return r;
     }
+
+    boolean canThrowGrenade(Trooper trooper) {
+        return canThrowGrenade(trooper.getX(), trooper.getY());
+    }
+
+    private boolean canThrowGrenade(int x, int y) {
+        return sqrDist(self.getX(), self.getY(), x, y) <= sqr(game.getGrenadeThrowRange());
+    }
+
+    private int sqrDist(int x, int y, int x1, int y1) {
+        return sqr(x-x1) + sqr(y-y1);
+    }
+
+    private int sqr(int x) {
+        return x*x;
+    }
+
+    private double sqr(double x) {
+        return x*x;
+    }
+
+    public void setDirection(Trooper direction) {
+        setDirection(direction.getX(), direction.getY());
+    }
+
+    private void setDirection(int x, int y) {
+        move.setX(x);
+        move.setY(y);
+    }
 }
+
+/*
+grenade reachability pattern
+######
+#####
+#####
+#####
+####
+#
+
+карта 20 на 30
+
+*/
