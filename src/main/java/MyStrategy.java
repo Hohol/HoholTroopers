@@ -5,15 +5,18 @@ import java.util.*;
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random();
     final static Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
+    final static int NOT_VISITED = 666;
     Trooper self;
     World world;
     Game game;
     Move move;
     CellType[][] cells;
     boolean[][] occupiedByTrooper;
+    static int[][] lastSeen;
 
     ArrayList<Trooper> teammates;
     Trooper teammateToFollow;
+    int stepNumber;
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
@@ -52,10 +55,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryDeblock() {
-        if(!haveTime(getMoveCost(self))) {
+        if (!haveTime(getMoveCost(self))) {
             return false;
         }
-        if(isBlockedByMe(teammateToFollow)) {
+        if (isBlockedByMe(teammateToFollow)) {
             moveRandom();
             return true;
         }
@@ -64,13 +67,13 @@ public final class MyStrategy implements Strategy {
 
     private boolean isBlockedByMe(Trooper teammateToFollow) {
         return manhattanDist(self, teammateToFollow) == 1 &&
-               moveCnt(teammateToFollow) == 0;
+                moveCnt(teammateToFollow) == 0;
     }
 
     private int moveCnt(Trooper teammateToFollow) {
         int r = 0;
         for (Direction dir : dirs) {
-            if(isValidMove(dir, teammateToFollow)) {
+            if (isValidMove(dir, teammateToFollow)) {
                 r++;
             }
         }
@@ -105,10 +108,36 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
+        stepNumber++;
         cells = world.getCells();
         teammates = getTeammates();
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
+        if (lastSeen == null) {
+            lastSeen = createIntMap(0);
+        }
+        updateLastSeen();
+    }
+
+    private void updateLastSeen() {
+        for (Trooper trooper : teammates) {
+            for (int i = 0; i < world.getWidth(); i++) {
+                for (int j = 0; j < world.getHeight(); j++) {
+                    if (world.isVisible(
+                            trooper.getVisionRange(),
+                            trooper.getX(),
+                            trooper.getY(),
+                            trooper.getStance(),
+                            i,
+                            j,
+                            TrooperStance.PRONE
+                    )) {
+                        lastSeen[i][j] = stepNumber;
+                    }
+                }
+            }
+        }
+        print(lastSeen);
     }
 
     private boolean tryMedicHeal() {
@@ -135,7 +164,7 @@ public final class MyStrategy implements Strategy {
             move.setX(target.getX());
             move.setY(target.getY());
         } else {
-            if(!haveTime(getMoveCost(self))) {
+            if (!haveTime(getMoveCost(self))) {
                 return false;
             }
             moveTo(target);
@@ -176,12 +205,32 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            moveRandom();
+            moveToNearestLongAgoSeenCell();
+            //moveRandom();
             //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
             moveTo(teammateToFollow);
         }
         return true;
+    }
+
+    private void moveToNearestLongAgoSeenCell() {
+        int minLastSeen = Integer.MAX_VALUE;
+        int minDist = 0;
+        int x = -1, y = -1;
+
+        int[][] dist = bfs(self.getX(), self.getY(), -1, -1);
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist) {
+                    minLastSeen = lastSeen[i][j];
+                    minDist = dist[i][j];
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        moveTo(x, y);
     }
 
     private void moveTo(Trooper target) {
@@ -192,11 +241,11 @@ public final class MyStrategy implements Strategy {
         if (x == self.getX() && y == self.getY()) {
             throw new RuntimeException();
         }
-        if(manhattanDist(self,x,y) == 1) { //todo ?
+        if (manhattanDist(self, x, y) == 1) { //todo ?
             return false;
         }
         int[][] dist = bfs(x, y, self.getX(), self.getY());
-        if (dist[self.getX()][self.getY()] == -1) {
+        if (dist[self.getX()][self.getY()] == NOT_VISITED) {
             return false;
         }
         for (Direction dir : dirs) {
@@ -221,6 +270,7 @@ public final class MyStrategy implements Strategy {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     private void moveTo(Direction dir) {
@@ -231,7 +281,7 @@ public final class MyStrategy implements Strategy {
     private int[][] bfs(int startX, int startY, int targetX, int targetY) {
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
-        int[][] dist = createIntMap(-1);
+        int[][] dist = createIntMap(NOT_VISITED);
         qx.add(startX);
         qy.add(startY);
         dist[startX][startY] = 0;
@@ -244,14 +294,14 @@ public final class MyStrategy implements Strategy {
             for (Direction dir : dirs) {
                 int toX = x + dir.getOffsetX();
                 int toY = y + dir.getOffsetY();
-                if(toX == targetX && toY == targetY) {
+                if (toX == targetX && toY == targetY) {
                     dist[toX][toY] = dist[x][y] + 1;
                     return dist;
                 }
                 if (!goodCell(toX, toY)) {
                     continue;
                 }
-                if (dist[toX][toY] != -1) {
+                if (dist[toX][toY] != NOT_VISITED) {
                     continue;
                 }
                 qx.add(toX);
