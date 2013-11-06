@@ -3,7 +3,7 @@ import model.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    final Random rnd = new Random();
+    final Random rnd = new Random(322);
     final static Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
     final static int NOT_VISITED = 666;
     Trooper self;
@@ -205,6 +205,10 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
+            if(self.getActionPoints() <= 4) {
+                standStill();
+                return true;
+            }
             moveToNearestLongAgoSeenCell();
             //moveRandom();
             //moveTo(world.getWidth()/2, world.getHeight()/2);
@@ -212,6 +216,11 @@ public final class MyStrategy implements Strategy {
             moveTo(teammateToFollow);
         }
         return true;
+    }
+
+    private void standStill() {
+        move.setAction(ActionType.MOVE);
+        move.setDirection(Direction.CURRENT_POINT);
     }
 
     private void moveToNearestLongAgoSeenCell() {
