@@ -410,15 +410,27 @@ public final class MyStrategy implements Strategy {
         if (!haveTime(self.getShootCost())) {
             return false;
         }
+
+        Trooper target = getTargetEnemy();
+        if(target != null) {
+            shoot(target);
+            return true;
+        }
+        return false;
+    }
+
+    private Trooper getTargetEnemy() {
+        Trooper r = null;
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
                 if (canShoot(trooper)) {
-                    shoot(trooper);
-                    return true;
+                    if(r == null || trooper.getHitpoints() < r.getHitpoints()) {
+                        r = trooper;
+                    }
                 }
             }
         }
-        return false;
+        return r;
     }
 
     private void shoot(Trooper trooper) {
