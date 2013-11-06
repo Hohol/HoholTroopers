@@ -40,11 +40,41 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        if (tryDeblock()) { //todo it is obviously bad
+            return;
+        }
+
         if (tryMove()) {
             return;
         }
 
         move.setAction(ActionType.END_TURN);
+    }
+
+    private boolean tryDeblock() {
+        if(!haveTime(getMoveCost(self))) {
+            return false;
+        }
+        if(isBlockedByMe(teammateToFollow)) {
+            moveRandom();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBlockedByMe(Trooper teammateToFollow) {
+        return manhattanDist(self, teammateToFollow) == 1 &&
+               moveCnt(teammateToFollow) == 0;
+    }
+
+    private int moveCnt(Trooper teammateToFollow) {
+        int r = 0;
+        for (Direction dir : dirs) {
+            if(isValidMove(dir, teammateToFollow)) {
+                r++;
+            }
+        }
+        return r;
     }
 
     private boolean tryThrowGrenade() { //todo не надо бросать гранату в тех кто рядом с нами, и в тех, кого и так можно застрелить
@@ -270,11 +300,15 @@ public final class MyStrategy implements Strategy {
         return Math.abs(x - x1) + Math.abs(y - y1);
     }
 
-    private boolean isValidMove(Direction dir) {
-        int toX = self.getX() + dir.getOffsetX();
-        int toY = self.getY() + dir.getOffsetY();
+    private boolean isValidMove(Direction dir, Trooper trooper) {
+        int toX = trooper.getX() + dir.getOffsetX();
+        int toY = trooper.getY() + dir.getOffsetY();
 
         return goodCell(toX, toY);
+    }
+
+    private boolean isValidMove(Direction dir) {
+        return isValidMove(dir, self);
     }
 
     private boolean goodCell(int toX, int toY) {
