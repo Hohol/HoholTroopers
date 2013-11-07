@@ -35,7 +35,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryShoot()) {
+        if (tryShoot()) { //may eat field ration instead
             return;
         }
 
@@ -507,16 +507,39 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean tryShoot() {
+        Trooper target = getTargetEnemy();
+        if (target == null) {
+            return false;
+        }
+
+        if(self.isHoldingFieldRation() &&
+                !canKillWithCurrentStance(target) &&
+                haveTime(game.getFieldRationEatCost()) &&
+                fieldRationIncreasesShootCnt()) {
+            move.setAction(ActionType.EAT_FIELD_RATION);
+            return true;
+        }
+
         if (!haveTime(self.getShootCost())) {
             return false;
         }
 
-        Trooper target = getTargetEnemy();
-        if (target != null) {
-            shoot(target);
-            return true;
-        }
-        return false;
+        shoot(target);
+        return true;
+    }
+
+    private boolean fieldRationIncreasesShootCnt() {
+        return getShootCnt(self.getActionPoints()) <
+                getShootCnt(self.getActionPoints() - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints());
+    }
+
+    private int getShootCnt(int actionPoints) {
+        return actionPoints / self.getShootCost();
+    }
+
+    private boolean canKillWithCurrentStance(Trooper target) {
+        int needShoots = (target.getHitpoints() + self.getDamage() - 1) / self.getDamage();
+        return haveTime(needShoots * self.getShootCost());
     }
 
     private Trooper getTargetEnemy() {
