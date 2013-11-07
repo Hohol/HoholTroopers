@@ -51,6 +51,9 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryHeal() {
+        if (self.getType() != TrooperType.FIELD_MEDIC && !self.isHoldingMedikit()) {
+            return false;
+        }
         Trooper target = getMostInjuredTeammate();
         if (target == null) {
             return false;
@@ -64,9 +67,8 @@ public final class MyStrategy implements Strategy {
             if (!haveTime(getMoveCost(self))) {
                 return false;
             }
-            moveTo(target);
+            return moveTo(target);
         }
-        return false;
     }
 
     private boolean heal(Trooper target) {
@@ -318,7 +320,7 @@ public final class MyStrategy implements Strategy {
         int[][] dist = bfs(self.getX(), self.getY());
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
-                if (cells[i][j] == CellType.FREE &&
+                if (cells[i][j] == CellType.FREE && !isNarrowPathNearTheBorder(i, j) &&
                         (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist)) {
                     minLastSeen = lastSeen[i][j];
                     minDist = dist[i][j];
@@ -330,8 +332,8 @@ public final class MyStrategy implements Strategy {
         moveTo(x, y);
     }
 
-    private void moveTo(Trooper target) {
-        moveTo(target.getX(), target.getY());
+    private boolean moveTo(Trooper target) { // todo why void?
+        return moveTo(target.getX(), target.getY());
     }
 
     private boolean moveTo(int x, int y) {
@@ -583,8 +585,8 @@ public final class MyStrategy implements Strategy {
         return x * x;
     }
 
-    public void setDirection(Trooper direction) {
-        setDirection(direction.getX(), direction.getY());
+    public void setDirection(Trooper trooper) {
+        setDirection(trooper.getX(), trooper.getY());
     }
 
     private void setDirection(int x, int y) {
