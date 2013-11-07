@@ -3,7 +3,7 @@ import model.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    final Random rnd = new Random(322);
+    final Random rnd = new Random(3222);
     final static Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
     final static int NOT_VISITED = 666;
     Trooper self;
@@ -27,17 +27,9 @@ public final class MyStrategy implements Strategy {
 
         init();
 
-        if(tryHeal()) {
+        if (tryHeal()) {
             return;
         }
-
-        /*if (tryMedicHeal()) {
-            return;
-        }
-
-        if (tryHealSelf()) {
-            return;
-        }/**/
 
         if (tryThrowGrenade()) {
             return;
@@ -60,16 +52,16 @@ public final class MyStrategy implements Strategy {
 
     private boolean tryHeal() {
         Trooper target = getMostInjuredTeammate();
-        if(target == null) {
+        if (target == null) {
             return false;
         }
-        if(distTo(target) > 7) {
+        if (distTo(target) > 7) {
             return false;
         }
-        if(manhattanDist(self, target) <= 1) {
+        if (manhattanDist(self, target) <= 1) {
             return heal(target);
         } else {
-            if(!haveTime(getMoveCost(self))) {
+            if (!haveTime(getMoveCost(self))) {
                 return false;
             }
             moveTo(target);
@@ -78,14 +70,14 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean heal(Trooper target) {
-        if(self.isHoldingMedikit() &&
+        if (self.isHoldingMedikit() &&
                 haveTime(game.getMedikitUseCost()) &&
                 target.getMaximalHitpoints() - target.getHitpoints() >= medikitHealValue(target)) {
             move.setAction(ActionType.USE_MEDIKIT);
             setDirection(target);
             return true;
         }
-        if(self.getType() == TrooperType.FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
+        if (self.getType() == TrooperType.FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
             move.setAction(ActionType.HEAL);
             setDirection(target);
             return true;
@@ -94,7 +86,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int medikitHealValue(Trooper target) {
-        if(target.getId() == self.getId()) {
+        if (target.getId() == self.getId()) {
             return game.getMedikitHealSelfBonusHitpoints();
         } else {
             return game.getMedikitBonusHitpoints();
@@ -273,7 +265,7 @@ public final class MyStrategy implements Strategy {
             //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
             Trooper toFollow = teammateToFollow;
-            if(teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
+            if (teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
                 toFollow = getOtherTeammate();
             }
             moveTo(toFollow);
@@ -282,8 +274,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private Trooper getOtherTeammate() {
-        for(Trooper trooper : teammates) {
-            if(trooper.getId() != self.getId() && trooper.getId() != teammateToFollow.getId()) {
+        for (Trooper trooper : teammates) {
+            if (trooper.getId() != self.getId() && trooper.getId() != teammateToFollow.getId()) {
                 return trooper;
             }
         }
@@ -356,7 +348,7 @@ public final class MyStrategy implements Strategy {
         for (Direction dir : dirs) {
             int toX = self.getX() + dir.getOffsetX();
             int toY = self.getY() + dir.getOffsetY();
-            if (!goodCell(toX, toY)) {
+            if (!isGoodCell(toX, toY)) {
                 continue;
             }
             if (dist[toX][toY] == dist[self.getX()][self.getY()] - 1) {
@@ -409,7 +401,7 @@ public final class MyStrategy implements Strategy {
                 if (toX == targetX && toY == targetY) {
                     return dist;
                 }
-                if (!goodCell(toX, toY)) {
+                if (!isGoodCell(toX, toY)) {
                     continue;
                 }
                 qx.add(toX);
@@ -461,15 +453,23 @@ public final class MyStrategy implements Strategy {
         int toX = trooper.getX() + dir.getOffsetX();
         int toY = trooper.getY() + dir.getOffsetY();
 
-        return goodCell(toX, toY);
+        return isGoodCell(toX, toY);
     }
 
     private boolean isValidMove(Direction dir) {
         return isValidMove(dir, self);
     }
 
-    private boolean goodCell(int toX, int toY) {
-        return inField(toX, toY) && cells[toX][toY] == CellType.FREE && !occupiedByTrooper[toX][toY];
+    private boolean isGoodCell(int toX, int toY) {
+        return inField(toX, toY) && cells[toX][toY] == CellType.FREE &&
+                !occupiedByTrooper[toX][toY] && !isNarrowPathNearTheBorder(toX, toY);
+    }
+
+    private boolean isNarrowPathNearTheBorder(int toX, int toY) {
+        return toX == 0 && cells[toX + 1][toY] != CellType.FREE ||
+                toX == world.getWidth() - 1 && cells[toX - 1][toY] != CellType.FREE ||
+                toY == 0 && cells[toX][toY + 1] != CellType.FREE ||
+                toY == world.getHeight() - 1 && cells[toX][toY - 1] != CellType.FREE;
     }
 
     private boolean inField(int toX, int toY) {
