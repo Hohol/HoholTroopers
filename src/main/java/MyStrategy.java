@@ -171,6 +171,24 @@ public final class MyStrategy implements Strategy {
             lastSeen = createIntMap(0);
         }
         updateLastSeen();
+        //printMap();
+    }
+
+    private void printMap() {
+        char[][] map = new char[world.getWidth()][world.getHeight()];
+        for(char[] row : map) {
+            Arrays.fill(row, '.');
+        }
+        for (Trooper trooper : teammates) {
+            map[trooper.getX()][trooper.getY()] = trooper.getType().toString().charAt(0);
+        }
+        for (int j = 0; j < map[0].length; j++) {
+            for (int i = 0; i < map.length; i++) {
+                System.out.print(map[i][j]);
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     private void updateLastSeen() {
@@ -258,7 +276,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (self.getActionPoints() <= 4 || overExtended()) {
+            if (self.getActionPoints() <= 4 || overExtended() || anyTeammateNotFullHp() && medicIsAlive()) {
                 standStill();
                 return true;
             }
@@ -273,6 +291,24 @@ public final class MyStrategy implements Strategy {
             moveTo(toFollow);
         }
         return true;
+    }
+
+    private boolean anyTeammateNotFullHp() {
+        for(Trooper trooper : teammates) {
+            if(trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean medicIsAlive() {
+        for (Trooper trooper : teammates) {
+            if (trooper.getType() == TrooperType.FIELD_MEDIC) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Trooper getOtherTeammate() {
@@ -332,7 +368,7 @@ public final class MyStrategy implements Strategy {
         moveTo(x, y);
     }
 
-    private boolean moveTo(Trooper target) { // todo why void?
+    private boolean moveTo(Trooper target) {
         return moveTo(target.getX(), target.getY());
     }
 
@@ -512,7 +548,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if(self.isHoldingFieldRation() &&
+        if (self.isHoldingFieldRation() &&
                 !canKillWithCurrentStance(target) &&
                 haveTime(game.getFieldRationEatCost()) &&
                 fieldRationIncreasesShootCnt()) {
@@ -579,9 +615,6 @@ public final class MyStrategy implements Strategy {
 
     public boolean[][] getOccupiedByTrooper() {
         boolean[][] r = new boolean[world.getWidth()][world.getHeight()];
-        for (int i = 0; i < world.getWidth(); i++) {
-            r[i] = new boolean[world.getHeight()];
-        }
         for (Trooper trooper : world.getTroopers()) {
             r[trooper.getX()][trooper.getY()] = true;
         }
@@ -596,15 +629,15 @@ public final class MyStrategy implements Strategy {
         return sqrDist(self.getX(), self.getY(), x, y) <= sqr(game.getGrenadeThrowRange());
     }
 
-    private int sqrDist(int x, int y, int x1, int y1) {
+    private static int sqrDist(int x, int y, int x1, int y1) {
         return sqr(x - x1) + sqr(y - y1);
     }
 
-    private int sqr(int x) {
+    private static int sqr(int x) {
         return x * x;
     }
 
-    private double sqr(double x) {
+    private static double sqr(double x) {
         return x * x;
     }
 
