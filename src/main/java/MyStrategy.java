@@ -18,6 +18,8 @@ public final class MyStrategy implements Strategy {
     Trooper teammateToFollow;
     int stepNumber;
 
+    Map<Cell, int[][]> bfsCache = new HashMap<>();
+
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
         this.self = self;
@@ -162,6 +164,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
+        bfsCache.clear();
         stepNumber++;
         cells = world.getCells();
         teammates = getTeammates();
@@ -325,7 +328,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int distTo(int x, int y) {
-        int[][] dist = bfs(self.getX(), self.getY(), x, y);
+        int[][] dist = bfs(self.getX(), self.getY());
         return dist[x][y];
     }
 
@@ -337,10 +340,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return false;
-    }
-
-    private int[][] bfs(int x, int y) {
-        return bfs(x, y, -1, -1);
     }
 
     private void standStill() {
@@ -379,7 +378,7 @@ public final class MyStrategy implements Strategy {
         if (manhattanDist(self, x, y) == 1) { //todo ?
             return false;
         }
-        int[][] dist = bfs(x, y, self.getX(), self.getY());
+        int[][] dist = bfs(x, y);
         if (dist[self.getX()][self.getY()] == NOT_VISITED) {
             return false;
         }
@@ -413,19 +412,21 @@ public final class MyStrategy implements Strategy {
         move.setDirection(dir);
     }
 
-    private int[][] bfs(int startX, int startY, int targetX, int targetY) {
+    private int[][] bfs(int startX, int startY) {
+        Cell startCell = new Cell(startX,startY);
+        int[][] dist = bfsCache.get(startCell);
+        if(dist != null) {
+            return dist;
+        }
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
-        int[][] dist = createIntMap(NOT_VISITED);
+        dist = createIntMap(NOT_VISITED);
         qx.add(startX);
         qy.add(startY);
         dist[startX][startY] = 0;
         while (!qx.isEmpty()) {
             int x = qx.poll();
             int y = qy.poll();
-            if (x == targetX && y == targetY) {
-                return dist;
-            }
             for (Direction dir : dirs) {
                 int toX = x + dir.getOffsetX();
                 int toY = y + dir.getOffsetY();
@@ -436,9 +437,6 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (toX == targetX && toY == targetY) {
-                    return dist;
-                }
                 if (!isGoodCell(toX, toY)) {
                     continue;
                 }
@@ -446,6 +444,7 @@ public final class MyStrategy implements Strategy {
                 qy.add(toY);
             }
         }
+        bfsCache.put(startCell, dist);
         return dist;
     }
 
@@ -648,6 +647,34 @@ public final class MyStrategy implements Strategy {
     private void setDirection(int x, int y) {
         move.setX(x);
         move.setY(y);
+    }
+
+    class Cell {
+        int x, y;
+
+        Cell(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null) return false;
+
+            Cell cell = (Cell) o;
+
+            if (x != cell.x) return false;
+            if (y != cell.y) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = x;
+            result = 31 * result + y;
+            return result;
+        }
     }
 }
 
