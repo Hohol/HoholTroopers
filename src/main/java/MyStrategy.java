@@ -13,6 +13,7 @@ public final class MyStrategy implements Strategy {
     CellType[][] cells;
     boolean[][] occupiedByTrooper;
     static int[][] lastSeen;
+    static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
 
     ArrayList<Trooper> teammates;
     Trooper teammateToFollow;
@@ -45,11 +46,80 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        if (tryMoveToBonus()) {
+            return;
+        }
+
         if (tryMove()) {
             return;
         }
 
         move.setAction(ActionType.END_TURN);
+    }
+
+    private boolean tryMoveToBonus() {
+        Bonus bonus = chooseBonus();
+        if (bonus == null) {
+            return false;
+        }
+        return moveTo(bonus);
+    }
+
+    private Bonus chooseBonus() {
+        int[][] dist = bfs(self.getX(), self.getY());
+        Bonus r = null;
+        int minDist = Integer.MAX_VALUE;
+        for (Bonus bonus : world.getBonuses()) {
+            if (isHoldingBonus(bonus.getType())) {
+                continue;
+            }
+            if (tooFarFromTeammates(bonus)) {
+                continue;
+            }
+            if (!isGoodCell(bonus.getX(), bonus.getY())) {
+                continue;
+            }
+            int d = dist[bonus.getX()][bonus.getY()];
+            if (r == null || d < dist[r.getX()][r.getY()]) {
+                r = bonus;
+                minDist = d;
+            }
+        }
+        if (!haveTime(minDist * getMoveCost(self))) {
+            return null;
+        }
+        return r;
+    }
+
+    private boolean tooFarFromTeammates(Unit unit) {
+        return tooFarFromTeammates(unit.getX(), unit.getY());
+    }
+
+    private boolean tooFarFromTeammates(int x, int y) {
+        int[][] dist = bfs(x, y);
+        for(Trooper trooper : teammates) {
+            if(dist[trooper.getX()][trooper.getY()] >= 6) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isHoldingBonus(BonusType type) {
+        return isHoldingBonus(self, type);
+    }
+
+    private static boolean isHoldingBonus(Trooper trooper, BonusType type) {
+        if (type == BonusType.MEDIKIT) {
+            return trooper.isHoldingMedikit();
+        }
+        if (type == BonusType.FIELD_RATION) {
+            return trooper.isHoldingFieldRation();
+        }
+        if (type == BonusType.GRENADE) {
+            return trooper.isHoldingGrenade();
+        }
+        throw new RuntimeException();
     }
 
     private boolean tryHeal() {
@@ -179,7 +249,7 @@ public final class MyStrategy implements Strategy {
 
     private void printMap() {
         char[][] map = new char[world.getWidth()][world.getHeight()];
-        for(char[] row : map) {
+        for (char[] row : map) {
             Arrays.fill(row, '.');
         }
         for (Trooper trooper : teammates) {
@@ -212,38 +282,6 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-    }
-
-    private boolean tryMedicHeal() {
-        if (self.getType() != TrooperType.FIELD_MEDIC) {
-            return false;
-        }
-        if (!haveTime(game.getFieldMedicHealCost())) {
-            return false;
-        }
-        Trooper target = null;
-        int maxDiff = 0;
-        for (Trooper trooper : teammates) {
-            int diff = trooper.getMaximalHitpoints() - trooper.getHitpoints();
-            if (diff > maxDiff) {
-                maxDiff = diff;
-                target = trooper;
-            }
-        }
-        if (target == null) {
-            return false;
-        }
-        if (manhattanDist(self, target) <= 1) {
-            move.setAction(ActionType.HEAL);
-            move.setX(target.getX());
-            move.setY(target.getY());
-        } else {
-            if (!haveTime(getMoveCost(self))) {
-                return false;
-            }
-            moveTo(target);
-        }
-        return true;
     }
 
     private int manhattanDist(Trooper self, Trooper target) {
@@ -283,7 +321,7 @@ public final class MyStrategy implements Strategy {
                 standStill();
                 return true;
             }
-            moveToNearestLongAgoSeenCell();
+            return moveToNearestLongAgoSeenCell();
             //moveRandom();
             //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
@@ -291,14 +329,16 @@ public final class MyStrategy implements Strategy {
             if (teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
                 toFollow = getOtherTeammate();
             }
-            moveTo(toFollow);
+            if (manhattanDist(self, toFollow) == 1) {
+                return false;
+            }
+            return moveTo(toFollow);
         }
-        return true;
     }
 
     private boolean anyTeammateNotFullHp() {
-        for(Trooper trooper : teammates) {
-            if(trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
+        for (Trooper trooper : teammates) {
+            if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
                 return true;
             }
         }
@@ -347,7 +387,7 @@ public final class MyStrategy implements Strategy {
         move.setDirection(Direction.CURRENT_POINT);
     }
 
-    private void moveToNearestLongAgoSeenCell() {
+    private boolean moveToNearestLongAgoSeenCell() {
         int minLastSeen = Integer.MAX_VALUE;
         int minDist = 0;
         int x = -1, y = -1;
@@ -364,19 +404,16 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        moveTo(x, y);
+        return moveTo(x, y);
     }
 
-    private boolean moveTo(Trooper target) {
+    private boolean moveTo(Unit target) {
         return moveTo(target.getX(), target.getY());
     }
 
     private boolean moveTo(int x, int y) {
         if (x == self.getX() && y == self.getY()) {
             throw new RuntimeException();
-        }
-        if (manhattanDist(self, x, y) == 1) { //todo ?
-            return false;
         }
         int[][] dist = bfs(x, y);
         if (dist[self.getX()][self.getY()] == NOT_VISITED) {
@@ -413,9 +450,9 @@ public final class MyStrategy implements Strategy {
     }
 
     private int[][] bfs(int startX, int startY) {
-        Cell startCell = new Cell(startX,startY);
+        Cell startCell = new Cell(startX, startY);
         int[][] dist = bfsCache.get(startCell);
-        if(dist != null) {
+        if (dist != null) {
             return dist;
         }
         Queue<Integer> qx = new ArrayDeque<>();
