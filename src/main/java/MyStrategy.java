@@ -585,6 +585,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.isHoldingFieldRation() &&
+                !fieldRationOverdose() &&
                 !canKillWithCurrentStance(target) &&
                 haveTime(game.getFieldRationEatCost()) &&
                 fieldRationIncreasesShootCnt()) {
@@ -600,9 +601,21 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
+    private boolean fieldRationOverdose() {
+        int increases = game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+        int maxCanIncrease = self.getInitialActionPoints() - self.getActionPoints();
+        return increases > maxCanIncrease;
+    }
+
     private boolean fieldRationIncreasesShootCnt() {
         return getShootCnt(self.getActionPoints()) <
-                getShootCnt(self.getActionPoints() - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints());
+                getShootCnt(actionPointsAfterEatingFieldRation(self));
+    }
+
+    private int actionPointsAfterEatingFieldRation(Trooper trooper) {
+        int r = trooper.getActionPoints() - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
+        r = Math.min(r, trooper.getInitialActionPoints());
+        return r;
     }
 
     private int getShootCnt(int actionPoints) {
