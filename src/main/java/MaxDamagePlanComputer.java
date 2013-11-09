@@ -111,14 +111,26 @@ class MaxDamagePlanComputer {
         if (targetHp != bestTargetHp) {
             return targetHp < bestTargetHp;
         }
-        if (holdingFieldRation != bestHoldingFieldRation) {
-            return holdingFieldRation;
-        }
-        if (actionPoints != bestActionPoints) {
-            return actionPoints > bestActionPoints;
-        }
-        if (currentStance != bestCurrentStance) {
-            return currentStance.ordinal() > bestCurrentStance.ordinal();
+        if(targetHp == 0) {
+            if (holdingFieldRation != bestHoldingFieldRation) {
+                return holdingFieldRation;
+            }
+            if (actionPoints != bestActionPoints) {
+                return actionPoints > bestActionPoints;
+            }
+            if (currentStance != bestCurrentStance) {
+                return currentStance.ordinal() > bestCurrentStance.ordinal();
+            }
+        } else {
+            if (currentStance != bestCurrentStance) {
+                return currentStance.ordinal() < bestCurrentStance.ordinal();
+            }
+            if (holdingFieldRation != bestHoldingFieldRation) {
+                return holdingFieldRation;
+            }
+            if (actionPoints != bestActionPoints) {
+                return actionPoints > bestActionPoints;
+            }
         }
         return false;
     }
