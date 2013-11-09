@@ -46,6 +46,10 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        if (tryHelpTeammateInFight()) {
+            return;
+        }
+
         if (tryDeblock()) {
             return;
         }
@@ -59,6 +63,80 @@ public final class MyStrategy implements Strategy {
         }
 
         move.setAction(END_TURN);
+    }
+
+    private boolean tryHelpTeammateInFight() {
+        if (self.getType() == FIELD_MEDIC) {
+            return false;
+        }
+        if (someEnemyInShootingRange()) {
+            return false;
+        }
+        Trooper target = getLeastHpEnemySomeOfTeammatesCanShoot();
+        if (target == null) {
+            return false;
+        }
+        if (self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
+            move.setAction(RAISE_STANCE);
+            return true;
+        }
+        if (!haveTime(getMoveCost(self))) {
+            return false;
+        }
+        return moveToNearestCellFromWhichCanShoot(target);
+    }
+
+    private boolean someEnemyInShootingRange() {
+        for (Trooper trooper : enemies) {
+            if (canShoot(trooper)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean moveToNearestCellFromWhichCanShoot(Trooper target) {
+        int minDist = Integer.MAX_VALUE;
+        int x = -1, y = -1;
+
+        int[][] dist = bfs(self.getX(), self.getY());
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (world.isVisible(
+                        self.getShootingRange(), i, j, STANDING,
+                        target.getX(), target.getY(), target.getStance()
+                ) && dist[i][j] < minDist && isGoodCell(i,j)) {
+                    minDist = dist[i][j];
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        if (minDist >= 7) {
+            return false;
+        }
+        return moveTo(x, y);
+    }
+
+    private Trooper getLeastHpEnemySomeOfTeammatesCanShoot() {
+        Trooper r = null;
+        for (Trooper trooper : enemies) {
+            if (someTeammateCanShoot(trooper)) {
+                if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
+                    r = trooper;
+                }
+            }
+        }
+        return r;
+    }
+
+    private boolean someTeammateCanShoot(Trooper target) {
+        for (Trooper trooper : teammates) {
+            if (canShoot(trooper, target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean tryMoveToBonus() {
@@ -111,9 +189,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tooFarFromTeammates(int x, int y) {
-        int[][] dist = bfs(x, y);
         for (Trooper trooper : teammates) {
-            if (dist[trooper.getX()][trooper.getY()] >= 6) {
+            if (manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 6) {
                 return true;
             }
         }
@@ -412,7 +489,7 @@ public final class MyStrategy implements Strategy {
 
     private boolean moveToNearestLongAgoSeenCell() {
         int minLastSeen = Integer.MAX_VALUE;
-        int minDist = 0;
+        int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
         int[][] dist = bfs(self.getX(), self.getY());
@@ -590,7 +667,7 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean tryShoot() {
-        Trooper target = getTargetEnemy();
+        Trooper target = getLeastHpEnemySelfCanShoot();
         if (target == null) {
             return false;
         }
@@ -628,7 +705,7 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private Trooper getTargetEnemy() {
+    private Trooper getLeastHpEnemySelfCanShoot() {
         Trooper r = null;
         for (Trooper trooper : enemies) {
             if (canShoot(trooper)) {
@@ -646,11 +723,16 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean canShoot(Trooper target) {
-        return canShoot(target, self.getStance());
+        return canShoot(self, target);
     }
 
-    private boolean canShoot(Trooper target, TrooperStance selfStance) {
-        return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), selfStance,
+    private boolean canShoot(Trooper shooter, Trooper target) {
+        return world.isVisible(shooter.getShootingRange(), shooter.getX(), shooter.getY(), shooter.getStance(),
+                target.getX(), target.getY(), target.getStance());
+    }
+
+    private boolean canShoot(Trooper target, TrooperStance shooterStance) {
+        return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), shooterStance,
                 target.getX(), target.getY(), target.getStance());
     }
 
