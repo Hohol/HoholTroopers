@@ -19,7 +19,7 @@ public final class MyStrategy implements Strategy {
     static int[][] lastSeen;
     static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
 
-    ArrayList<Trooper> teammates;
+    List<Trooper> teammates, enemies;
     Trooper teammateToFollow;
     static int smallStepNumber;
 
@@ -229,12 +229,10 @@ public final class MyStrategy implements Strategy {
         if (!self.isHoldingGrenade()) {
             return false;
         }
-        for (Trooper trooper : world.getTroopers()) {
-            if (!trooper.isTeammate()) {
-                if (canThrowGrenade(trooper)) {
-                    throwGrenade(trooper);
-                    return true;
-                }
+        for (Trooper trooper : enemies) {
+            if (canThrowGrenade(trooper)) {
+                throwGrenade(trooper);
+                return true;
             }
         }
         return false;
@@ -255,6 +253,7 @@ public final class MyStrategy implements Strategy {
         log("SmallStepNumber = " + smallStepNumber);
         cells = world.getCells();
         teammates = getTeammates();
+        enemies = getEnemies();
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
         if (lastSeen == null) {
@@ -262,6 +261,16 @@ public final class MyStrategy implements Strategy {
         }
         updateLastSeen();
         //printMap();
+    }
+
+    private List<Trooper> getEnemies() {
+        List<Trooper> r = new ArrayList<>();
+        for (Trooper trooper : world.getTroopers()) {
+            if (!trooper.isTeammate()) {
+                r.add(trooper);
+            }
+        }
+        return r;
     }
 
     private void log(Object o) {
@@ -315,11 +324,9 @@ public final class MyStrategy implements Strategy {
 
     private Trooper getTeammateToFollow() {
         Trooper r = null;
-        for (Trooper trooper : world.getTroopers()) {
-            if (trooper.isTeammate()) {
-                if (r == null || followPriority(trooper) > followPriority(r)) {
-                    r = trooper;
-                }
+        for (Trooper trooper : teammates) {
+            if (r == null || followPriority(trooper) > followPriority(r)) {
+                r = trooper;
             }
         }
         return r;
@@ -623,12 +630,10 @@ public final class MyStrategy implements Strategy {
 
     private Trooper getTargetEnemy() {
         Trooper r = null;
-        for (Trooper trooper : world.getTroopers()) {
-            if (!trooper.isTeammate()) {
-                if (canShoot(trooper)) {
-                    if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
-                        r = trooper;
-                    }
+        for (Trooper trooper : enemies) {
+            if (canShoot(trooper)) {
+                if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
+                    r = trooper;
                 }
             }
         }
