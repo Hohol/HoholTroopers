@@ -12,7 +12,7 @@ import static org.testng.Assert.*;
 @Test
 public class MaxDamagePlanComputerTest {
     final static Game game = new Game(
-            50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
+            50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 10, 5, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
     );
 
     @Test
@@ -184,7 +184,7 @@ public class MaxDamagePlanComputerTest {
         );
     }
 
-    @Test (enabled = false)
+    @Test(enabled = false)
     void findLongestPlan() { //it has length 8
         List<ActionType> r = null;
         for (TrooperType selfType : TrooperType.values()) {
@@ -240,5 +240,5 @@ public class MaxDamagePlanComputerTest {
                 actual,
                 expected
         );
-    }
+    }/**/
 }
