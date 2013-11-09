@@ -1,4 +1,5 @@
 import model.*;
+
 import static model.ActionType.*;
 import static model.TrooperStance.*;
 import static model.TrooperType.*;
@@ -137,6 +138,9 @@ public final class MyStrategy implements Strategy {
 
     private boolean tryHeal() {
         if (self.getType() != FIELD_MEDIC && !self.isHoldingMedikit()) {
+            return false;
+        }
+        if (self.getType() == FIELD_MEDIC && teammates.size() == 1) {
             return false;
         }
         Trooper target = getMostInjuredTeammate();

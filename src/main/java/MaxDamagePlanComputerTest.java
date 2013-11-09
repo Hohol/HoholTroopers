@@ -1,7 +1,6 @@
 import model.*;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -205,10 +204,6 @@ public class MaxDamagePlanComputerTest {
                                     true,
                                     game
                             ).getActions();
-                            if (test.size() >= 8) {
-                                int x = 0;
-                                x++;
-                            }
                             if (r == null || test.size() > r.size()) {
                                 r = test;
                             }
