@@ -1,4 +1,7 @@
 import model.*;
+import static model.ActionType.*;
+import static model.TrooperStance.*;
+import static model.TrooperType.*;
 
 import java.util.*;
 
@@ -42,7 +45,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryDeblock()) { //todo it is obviously bad
+        if (tryDeblock()) {
             return;
         }
 
@@ -54,7 +57,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        move.setAction(ActionType.END_TURN);
+        move.setAction(END_TURN);
     }
 
     private boolean tryMoveToBonus() {
@@ -62,8 +65,8 @@ public final class MyStrategy implements Strategy {
         if (bonus == null) {
             return false;
         }
-        if (self.getStance() != TrooperStance.STANDING && haveTime(game.getStanceChangeCost())) {
-            move.setAction(ActionType.RAISE_STANCE);
+        if (self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
+            move.setAction(RAISE_STANCE);
             return true;
         }
         return moveTo(bonus);
@@ -98,7 +101,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int actionsToStandUp(TrooperStance stance) {
-        return (TrooperStance.STANDING.ordinal() - stance.ordinal()) * game.getStanceChangeCost();
+        return (STANDING.ordinal() - stance.ordinal()) * game.getStanceChangeCost();
     }
 
 
@@ -121,20 +124,19 @@ public final class MyStrategy implements Strategy {
     }
 
     private static boolean isHoldingBonus(Trooper trooper, BonusType type) {
-        if (type == BonusType.MEDIKIT) {
-            return trooper.isHoldingMedikit();
-        }
-        if (type == BonusType.FIELD_RATION) {
-            return trooper.isHoldingFieldRation();
-        }
-        if (type == BonusType.GRENADE) {
-            return trooper.isHoldingGrenade();
+        switch (type) {
+            case GRENADE:
+                return trooper.isHoldingGrenade();
+            case MEDIKIT:
+                return trooper.isHoldingMedikit();
+            case FIELD_RATION:
+                return trooper.isHoldingFieldRation();
         }
         throw new RuntimeException();
     }
 
     private boolean tryHeal() {
-        if (self.getType() != TrooperType.FIELD_MEDIC && !self.isHoldingMedikit()) {
+        if (self.getType() != FIELD_MEDIC && !self.isHoldingMedikit()) {
             return false;
         }
         Trooper target = getMostInjuredTeammate();
@@ -147,13 +149,9 @@ public final class MyStrategy implements Strategy {
         if (manhattanDist(self, target) <= 1) {
             return heal(target);
         } else {
-            if (self.getStance() != TrooperStance.STANDING) {
-                return false;
-            }
-            if (!haveTime(getMoveCost(self))) {
-                return false;
-            }
-            return moveTo(target);
+            return self.getStance() == STANDING &&
+                    haveTime(getMoveCost(self)) &&
+                    moveTo(target);
         }
     }
 
@@ -161,12 +159,12 @@ public final class MyStrategy implements Strategy {
         if (self.isHoldingMedikit() &&
                 haveTime(game.getMedikitUseCost()) &&
                 target.getMaximalHitpoints() - target.getHitpoints() >= medikitHealValue(target)) {
-            move.setAction(ActionType.USE_MEDIKIT);
+            move.setAction(USE_MEDIKIT);
             setDirection(target);
             return true;
         }
-        if (self.getType() == TrooperType.FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
-            move.setAction(ActionType.HEAL);
+        if (self.getType() == FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
+            move.setAction(HEAL);
             setDirection(target);
             return true;
         }
@@ -239,7 +237,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void throwGrenade(Trooper trooper) {
-        move.setAction(ActionType.THROW_GRENADE);
+        move.setAction(THROW_GRENADE);
         setDirection(trooper);
     }
 
@@ -269,6 +267,7 @@ public final class MyStrategy implements Strategy {
         System.out.println(o);
     }
 
+    @SuppressWarnings("unused")
     private void printMap() {
         char[][] map = new char[world.getWidth()][world.getHeight()];
         for (char[] row : map) {
@@ -278,8 +277,8 @@ public final class MyStrategy implements Strategy {
             map[trooper.getX()][trooper.getY()] = trooper.getType().toString().charAt(0);
         }
         for (int j = 0; j < map[0].length; j++) {
-            for (int i = 0; i < map.length; i++) {
-                System.out.print(map[i][j]);
+            for (char[] aMap : map) {
+                System.out.print(aMap[j]);
             }
             System.out.println();
         }
@@ -297,7 +296,7 @@ public final class MyStrategy implements Strategy {
                             trooper.getStance(),
                             i,
                             j,
-                            TrooperStance.PRONE
+                            PRONE
                     )) {
                         lastSeen[i][j] = smallStepNumber;
                     }
@@ -308,17 +307,6 @@ public final class MyStrategy implements Strategy {
 
     private int manhattanDist(Trooper self, Trooper target) {
         return manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
-    }
-
-    private boolean tryHealSelf() {
-        if (game.getMedikitHealSelfBonusHitpoints() > self.getActionPoints()) {
-            return false;
-        }
-        if (!self.isHoldingMedikit()) {
-            return false;
-        }
-        move.setAction(ActionType.USE_MEDIKIT);
-        return true;
     }
 
     private Trooper getTeammateToFollow() {
@@ -334,8 +322,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMove() {
-        if (self.getStance() != TrooperStance.STANDING && haveTime(game.getStanceChangeCost())) {
-            move.setAction(ActionType.RAISE_STANCE);
+        if (self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
+            move.setAction(RAISE_STANCE);
             return true;
         }
         if (!haveTime(getMoveCost(self))) {
@@ -348,8 +336,6 @@ public final class MyStrategy implements Strategy {
                 return true;
             }
             return moveToNearestLongAgoSeenCell();
-            //moveRandom();
-            //moveTo(world.getWidth()/2, world.getHeight()/2);
         } else {
             Trooper toFollow = teammateToFollow;
             if (teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
@@ -373,7 +359,7 @@ public final class MyStrategy implements Strategy {
 
     private boolean medicIsAlive() {
         for (Trooper trooper : teammates) {
-            if (trooper.getType() == TrooperType.FIELD_MEDIC) {
+            if (trooper.getType() == FIELD_MEDIC) {
                 return true;
             }
         }
@@ -409,7 +395,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void standStill() {
-        move.setAction(ActionType.MOVE);
+        move.setAction(MOVE);
         move.setDirection(Direction.CURRENT_POINT);
     }
 
@@ -460,10 +446,11 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
+    @SuppressWarnings("unused")
     private void print(int[][] dist) {
         for (int j = 0; j < dist[0].length; j++) {
-            for (int i = 0; i < dist.length; i++) {
-                System.out.print(dist[i][j] + " ");
+            for (int[] aDist : dist) {
+                System.out.print(aDist[j] + " ");
             }
             System.out.println();
         }
@@ -471,7 +458,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void moveTo(Direction dir) {
-        move.setAction(ActionType.MOVE);
+        move.setAction(MOVE);
         move.setDirection(dir);
     }
 
@@ -513,36 +500,23 @@ public final class MyStrategy implements Strategy {
 
     private int[][] createIntMap(int fillValue) {
         int[][] r = new int[world.getWidth()][world.getHeight()];
-        for (int i = 0; i < r.length; i++) {
-            Arrays.fill(r[i], fillValue);
+        for (int[] aR : r) {
+            Arrays.fill(aR, fillValue);
         }
         return r;
     }
 
     private int getMoveCost(Trooper self) {
-        if (self.getStance() == TrooperStance.KNEELING) {
+        if (self.getStance() == KNEELING) {
             return game.getKneelingMoveCost();
         }
-        if (self.getStance() == TrooperStance.PRONE) {
+        if (self.getStance() == PRONE) {
             return game.getProneMoveCost();
         }
-        if (self.getStance() == TrooperStance.STANDING) {
+        if (self.getStance() == STANDING) {
             return game.getStandingMoveCost();
         }
         throw new IllegalArgumentException();
-    }
-
-
-    private boolean isMoveTo(Direction dir, int x, int y) {
-        if (!isValidMove(dir)) {
-            return false;
-        }
-        return manhattanDist(x, y, self.getX() + dir.getOffsetX(), self.getY() + dir.getOffsetY()) <
-                manhattanDist(x, y, self.getX(), self.getY());
-    }
-
-    private int manhattanDist(Trooper trooper, int x, int y) {
-        return manhattanDist(trooper.getX(), trooper.getY(), x, y);
     }
 
     private int manhattanDist(int x, int y, int x1, int y1) {
@@ -583,7 +557,7 @@ public final class MyStrategy implements Strategy {
                 a.add(dir);
             }
         }
-        move.setAction(ActionType.MOVE);
+        move.setAction(MOVE);
         if (!a.isEmpty()) {
             move.setDirection(a.get(rnd.nextInt(a.size())));
         } else {
@@ -592,13 +566,13 @@ public final class MyStrategy implements Strategy {
     }
 
     int followPriority(Trooper trooper) {
-        if (trooper.getType() == TrooperType.FIELD_MEDIC) {
+        if (trooper.getType() == FIELD_MEDIC) {
             return 0;
         }
-        if (trooper.getType() == TrooperType.COMMANDER) {
+        if (trooper.getType() == COMMANDER) {
             return 1;
         }
-        if (trooper.getType() == TrooperType.SOLDIER) {
+        if (trooper.getType() == SOLDIER) {
             return 2;
         }
         return -7; // >_<
@@ -626,7 +600,7 @@ public final class MyStrategy implements Strategy {
         }
 
         ActionType action = plan.get(0);
-        if (action == ActionType.SHOOT) {
+        if (action == SHOOT) {
             shoot(target);
         } else {
             move.setAction(action);
@@ -643,39 +617,11 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private boolean fieldRationOverdose() {
-        int increases = game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
-        int maxCanIncrease = self.getInitialActionPoints() - self.getActionPoints();
-        return increases > maxCanIncrease;
-    }
-
-    private boolean fieldRationIncreasesShootCnt() {
-        return getShootCnt(self.getActionPoints()) <
-                getShootCnt(actionPointsAfterEatingFieldRation(self));
-    }
-
-    private int actionPointsAfterEatingFieldRation(Trooper trooper) {
-        return actionPointsAfterEatingFieldRation(trooper.getType(), trooper.getActionPoints(), game);
-    }
-
     private static int actionPointsAfterEatingFieldRation(TrooperType type, int actionPoints, Game game) {
         int r = actionPoints - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
-        int initialActionPoints = (type == TrooperType.SCOUT ? 12 : 10);
+        int initialActionPoints = (type == SCOUT ? 12 : 10);
         r = Math.min(r, initialActionPoints);
         return r;
-    }
-
-    private int getShootCnt(int actionPoints) {
-        return actionPoints / self.getShootCost();
-    }
-
-    private boolean canKillWithCurrentStance(Trooper target) {
-        int needShoots = shootsToKill(target.getHitpoints(), self.getDamage());
-        return haveTime(needShoots * self.getShootCost());
-    }
-
-    private static int shootsToKill(int hp, int damage) {
-        return divCeil(hp, damage);
     }
 
     private static int divCeil(int a, int b) {
@@ -697,7 +643,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void shoot(Trooper trooper) {
-        move.setAction(ActionType.SHOOT);
+        move.setAction(SHOOT);
         setDirection(trooper.getX(), trooper.getY());
     }
 
@@ -809,7 +755,7 @@ public final class MyStrategy implements Strategy {
             }
 
             if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost()) {
-                addAction(ActionType.EAT_FIELD_RATION);
+                addAction(EAT_FIELD_RATION);
                 rec(
                         actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
                         currentStance,
@@ -820,7 +766,7 @@ public final class MyStrategy implements Strategy {
             }
 
             if (actionPoints >= game.getStanceChangeCost() && currentStance.ordinal() > minStanceAllowed.ordinal()) {
-                addAction(ActionType.LOWER_STANCE);
+                addAction(LOWER_STANCE);
 
                 rec(
                         actionPoints - game.getStanceChangeCost(),
@@ -833,7 +779,7 @@ public final class MyStrategy implements Strategy {
             }
 
             if (actionPoints >= getShootCost(selfType)) {
-                addAction(ActionType.SHOOT);
+                addAction(SHOOT);
 
                 rec(
                         actionPoints - getShootCost(selfType),
@@ -859,7 +805,7 @@ public final class MyStrategy implements Strategy {
                 return targetHp < bestTargetHp;
             }
             if (holdingFieldRation != bestHoldingFieldRation) {
-                return holdingFieldRation && !bestHoldingFieldRation;
+                return holdingFieldRation;
             }
             if (actionPoints != bestActionPoints) {
                 return actionPoints > bestActionPoints;
@@ -876,9 +822,9 @@ public final class MyStrategy implements Strategy {
             case PRONE:
                 return null;
             case KNEELING:
-                return TrooperStance.PRONE;
+                return PRONE;
             case STANDING:
-                return TrooperStance.KNEELING;
+                return KNEELING;
         }
         throw new RuntimeException();
     }
