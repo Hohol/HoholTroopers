@@ -195,7 +195,7 @@ public class MaxDamagePlanComputerTest {
                 for (TrooperStance curStance : TrooperStance.values()) {
                     for (TrooperStance minStance : TrooperStance.values()) {
                         for (int hp = 1; hp <= 120; hp++) {
-                            List<ActionType> test = new MyStrategy.MaxDamagePlanComputer(
+                            List<ActionType> test = new MaxDamagePlanComputer(
                                     selfType,
                                     actionPoints,
                                     curStance,
@@ -224,7 +224,7 @@ public class MaxDamagePlanComputerTest {
             boolean holdingFieldRation,
             ActionType... expectedAr
     ) {
-        List<ActionType> actual = new MyStrategy.MaxDamagePlanComputer(
+        List<ActionType> actual = new MaxDamagePlanComputer(
                 selfType,
                 actionPoints,
                 currentStance, minStanceAllowed,
