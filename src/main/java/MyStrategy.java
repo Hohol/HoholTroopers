@@ -17,7 +17,7 @@ public final class MyStrategy implements Strategy {
 
     ArrayList<Trooper> teammates;
     Trooper teammateToFollow;
-    int stepNumber;
+    static int smallStepNumber;
 
     Map<Cell, int[][]> bfsCache = new HashMap<>();
 
@@ -38,7 +38,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryShoot()) { //may eat field ration instead
+        if (tryShoot()) {
             return;
         }
 
@@ -62,13 +62,16 @@ public final class MyStrategy implements Strategy {
         if (bonus == null) {
             return false;
         }
+        if (self.getStance() != TrooperStance.STANDING && haveTime(game.getStanceChangeCost())) {
+            move.setAction(ActionType.RAISE_STANCE);
+            return true;
+        }
         return moveTo(bonus);
     }
 
     private Bonus chooseBonus() {
         int[][] dist = bfs(self.getX(), self.getY());
         Bonus r = null;
-        int minDist = Integer.MAX_VALUE;
         for (Bonus bonus : world.getBonuses()) {
             if (isHoldingBonus(bonus.getType())) {
                 continue;
@@ -80,16 +83,24 @@ public final class MyStrategy implements Strategy {
                 continue;
             }
             int d = dist[bonus.getX()][bonus.getY()];
+            if (!haveTime(getActionsToMove(d, self.getStance()))) {
+                continue;
+            }
             if (r == null || d < dist[r.getX()][r.getY()]) {
                 r = bonus;
-                minDist = d;
             }
-        }
-        if (!haveTime(minDist * getMoveCost(self))) {
-            return null;
         }
         return r;
     }
+
+    private int getActionsToMove(int dist, TrooperStance stance) {
+        return actionsToStandUp(stance) + dist * game.getStandingMoveCost();
+    }
+
+    private int actionsToStandUp(TrooperStance stance) {
+        return (TrooperStance.STANDING.ordinal() - stance.ordinal()) * game.getStanceChangeCost();
+    }
+
 
     private boolean tooFarFromTeammates(Unit unit) {
         return tooFarFromTeammates(unit.getX(), unit.getY());
@@ -97,8 +108,8 @@ public final class MyStrategy implements Strategy {
 
     private boolean tooFarFromTeammates(int x, int y) {
         int[][] dist = bfs(x, y);
-        for(Trooper trooper : teammates) {
-            if(dist[trooper.getX()][trooper.getY()] >= 6) {
+        for (Trooper trooper : teammates) {
+            if (dist[trooper.getX()][trooper.getY()] >= 6) {
                 return true;
             }
         }
@@ -136,6 +147,9 @@ public final class MyStrategy implements Strategy {
         if (manhattanDist(self, target) <= 1) {
             return heal(target);
         } else {
+            if (self.getStance() != TrooperStance.STANDING) {
+                return false;
+            }
             if (!haveTime(getMoveCost(self))) {
                 return false;
             }
@@ -235,7 +249,8 @@ public final class MyStrategy implements Strategy {
 
     private void init() {
         bfsCache.clear();
-        stepNumber++;
+        smallStepNumber++;
+        log("SmallStepNumber = " + smallStepNumber);
         cells = world.getCells();
         teammates = getTeammates();
         teammateToFollow = getTeammateToFollow();
@@ -245,6 +260,13 @@ public final class MyStrategy implements Strategy {
         }
         updateLastSeen();
         //printMap();
+    }
+
+    private void log(Object o) {
+        if (!local) {
+            return;
+        }
+        System.out.println(o);
     }
 
     private void printMap() {
@@ -277,7 +299,7 @@ public final class MyStrategy implements Strategy {
                             j,
                             TrooperStance.PRONE
                     )) {
-                        lastSeen[i][j] = stepNumber;
+                        lastSeen[i][j] = smallStepNumber;
                     }
                 }
             }
@@ -312,6 +334,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryMove() {
+        if (self.getStance() != TrooperStance.STANDING && haveTime(game.getStanceChangeCost())) {
+            move.setAction(ActionType.RAISE_STANCE);
+            return true;
+        }
         if (!haveTime(getMoveCost(self))) {
             return false;
         }
@@ -419,6 +445,7 @@ public final class MyStrategy implements Strategy {
         if (dist[self.getX()][self.getY()] == NOT_VISITED) {
             return false;
         }
+
         for (Direction dir : dirs) {
             int toX = self.getX() + dir.getOffsetX();
             int toY = self.getY() + dir.getOffsetY();
@@ -430,7 +457,6 @@ public final class MyStrategy implements Strategy {
                 return true;
             }
         }
-        print(dist);
         throw new RuntimeException();
     }
 
@@ -584,21 +610,37 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if (self.isHoldingFieldRation() &&
-                !fieldRationOverdose() &&
-                !canKillWithCurrentStance(target) &&
-                haveTime(game.getFieldRationEatCost()) &&
-                fieldRationIncreasesShootCnt()) {
-            move.setAction(ActionType.EAT_FIELD_RATION);
-            return true;
-        }
+        TrooperStance minStance = getMinStanceCanStillShoot(target);
 
-        if (!haveTime(self.getShootCost())) {
+        List<ActionType> plan = new MaxDamagePlanComputer(
+                self.getType(),
+                self.getActionPoints(),
+                self.getStance(), minStance,
+                target.getHitpoints(),
+                self.isHoldingFieldRation(),
+                game
+        ).getActions();
+
+        if (plan.isEmpty()) {
             return false;
         }
 
-        shoot(target);
+        ActionType action = plan.get(0);
+        if (action == ActionType.SHOOT) {
+            shoot(target);
+        } else {
+            move.setAction(action);
+        }
         return true;
+    }
+
+    private TrooperStance getMinStanceCanStillShoot(Trooper target) {
+        for (TrooperStance stance : TrooperStance.values()) {
+            if (canShoot(target, stance)) {
+                return stance;
+            }
+        }
+        throw new RuntimeException();
     }
 
     private boolean fieldRationOverdose() {
@@ -613,8 +655,13 @@ public final class MyStrategy implements Strategy {
     }
 
     private int actionPointsAfterEatingFieldRation(Trooper trooper) {
-        int r = trooper.getActionPoints() - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
-        r = Math.min(r, trooper.getInitialActionPoints());
+        return actionPointsAfterEatingFieldRation(trooper.getType(), trooper.getActionPoints(), game);
+    }
+
+    private static int actionPointsAfterEatingFieldRation(TrooperType type, int actionPoints, Game game) {
+        int r = actionPoints - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
+        int initialActionPoints = (type == TrooperType.SCOUT ? 12 : 10);
+        r = Math.min(r, initialActionPoints);
         return r;
     }
 
@@ -623,8 +670,16 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean canKillWithCurrentStance(Trooper target) {
-        int needShoots = (target.getHitpoints() + self.getDamage() - 1) / self.getDamage();
+        int needShoots = shootsToKill(target.getHitpoints(), self.getDamage());
         return haveTime(needShoots * self.getShootCost());
+    }
+
+    private static int shootsToKill(int hp, int damage) {
+        return divCeil(hp, damage);
+    }
+
+    private static int divCeil(int a, int b) {
+        return (a + b - 1) / b;
     }
 
     private Trooper getTargetEnemy() {
@@ -643,13 +698,16 @@ public final class MyStrategy implements Strategy {
 
     private void shoot(Trooper trooper) {
         move.setAction(ActionType.SHOOT);
-        move.setX(trooper.getX());
-        move.setY(trooper.getY());
+        setDirection(trooper.getX(), trooper.getY());
     }
 
-    private boolean canShoot(Trooper trooper) {
-        return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(),
-                trooper.getX(), trooper.getY(), trooper.getStance());
+    private boolean canShoot(Trooper target) {
+        return canShoot(target, self.getStance());
+    }
+
+    private boolean canShoot(Trooper target, TrooperStance selfStance) {
+        return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), selfStance,
+                target.getX(), target.getY(), target.getStance());
     }
 
     public ArrayList<Trooper> getTeammates() {
@@ -699,6 +757,132 @@ public final class MyStrategy implements Strategy {
         move.setY(y);
     }
 
+    public static class MaxDamagePlanComputer {
+        private final TrooperType selfType;
+        private final TrooperStance minStanceAllowed;
+        private final Game game;
+
+        private int bestActionPoints, bestTargetHp;
+        private boolean bestHoldingFieldRation;
+        private TrooperStance bestCurrentStance;
+
+        List<ActionType> actions = new ArrayList<>(), bestActions;
+
+        public MaxDamagePlanComputer(
+                TrooperType selfType,
+                int actionPoints,
+                TrooperStance currentStance, TrooperStance minStanceAllowed,
+                int targetHp,
+                boolean holdingFieldRation,
+                Game game
+        ) {
+            this.selfType = selfType;
+            this.minStanceAllowed = minStanceAllowed;
+            this.game = game;
+
+            bestActionPoints = actionPoints;
+            bestTargetHp = targetHp;
+            bestHoldingFieldRation = holdingFieldRation;
+            bestCurrentStance = currentStance;
+            bestActions = new ArrayList<>();
+
+            rec(actionPoints, currentStance, targetHp, holdingFieldRation);
+        }
+
+        List<ActionType> getActions() {
+            return bestActions;
+        }
+
+        private void rec(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
+            if (targetHp <= 0) {
+                targetHp = 0;
+            }
+            if (better(actionPoints, currentStance, targetHp, holdingFieldRation)) {
+                bestActionPoints = actionPoints;
+                bestCurrentStance = currentStance;
+                bestTargetHp = targetHp;
+                bestHoldingFieldRation = holdingFieldRation;
+                bestActions = new ArrayList<>(actions);
+            }
+            if (targetHp == 0) {
+                return;
+            }
+
+            if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost()) {
+                addAction(ActionType.EAT_FIELD_RATION);
+                rec(
+                        actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
+                        currentStance,
+                        targetHp,
+                        false
+                );
+                popAction();
+            }
+
+            if (actionPoints >= game.getStanceChangeCost() && currentStance.ordinal() > minStanceAllowed.ordinal()) {
+                addAction(ActionType.LOWER_STANCE);
+
+                rec(
+                        actionPoints - game.getStanceChangeCost(),
+                        stanceAfterLowering(currentStance),
+                        targetHp,
+                        holdingFieldRation
+                );
+
+                popAction();
+            }
+
+            if (actionPoints >= getShootCost(selfType)) {
+                addAction(ActionType.SHOOT);
+
+                rec(
+                        actionPoints - getShootCost(selfType),
+                        currentStance,
+                        targetHp - getShootDamage(selfType, currentStance),
+                        holdingFieldRation
+                );
+
+                popAction();
+            }
+        }
+
+        private void popAction() {
+            actions.remove(actions.size() - 1);
+        }
+
+        private void addAction(ActionType action) {
+            actions.add(action);
+        }
+
+        private boolean better(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
+            if (targetHp != bestTargetHp) {
+                return targetHp < bestTargetHp;
+            }
+            if (holdingFieldRation != bestHoldingFieldRation) {
+                return holdingFieldRation && !bestHoldingFieldRation;
+            }
+            if (actionPoints != bestActionPoints) {
+                return actionPoints > bestActionPoints;
+            }
+            if (currentStance != bestCurrentStance) {
+                return currentStance.ordinal() > bestCurrentStance.ordinal();
+            }
+            return false;
+        }
+    }
+
+    static TrooperStance stanceAfterLowering(TrooperStance stance) {
+        switch (stance) {
+            case PRONE:
+                return null;
+            case KNEELING:
+                return TrooperStance.PRONE;
+            case STANDING:
+                return TrooperStance.KNEELING;
+        }
+        throw new RuntimeException();
+    }
+
     class Cell {
         int x, y;
 
@@ -726,17 +910,56 @@ public final class MyStrategy implements Strategy {
             return result;
         }
     }
+
+    static int getShootDamage(TrooperType type, TrooperStance stance) {
+        return standingDamage(type) + bonusDamage(type) * (3 - stance.ordinal() - 1);
+    }
+
+    static int bonusDamage(TrooperType type) {
+        switch (type) {
+            case COMMANDER:
+                return 5;
+            case FIELD_MEDIC:
+                return 3;
+            case SOLDIER:
+                return 5;
+            case SNIPER:
+                break;
+            case SCOUT:
+                break;
+        }
+        throw new RuntimeException();
+    }
+
+    static int standingDamage(TrooperType type) {
+        switch (type) {
+            case COMMANDER:
+                return 15;
+            case FIELD_MEDIC:
+                return 9;
+            case SOLDIER:
+                return 30;
+            case SNIPER:
+                break;
+            case SCOUT:
+                break;
+        }
+        throw new RuntimeException();
+    }
+
+    static int getShootCost(TrooperType type) {
+        switch (type) {
+            case COMMANDER:
+                return 3;
+            case FIELD_MEDIC:
+                return 2;
+            case SOLDIER:
+                return 4;
+            case SNIPER:
+                break;
+            case SCOUT:
+                break;
+        }
+        throw new RuntimeException();
+    }
 }
-
-/*
-grenade reachability pattern
-######
-#####
-#####
-#####
-####
-#
-
-карта 20 на 30
-
-*/
