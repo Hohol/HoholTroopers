@@ -227,6 +227,9 @@ public final class MyStrategy implements Strategy {
         if (distTo(target) > 7) {
             return false;
         }
+        if (self.getType() != FIELD_MEDIC && overheal(target)) {
+            return false;
+        }
         if (manhattanDist(self, target) <= 1) {
             return heal(target);
         } else {
@@ -236,10 +239,15 @@ public final class MyStrategy implements Strategy {
         }
     }
 
+    private boolean overheal(Trooper target) {
+        return target.getMaximalHitpoints() - target.getHitpoints() < medikitHealValue(target);
+    }
+
     private boolean heal(Trooper target) {
         if (self.isHoldingMedikit() &&
                 haveTime(game.getMedikitUseCost()) &&
-                target.getMaximalHitpoints() - target.getHitpoints() >= medikitHealValue(target)) {
+                !overheal(target)
+                ) {
             move.setAction(USE_MEDIKIT);
             setDirection(target);
             return true;
