@@ -815,7 +815,8 @@ public final class MyStrategy implements Strategy {
         ).getActions();
 
         if (plan.isEmpty()) {
-            return false;
+            standStill();
+            return true;
         }
 
         ActionType action = plan.get(0);

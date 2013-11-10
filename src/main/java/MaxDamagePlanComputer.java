@@ -110,10 +110,10 @@ class MaxDamagePlanComputer {
     }
 
     private boolean better(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
-        if (targetHp != bestTargetHp) {
-            return targetHp < bestTargetHp;
-        }
         if(targetHp == 0) {
+            if(bestTargetHp != 0) {
+                return true;
+            }
             if (holdingFieldRation != bestHoldingFieldRation) {
                 return holdingFieldRation;
             }
@@ -126,6 +126,9 @@ class MaxDamagePlanComputer {
         } else {
             if (currentStance != bestCurrentStance) {
                 return currentStance.ordinal() < bestCurrentStance.ordinal();
+            }
+            if (targetHp != bestTargetHp) {
+                return targetHp < bestTargetHp;
             }
             if (holdingFieldRation != bestHoldingFieldRation) {
                 return holdingFieldRation;
