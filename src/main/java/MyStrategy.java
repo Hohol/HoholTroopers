@@ -24,7 +24,7 @@ public final class MyStrategy implements Strategy {
     static int smallStepNumber;
     final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
 
-    Map<Cell, int[][]> bfsCache = new HashMap<>();
+    static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
 
     static EnumMap<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
 
@@ -110,7 +110,7 @@ public final class MyStrategy implements Strategy {
         int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
-        int[][] dist = bfs(self.getX(), self.getY());
+        int[][] dist = bfs(self.getX(), self.getY(), false);
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
                 if (world.isVisible(
@@ -126,7 +126,7 @@ public final class MyStrategy implements Strategy {
         if (minDist >= 7) {
             return false;
         }
-        return moveTo(x, y);
+        return moveTo(x, y, false);
     }
 
     private Trooper getLeastHpEnemySomeOfTeammatesCanShoot() {
@@ -159,11 +159,11 @@ public final class MyStrategy implements Strategy {
             move.setAction(RAISE_STANCE);
             return true;
         }
-        return moveTo(bonus);
+        return moveTo(bonus, true);
     }
 
     private Bonus chooseBonus() {
-        int[][] dist = bfs(self.getX(), self.getY());
+        int[][] dist = bfs(self.getX(), self.getY(), true);
         Bonus r = null;
         for (Bonus bonus : world.getBonuses()) {
             if (isHoldingBonus(bonus.getType())) {
@@ -172,7 +172,7 @@ public final class MyStrategy implements Strategy {
             if (tooFarFromTeammates(bonus)) {
                 continue;
             }
-            if (!isGoodCell(bonus.getX(), bonus.getY())) {
+            if (!isGoodCell(bonus.getX(), bonus.getY()) || isNarrowPathNearBorder(bonus.getX(), bonus.getY())) {
                 continue;
             }
             int d = dist[bonus.getX()][bonus.getY()];
@@ -235,7 +235,7 @@ public final class MyStrategy implements Strategy {
         if (target == null) {
             return false;
         }
-        if (distTo(target) > 7) {
+        if (distTo(target, false) > 7) {
             return false;
         }
         if (self.getType() != FIELD_MEDIC && overheal(target)) {
@@ -246,7 +246,7 @@ public final class MyStrategy implements Strategy {
         } else {
             return self.getStance() == STANDING &&
                     haveTime(getMoveCost(self)) &&
-                    moveTo(target);
+                    moveTo(target, false);
         }
     }
 
@@ -345,6 +345,7 @@ public final class MyStrategy implements Strategy {
 
     private void init() {
         bfsCache.clear();
+        bfsCacheAvoidNarrowPath.clear();
         smallStepNumber++;
         log("SmallStepNumber = " + smallStepNumber);
         cells = world.getCells();
@@ -488,7 +489,7 @@ public final class MyStrategy implements Strategy {
             return moveToNearestLongAgoSeenCell();
         } else {
             Trooper toFollow = teammateToFollow;
-            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow)) {
+            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow.getX(), teammateToFollow.getY(), false)) {
                 toFollow = getOtherTeammate();
             }
             if (self.getType() == FIELD_MEDIC && moveBehind(toFollow)) {
@@ -500,16 +501,12 @@ public final class MyStrategy implements Strategy {
             if (manhattanDist(self, toFollow) == 1) {
                 return false;
             }
-            return moveTo(toFollow);
+            return moveTo(toFollow, false);
         }
     }
 
-    private boolean tooCurvedPathTo(Trooper trooper) {
-        return tooCurvedPathTo(trooper.getX(), trooper.getY());
-    }
-
-    private boolean tooCurvedPathTo(int x, int y) {
-        return distTo(x, y) - manhattanDist(x, y) >= 7;
+    private boolean tooCurvedPathTo(int x, int y, boolean avoidNarrowPathNearBorder) {
+        return distTo(x, y, avoidNarrowPathNearBorder) - manhattanDist(x, y) >= 7;
     }
 
     private int manhattanDist(int x, int y) {
@@ -518,7 +515,7 @@ public final class MyStrategy implements Strategy {
 
     private boolean moveAtSide(Trooper trooper) {
         Cell sidePos = getNearestSidePosition(trooper);
-        return moveTo2(sidePos);
+        return moveNearToTeammate(sidePos);
     }
 
     private Cell getNearestSidePosition(Trooper trooper) {
@@ -546,7 +543,7 @@ public final class MyStrategy implements Strategy {
             if (cells[to.x][to.y] != CellType.FREE) {
                 continue;
             }
-            int dist = distTo(to.x, to.y);
+            int dist = distTo(to.x, to.y, false);
             if (dist < minDist) {
                 minDist = dist;
                 r = to;
@@ -558,10 +555,10 @@ public final class MyStrategy implements Strategy {
 
     private boolean moveBehind(Trooper trooper) {
         Cell behindPos = getBehindPosition(trooper);
-        return moveTo2(behindPos);
+        return moveNearToTeammate(behindPos);
     }
 
-    private boolean moveTo2(Cell pos) { // hmm -_-
+    private boolean moveNearToTeammate(Cell pos) {
         if (pos == null) {
             return false;
         }
@@ -569,7 +566,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if (tooCurvedPathTo(pos.x, pos.y)) {
+        if (tooCurvedPathTo(pos.x, pos.y, false)) {
             return false;
         }
 
@@ -578,7 +575,7 @@ public final class MyStrategy implements Strategy {
             return true;
         }
 
-        return moveTo(pos.x, pos.y);
+        return moveTo(pos.x, pos.y, false);
     }
 
     private void standStill() {
@@ -628,12 +625,12 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private int distTo(Trooper trooper) {
-        return distTo(trooper.getX(), trooper.getY());
+    private int distTo(Trooper trooper, boolean avoidNarrowPathNearBorder) {
+        return distTo(trooper.getX(), trooper.getY(), avoidNarrowPathNearBorder);
     }
 
-    private int distTo(int x, int y) {
-        int[][] dist = bfs(self.getX(), self.getY());
+    private int distTo(int x, int y, boolean avoidNarrowPathNearBorder) {
+        int[][] dist = bfs(self.getX(), self.getY(), avoidNarrowPathNearBorder);
         return dist[x][y];
     }
 
@@ -652,10 +649,10 @@ public final class MyStrategy implements Strategy {
         int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
-        int[][] dist = bfs(self.getX(), self.getY());
+        int[][] dist = bfs(self.getX(), self.getY(), true);
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
-                if (cells[i][j] == CellType.FREE && !isNarrowPathNearTheBorder(i, j) &&
+                if (cells[i][j] == CellType.FREE && !isNarrowPathNearBorder(i, j) &&
                         (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist)) {
                     minLastSeen = lastSeen[i][j];
                     minDist = dist[i][j];
@@ -664,18 +661,18 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        return moveTo(x, y);
+        return moveTo(x, y, true);
     }
 
-    private boolean moveTo(Unit target) {
-        return moveTo(target.getX(), target.getY());
+    private boolean moveTo(Unit target, boolean avoidNarrowPathNearBorder) {
+        return moveTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
     }
 
-    private boolean moveTo(int x, int y) {
+    private boolean moveTo(int x, int y, boolean avoidNarrowPathNearBorder) {
         if (x == self.getX() && y == self.getY()) {
             throw new RuntimeException();
         }
-        int[][] dist = bfs(x, y);
+        int[][] dist = bfs(x, y, avoidNarrowPathNearBorder);
         if (dist[self.getX()][self.getY()] == NOT_VISITED) {
             return false;
         }
@@ -710,9 +707,10 @@ public final class MyStrategy implements Strategy {
         move.setDirection(dir);
     }
 
-    private int[][] bfs(int startX, int startY) {
+    private int[][] bfs(int startX, int startY, boolean avoidNarrowPathNearBorder) {
         Cell startCell = new Cell(startX, startY);
-        int[][] dist = bfsCache.get(startCell);
+        Map<Cell, int[][]> cache = avoidNarrowPathNearBorder ? bfsCacheAvoidNarrowPath : bfsCache;
+        int[][] dist = cache.get(startCell);
         if (dist != null) {
             return dist;
         }
@@ -735,14 +733,14 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (!isGoodCell(toX, toY)) {
+                if (!isGoodCell(toX, toY) || avoidNarrowPathNearBorder && isNarrowPathNearBorder(toX, toY)) {
                     continue;
                 }
                 qx.add(toX);
                 qy.add(toY);
             }
         }
-        bfsCache.put(startCell, dist);
+        cache.put(startCell, dist);
         return dist;
     }
 
@@ -775,7 +773,7 @@ public final class MyStrategy implements Strategy {
         int toX = trooper.getX() + dir.getOffsetX();
         int toY = trooper.getY() + dir.getOffsetY();
 
-        return isGoodCell(toX, toY);
+        return isGoodCell(toX, toY) && !isNarrowPathNearBorder(toX, toY);
     }
 
     private boolean isValidMove(Direction dir) {
@@ -784,10 +782,10 @@ public final class MyStrategy implements Strategy {
 
     private boolean isGoodCell(int toX, int toY) {
         return inField(toX, toY) && cells[toX][toY] == CellType.FREE &&
-                !occupiedByTrooper[toX][toY] && !isNarrowPathNearTheBorder(toX, toY);
+                !occupiedByTrooper[toX][toY];
     }
 
-    private boolean isNarrowPathNearTheBorder(int toX, int toY) {
+    private boolean isNarrowPathNearBorder(int toX, int toY) {
         return toX == 0 && cells[toX + 1][toY] != CellType.FREE ||
                 toX == world.getWidth() - 1 && cells[toX - 1][toY] != CellType.FREE ||
                 toY == 0 && cells[toX][toY + 1] != CellType.FREE ||
