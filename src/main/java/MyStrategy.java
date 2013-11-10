@@ -961,4 +961,23 @@ public final class MyStrategy implements Strategy {
         move.setX(x);
         move.setY(y);
     }
+
+    private Trooper getTrooper(String playerName, TrooperType type) { //for debug only
+        long playerId = -1;
+        for (Player player : world.getPlayers()) {
+            if (player.getName().equalsIgnoreCase(playerName)) {
+                playerId = player.getId();
+                break;
+            }
+        }
+        if (playerId == -1) {
+            return null;
+        }
+        for (Trooper trooper : world.getTroopers()) {
+            if (trooper.getPlayerId() == playerId && trooper.getType() == type) {
+                return trooper;
+            }
+        }
+        return null;
+    }
 }
