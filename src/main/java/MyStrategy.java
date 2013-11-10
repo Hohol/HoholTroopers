@@ -361,7 +361,7 @@ public final class MyStrategy implements Strategy {
         updateLastSeen();
         updatePositionHistory();
         verifyDamage();
-        //printMap();
+        printMap();
     }
 
     private void updatePositionHistory() {
@@ -393,12 +393,35 @@ public final class MyStrategy implements Strategy {
 
     @SuppressWarnings("unused")
     private void printMap() {
+        if (!local) {
+            return;
+        }
         char[][] map = new char[world.getWidth()][world.getHeight()];
         for (char[] row : map) {
-            Arrays.fill(row, '.');
+            Arrays.fill(row, '?');
+        }
+        for(int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if(cells[i][j] != CellType.FREE) {
+                    map[i][j] = '_';
+                }
+            }
+        }
+        for (Trooper trooper : teammates) {
+            for(int i = 0; i < world.getWidth(); i++) {
+                for (int j = 0; j < world.getHeight(); j++) {
+                    if(world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(),
+                            i, j, STANDING)) {
+                        map[i][j] = '.';
+                    }
+                }
+            }
         }
         for (Trooper trooper : teammates) {
             map[trooper.getX()][trooper.getY()] = trooper.getType().toString().charAt(0);
+        }
+        for (Trooper trooper : enemies) {
+            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(trooper.getType().toString().charAt(0));
         }
         for (int j = 0; j < map[0].length; j++) {
             for (char[] aMap : map) {
