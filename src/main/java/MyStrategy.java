@@ -176,7 +176,7 @@ public final class MyStrategy implements Strategy {
                 continue;
             }
             int d = dist[bonus.getX()][bonus.getY()];
-            if (!haveTime(getActionsToMove(d, self.getStance()))) {
+            if (!haveTime(getActionsToMoveIn(d, self.getStance()))) {
                 continue;
             }
             if (r == null || d < dist[r.getX()][r.getY()]) {
@@ -186,8 +186,15 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private int getActionsToMove(int dist, TrooperStance stance) {
+    private int getActionsToMoveIn(int dist, TrooperStance stance) {
         return actionsToStandUp(stance) + dist * game.getStandingMoveCost();
+    }
+
+    private int getActionsToMoveNear(int dist, TrooperStance stance) {
+        if (dist <= 1) {
+            return 0;
+        }
+        return actionsToStandUp(stance) + (dist - 1) * game.getStandingMoveCost();
     }
 
     private int actionsToStandUp(TrooperStance stance) {
@@ -231,14 +238,8 @@ public final class MyStrategy implements Strategy {
         if (self.getType() == FIELD_MEDIC && teammates.size() == 1) {
             return false;
         }
-        Trooper target = getMostInjuredTeammate();
+        Trooper target = getTeammateToHeal();
         if (target == null) {
-            return false;
-        }
-        if (distTo(target, false) > 7) {
-            return false;
-        }
-        if (self.getType() != FIELD_MEDIC && overheal(target)) {
             return false;
         }
         if (manhattanDist(self, target) <= 1) {
@@ -250,14 +251,18 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private boolean overheal(Trooper target) {
+    private boolean tooCurvedPathTo(Unit target, boolean avoidNarrowPathNearBorder) {
+        return tooCurvedPathTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
+    }
+
+    private boolean medikitOverheals(Trooper target) {
         return target.getMaximalHitpoints() - target.getHitpoints() < medikitHealValue(target);
     }
 
     private boolean heal(Trooper target) {
         if (self.isHoldingMedikit() &&
                 haveTime(game.getMedikitUseCost()) &&
-                !overheal(target)
+                !medikitOverheals(target)
                 ) {
             move.setAction(USE_MEDIKIT);
             setDirection(target);
@@ -279,14 +284,33 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private Trooper getMostInjuredTeammate() {
+    private Trooper getTeammateToHeal() { //todo separate methods for medic and not
         Trooper r = null;
-        int maxDiff = 0;
-        for (Trooper trooper : teammates) {
-            int diff = trooper.getMaximalHitpoints() - trooper.getHitpoints();
-            if (diff > maxDiff) {
-                maxDiff = diff;
-                r = trooper;
+        int minDist = Integer.MAX_VALUE;
+        for (Trooper target : teammates) {
+            if (self.getType() != FIELD_MEDIC && medikitOverheals(target)) {
+                continue;
+            }
+            if (target.getHitpoints() >= target.getMaximalHitpoints()) {
+                continue;
+            }
+            if (tooCurvedPathTo(target, false)) {
+                continue;
+            }
+            int dist = distTo(target, false);
+
+            if (self.getType() != FIELD_MEDIC) {
+                int actionsToMoveNearAndHeal = getActionsToMoveNear(dist, self.getStance()) + game.getMedikitUseCost();
+                if (!haveTime(actionsToMoveNearAndHeal)) {
+                    continue;
+                }
+            }
+            if (dist == 0) {
+                dist = 1; // doesn't matter if heal self or teammate near
+            }
+            if (r == null || dist < minDist || dist == minDist && target.getHitpoints() < r.getHitpoints()) {
+                minDist = dist;
+                r = target;
             }
         }
         return r;
@@ -407,17 +431,17 @@ public final class MyStrategy implements Strategy {
         for (char[] row : map) {
             Arrays.fill(row, '?');
         }
-        for(int i = 0; i < world.getWidth(); i++) {
+        for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
-                if(cells[i][j] != CellType.FREE) {
+                if (cells[i][j] != CellType.FREE) {
                     map[i][j] = '_';
                 }
             }
         }
         for (Trooper trooper : teammates) {
-            for(int i = 0; i < world.getWidth(); i++) {
+            for (int i = 0; i < world.getWidth(); i++) {
                 for (int j = 0; j < world.getHeight(); j++) {
-                    if(world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(),
+                    if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(),
                             i, j, STANDING)) {
                         map[i][j] = '.';
                     }
@@ -489,7 +513,7 @@ public final class MyStrategy implements Strategy {
             return moveToNearestLongAgoSeenCell();
         } else {
             Trooper toFollow = teammateToFollow;
-            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow.getX(), teammateToFollow.getY(), false)) {
+            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow, false)) {
                 toFollow = getOtherTeammate();
             }
             if (self.getType() == FIELD_MEDIC && moveBehind(toFollow)) {
@@ -625,8 +649,8 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private int distTo(Trooper trooper, boolean avoidNarrowPathNearBorder) {
-        return distTo(trooper.getX(), trooper.getY(), avoidNarrowPathNearBorder);
+    private int distTo(Unit target, boolean avoidNarrowPathNearBorder) {
+        return distTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
     }
 
     private int distTo(int x, int y, boolean avoidNarrowPathNearBorder) {
