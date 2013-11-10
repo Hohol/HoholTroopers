@@ -142,12 +142,17 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean someTeammateCanShoot(Trooper target) {
+        return numberOfTeammatesWhoCanShoot(target) > 0;
+    }
+
+    private int numberOfTeammatesWhoCanShoot(Trooper target) {
+        int cnt = 0;
         for (Trooper trooper : teammates) {
             if (canShoot(trooper, target)) {
-                return true;
+                cnt++;
             }
         }
-        return false;
+        return cnt;
     }
 
     private boolean tryMoveToBonus() {
@@ -849,7 +854,7 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean tryShoot() {
-        Trooper target = getLeastHpEnemySelfCanShoot();
+        Trooper target = getEnemyToShoot();
         if (target == null) {
             return false;
         }
@@ -888,12 +893,15 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private Trooper getLeastHpEnemySelfCanShoot() {
+    private Trooper getEnemyToShoot() {
         Trooper r = null;
-        for (Trooper trooper : enemies) {
-            if (canShoot(trooper)) {
-                if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
-                    r = trooper;
+        int maxCanShootCnt = 0;
+        for (Trooper target : enemies) {
+            if (canShoot(target)) {
+                int canShootCnt = numberOfTeammatesWhoCanShoot(target);
+                if (r == null || canShootCnt > maxCanShootCnt || canShootCnt == maxCanShootCnt && target.getHitpoints() < r.getHitpoints()) {
+                    r = target;
+                    maxCanShootCnt = canShootCnt;
                 }
             }
         }
