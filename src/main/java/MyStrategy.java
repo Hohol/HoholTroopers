@@ -375,13 +375,19 @@ public final class MyStrategy implements Strategy {
     }
 
     private List<Trooper> getEnemies() {
-        List<Trooper> r = new ArrayList<>();
+        List<Trooper> enemies = new ArrayList<>();
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
-                r.add(trooper);
+                enemies.add(trooper);
             }
         }
-        return r;
+        Collections.sort(enemies, new Comparator<Trooper>() {
+            @Override
+            public int compare(Trooper o1, Trooper o2) {
+                return Long.compare(o1.getId(), o2.getId());
+            }
+        });
+        return enemies;
     }
 
     private void log(Object o) {
