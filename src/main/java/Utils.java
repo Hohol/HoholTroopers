@@ -47,7 +47,7 @@ public class Utils {
             case FIELD_MEDIC:
                 return 9;
             case SOLDIER:
-                return 30;
+                return 25;
             case SNIPER:
                 break;
             case SCOUT:

@@ -99,7 +99,7 @@ public class MaxDamagePlanComputerTest {
                 SOLDIER,
                 10,
                 STANDING, STANDING,
-                60,
+                50,
                 true,
 
                 SHOOT, SHOOT
@@ -108,7 +108,7 @@ public class MaxDamagePlanComputerTest {
                 SOLDIER,
                 10,
                 STANDING, STANDING,
-                61,
+                51,
                 true,
 
                 SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
