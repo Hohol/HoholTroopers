@@ -7,8 +7,21 @@ import static model.TrooperStance.KNEELING;
 import static model.TrooperStance.PRONE;
 import static model.TrooperType.SCOUT;
 
-public class Utils {
-    static TrooperStance stanceAfterLowering(TrooperStance stance) {
+class Utils {
+
+    final static Game hardcodedGame = new Game(
+            50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 10, 5, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
+    );
+
+    private final Game game;
+    private final TrooperParameters trooperParameters;
+
+    Utils(Game game, TrooperParameters trooperParameters) {
+        this.game = game;
+        this.trooperParameters = trooperParameters;
+    }
+
+    TrooperStance stanceAfterLowering(TrooperStance stance) {
         switch (stance) {
             case PRONE:
                 return null;
@@ -20,59 +33,7 @@ public class Utils {
         throw new RuntimeException();
     }
 
-    static int getShootDamage(TrooperType type, TrooperStance stance) {
-        return standingDamage(type) + bonusDamage(type) * (3 - stance.ordinal() - 1);
-    }
-
-    static int bonusDamage(TrooperType type) {
-        switch (type) {
-            case COMMANDER:
-                return 5;
-            case FIELD_MEDIC:
-                return 3;
-            case SOLDIER:
-                return 5;
-            case SNIPER:
-                break;
-            case SCOUT:
-                break;
-        }
-        throw new RuntimeException();
-    }
-
-    static int standingDamage(TrooperType type) {
-        switch (type) {
-            case COMMANDER:
-                return 15;
-            case FIELD_MEDIC:
-                return 9;
-            case SOLDIER:
-                return 25;
-            case SNIPER:
-                break;
-            case SCOUT:
-                break;
-        }
-        throw new RuntimeException();
-    }
-
-    static int getShootCost(TrooperType type) {
-        switch (type) {
-            case COMMANDER:
-                return 3;
-            case FIELD_MEDIC:
-                return 2;
-            case SOLDIER:
-                return 4;
-            case SNIPER:
-                break;
-            case SCOUT:
-                break;
-        }
-        throw new RuntimeException();
-    }
-
-    static int actionPointsAfterEatingFieldRation(TrooperType type, int actionPoints, Game game) {
+    int actionPointsAfterEatingFieldRation(TrooperType type, int actionPoints, Game game) {
         int r = actionPoints - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
         int initialActionPoints = (type == SCOUT ? 12 : 10);
         r = Math.min(r, initialActionPoints);
@@ -89,5 +50,18 @@ public class Utils {
 
     static double sqr(double x) {
         return x * x;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+
+    public int getShootDamage(TrooperType type, TrooperStance stance) {
+        return trooperParameters.getShootDamage(type, stance);
+    }
+
+    public int getShootCost(TrooperType type) {
+        return trooperParameters.getShootCost(type);
     }
 }

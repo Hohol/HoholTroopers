@@ -8,7 +8,7 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random(3222);
-    final static Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
+    final static Direction[] dirs = {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.EAST};
     final static int NOT_VISITED = 666;
     Trooper self;
     World world;
@@ -22,8 +22,19 @@ public final class MyStrategy implements Strategy {
     List<Trooper> teammates, enemies;
     Trooper teammateToFollow;
     static int smallStepNumber;
+    final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
 
     Map<Cell, int[][]> bfsCache = new HashMap<>();
+
+    static EnumMap<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
+
+    static {
+        for (TrooperType type : TrooperType.values()) {
+            positionHistory.put(type, new ArrayList<Cell>());
+        }
+    }
+
+    Utils utils;
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
@@ -105,7 +116,7 @@ public final class MyStrategy implements Strategy {
                 if (world.isVisible(
                         self.getShootingRange(), i, j, STANDING,
                         target.getX(), target.getY(), target.getStance()
-                ) && dist[i][j] < minDist && isGoodCell(i,j)) {
+                ) && dist[i][j] < minDist && isGoodCell(i, j)) {
                     minDist = dist[i][j];
                     x = i;
                     y = j;
@@ -307,7 +318,7 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private boolean tryThrowGrenade() { //todo не надо бросать гранату в тех кто рядом с нами, и в тех, кого и так можно застрелить
+    private boolean tryThrowGrenade() {
         if (!haveTime(game.getGrenadeThrowCost())) {
             return false;
         }
@@ -344,8 +355,23 @@ public final class MyStrategy implements Strategy {
         if (lastSeen == null) {
             lastSeen = createIntMap(0);
         }
+        if (utils == null) {
+            utils = new Utils(game, new TrooperParameters.TrooperParametersImpl(teammates));
+        }
         updateLastSeen();
+        updatePositionHistory();
+        verifyDamage();
         //printMap();
+    }
+
+    private void updatePositionHistory() {
+        positionHistory.get(self.getType()).add(new Cell(self.getX(), self.getY()));
+    }
+
+    void verifyDamage() {
+        if (utils.getShootDamage(self.getType(), self.getStance()) != self.getDamage()) {
+            throw new RuntimeException();
+        }
     }
 
     private List<Trooper> getEnemies() {
@@ -428,20 +454,122 @@ public final class MyStrategy implements Strategy {
 
         if (self.getId() == teammateToFollow.getId()) {
             if (self.getActionPoints() <= 4 || overExtended() || anyTeammateNotFullHp() && medicIsAlive()) {
-                standStill();
-                return true;
+                return false;
             }
             return moveToNearestLongAgoSeenCell();
         } else {
             Trooper toFollow = teammateToFollow;
-            if (teammates.size() >= 3 && distTo(teammateToFollow) >= 7) {
+            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow)) {
                 toFollow = getOtherTeammate();
+            }
+            if (self.getType() == FIELD_MEDIC && moveBehind(toFollow)) {
+                return true;
+            }
+            if (self.getType() == COMMANDER && moveAtSide(toFollow)) {
+                return true;
             }
             if (manhattanDist(self, toFollow) == 1) {
                 return false;
             }
             return moveTo(toFollow);
         }
+    }
+
+    private boolean tooCurvedPathTo(Trooper trooper) {
+        return tooCurvedPathTo(trooper.getX(), trooper.getY());
+    }
+
+    private boolean tooCurvedPathTo(int x, int y) {
+        return distTo(x, y) - manhattanDist(x, y) >= 7;
+    }
+
+    private int manhattanDist(int x, int y) {
+        return manhattanDist(self.getX(), self.getY(), x, y);
+    }
+
+    private boolean moveAtSide(Trooper trooper) {
+        Cell sidePos = getNearestSidePosition(trooper);
+        return moveTo2(sidePos);
+    }
+
+    private Cell getNearestSidePosition(Trooper trooper) {
+        Cell behindPos = getBehindPosition(trooper);
+        if (behindPos == null) {
+            return null;
+        }
+        int behD = -1;
+        for (int d = 0; d < 4; d++) {
+            Direction dir = dirs[d];
+            if (trooper.getX() + dir.getOffsetX() == behindPos.x &&
+                    trooper.getY() + dir.getOffsetY() == behindPos.y) {
+                behD = d;
+                break;
+            }
+        }
+        Cell r = null;
+        int minDist = Integer.MAX_VALUE;
+        for (int shift = 1; shift <= 3; shift += 2) {
+            Direction dir = dirs[(behD + shift) % 4];
+            Cell to = new Cell(trooper.getX() + dir.getOffsetX(), trooper.getY() + dir.getOffsetY());
+            if (!inField(to.x, to.y)) {
+                continue;
+            }
+            if (cells[to.x][to.y] != CellType.FREE) {
+                continue;
+            }
+            int dist = distTo(to.x, to.y);
+            if (dist < minDist) {
+                minDist = dist;
+                r = to;
+            }
+        }
+        return r;
+    }
+
+
+    private boolean moveBehind(Trooper trooper) {
+        Cell behindPos = getBehindPosition(trooper);
+        return moveTo2(behindPos);
+    }
+
+    private boolean moveTo2(Cell pos) { // hmm -_-
+        if (pos == null) {
+            return false;
+        }
+        if (self.getX() == pos.x && self.getY() == pos.y) {
+            return false;
+        }
+
+        if (tooCurvedPathTo(pos.x, pos.y)) {
+            return false;
+        }
+
+        if (!isGoodCell(pos.x, pos.y) && manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
+            standStill();
+            return true;
+        }
+
+        return moveTo(pos.x, pos.y);
+    }
+
+    private void standStill() {
+        move.setDirection(Direction.CURRENT_POINT);
+    }
+
+
+    private Cell getBehindPosition(Trooper trooper) {
+        List<Cell> history = positionHistory.get(trooper.getType());
+        if (history.isEmpty()) {
+            return null;
+        }
+        Cell lastPosition = new Cell(trooper.getX(), trooper.getY());
+        for (int i = history.size() - 1; i >= 0; i--) {
+            Cell pos = history.get(i);
+            if (!pos.equals(lastPosition)) {
+                return pos;
+            }
+        }
+        return null;
     }
 
     private boolean anyTeammateNotFullHp() {
@@ -488,11 +616,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return false;
-    }
-
-    private void standStill() {
-        move.setAction(MOVE);
-        move.setDirection(Direction.CURRENT_POINT);
     }
 
     private boolean moveToNearestLongAgoSeenCell() {
@@ -688,7 +811,7 @@ public final class MyStrategy implements Strategy {
                 self.getStance(), minStance,
                 target.getHitpoints(),
                 self.isHoldingFieldRation(),
-                game
+                utils
         ).getActions();
 
         if (plan.isEmpty()) {

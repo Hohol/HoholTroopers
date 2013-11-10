@@ -11,9 +11,8 @@ import static org.testng.Assert.*;
 
 @Test
 public class MaxDamagePlanComputerTest {
-    final static Game game = new Game(
-            50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 10, 5, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
-    );
+
+    static final Utils utils = new Utils(Utils.hardcodedGame, new TrooperParameters.HardcodedTrooperParameters());
 
     @Test
     void testEmpty() {
@@ -98,8 +97,8 @@ public class MaxDamagePlanComputerTest {
         check(
                 SOLDIER,
                 10,
-                STANDING, STANDING,
-                50,
+                PRONE, PRONE,
+                70,
                 true,
 
                 SHOOT, SHOOT
@@ -107,8 +106,26 @@ public class MaxDamagePlanComputerTest {
         check(
                 SOLDIER,
                 10,
+                PRONE, PRONE,
+                71,
+                true,
+
+                SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
+        );
+        check(
+                SOLDIER,
+                10,
                 STANDING, STANDING,
-                51,
+                60,
+                true,
+
+                SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
+        );
+        check(
+                SOLDIER,
+                10,
+                STANDING, STANDING,
+                61,
                 true,
 
                 SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
@@ -202,7 +219,7 @@ public class MaxDamagePlanComputerTest {
                                     minStance,
                                     hp,
                                     true,
-                                    game
+                                    utils
                             ).getActions();
                             if (r == null || test.size() > r.size()) {
                                 r = test;
@@ -230,7 +247,7 @@ public class MaxDamagePlanComputerTest {
                 currentStance, minStanceAllowed,
                 targetHp,
                 holdingFieldRation,
-                game
+                utils
         ).getActions();
         List<ActionType> expected = Arrays.asList(expectedAr);
         System.out.println("Actual: " + actual);

@@ -2,3 +2,4 @@ MyStrategy.java
 Cell.java
 MaxDamagePlanComputer.java
 Utils.java
+TrooperParameters.java

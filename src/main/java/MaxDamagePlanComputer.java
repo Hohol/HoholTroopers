@@ -14,6 +14,7 @@ class MaxDamagePlanComputer {
     private final TrooperType selfType;
     private final TrooperStance minStanceAllowed;
     private final Game game;
+    private final Utils utils;
 
     private int bestActionPoints, bestTargetHp;
     private boolean bestHoldingFieldRation;
@@ -27,11 +28,12 @@ class MaxDamagePlanComputer {
             TrooperStance currentStance, TrooperStance minStanceAllowed,
             int targetHp,
             boolean holdingFieldRation,
-            Game game
+            Utils utils
     ) {
         this.selfType = selfType;
         this.minStanceAllowed = minStanceAllowed;
-        this.game = game;
+        this.utils = utils;
+        this.game = utils.getGame();
 
         bestActionPoints = actionPoints;
         bestTargetHp = targetHp;
@@ -64,7 +66,7 @@ class MaxDamagePlanComputer {
         if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost()) {
             addAction(EAT_FIELD_RATION);
             rec(
-                    Utils.actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
+                    utils.actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
                     currentStance,
                     targetHp,
                     false
@@ -77,7 +79,7 @@ class MaxDamagePlanComputer {
 
             rec(
                     actionPoints - game.getStanceChangeCost(),
-                    Utils.stanceAfterLowering(currentStance),
+                    utils.stanceAfterLowering(currentStance),
                     targetHp,
                     holdingFieldRation
             );
@@ -85,13 +87,13 @@ class MaxDamagePlanComputer {
             popAction();
         }
 
-        if (actionPoints >= Utils.getShootCost(selfType)) {
+        if (actionPoints >= utils.getShootCost(selfType)) {
             addAction(SHOOT);
 
             rec(
-                    actionPoints - Utils.getShootCost(selfType),
+                    actionPoints - utils.getShootCost(selfType),
                     currentStance,
-                    targetHp - Utils.getShootDamage(selfType, currentStance),
+                    targetHp - utils.getShootDamage(selfType, currentStance),
                     holdingFieldRation
             );
 
