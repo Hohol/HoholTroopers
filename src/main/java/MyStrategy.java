@@ -9,7 +9,7 @@ import java.util.*;
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random(3222);
     final static Direction[] dirs = {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.EAST};
-    final static int NOT_VISITED = 666;
+    final static int UNREACHABLE = 666;
     Trooper self;
     World world;
     Game game;
@@ -65,15 +65,15 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryDeblock()) {
-            return;
-        }
-
         if (tryMoveToBonus()) {
             return;
         }
 
         if (tryMove()) {
+            return;
+        }
+
+        if (tryDeblock()) {
             return;
         }
 
@@ -361,25 +361,34 @@ public final class MyStrategy implements Strategy {
             return false;
         }
         if (isBlockedByMe(teammateToFollow)) {
-            moveRandom();
+            int canMakeMoveCnt = self.getActionPoints() / getMoveCost(self);
+            if(canMakeMoveCnt%2 == 0) {
+                move.setAction(MOVE);
+                move.setDirection(Direction.CURRENT_POINT);
+            } else {
+                moveRandom();
+            }
             return true;
         }
         return false;
     }
 
     private boolean isBlockedByMe(Trooper teammateToFollow) {
-        return manhattanDist(self, teammateToFollow) == 1 &&
-                moveCnt(teammateToFollow) == 0;
+        return distTo(teammateToFollow.getX(), teammateToFollow.getY(), true) != UNREACHABLE &&
+                isBlocked(teammateToFollow);
     }
 
-    private int moveCnt(Trooper teammateToFollow) {
-        int r = 0;
-        for (Direction dir : dirs) {
-            if (isValidMove(dir, teammateToFollow)) {
-                r++;
+    private boolean isBlocked(Trooper trooper) {
+        int[][] dist = bfs(trooper.getX(), trooper.getY(), true);
+        int cnt = 0;
+        for (int[] aDist : dist) {
+            for (int j = 0; j < aDist.length; j++) {
+                if (dist[j][j] != UNREACHABLE) {
+                    cnt++;
+                }
             }
         }
-        return r;
+        return cnt < 10;
     }
 
     private boolean tryThrowGrenade() {
@@ -635,17 +644,12 @@ public final class MyStrategy implements Strategy {
         }
 
         if (!isGoodCell(pos.x, pos.y) && manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
-            standStill();
+            move.setAction(END_TURN);
             return true;
         }
 
         return moveTo(pos.x, pos.y, false);
     }
-
-    private void standStill() {
-        move.setDirection(Direction.CURRENT_POINT);
-    }
-
 
     private Cell getBehindPosition(Trooper trooper) {
         List<Cell> history = positionHistory.get(trooper.getType());
@@ -737,7 +741,7 @@ public final class MyStrategy implements Strategy {
             throw new RuntimeException();
         }
         int[][] dist = bfs(x, y, avoidNarrowPathNearBorder);
-        if (dist[self.getX()][self.getY()] == NOT_VISITED) {
+        if (dist[self.getX()][self.getY()] == UNREACHABLE) {
             return false;
         }
 
@@ -780,7 +784,7 @@ public final class MyStrategy implements Strategy {
         }
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
-        dist = createIntMap(NOT_VISITED);
+        dist = createIntMap(UNREACHABLE);
         qx.add(startX);
         qy.add(startY);
         dist[startX][startY] = 0;
@@ -793,7 +797,7 @@ public final class MyStrategy implements Strategy {
                 if (!inField(toX, toY)) {
                     continue;
                 }
-                if (dist[toX][toY] != NOT_VISITED) {
+                if (dist[toX][toY] != UNREACHABLE) {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
@@ -906,7 +910,7 @@ public final class MyStrategy implements Strategy {
         ).getActions();
 
         if (plan.isEmpty()) {
-            standStill();
+            move.setAction(END_TURN);
             return true;
         }
 
@@ -997,6 +1001,7 @@ public final class MyStrategy implements Strategy {
         move.setY(y);
     }
 
+    @SuppressWarnings("unused")
     private Trooper getTrooper(String playerName, TrooperType type) { //for debug only
         long playerId = -1;
         for (Player player : world.getPlayers()) {
