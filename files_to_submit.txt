@@ -1,5 +1,7 @@
 MyStrategy.java
 Cell.java
-model.MaxDamagePlanComputer.java
+MaxDamagePlanComputer.java
 Utils.java
 TrooperParameters.java
+MaxHealingPlanComputer.java
+MyAction.java

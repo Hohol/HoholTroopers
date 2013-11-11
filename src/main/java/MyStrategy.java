@@ -21,7 +21,7 @@ public final class MyStrategy implements Strategy {
 
     List<Trooper> teammates, enemies;
     Trooper teammateToFollow;
-    static int smallStepNumber;
+    static int smallMoveIndex;
     final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
 
     static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
@@ -80,7 +80,7 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
-    static String script = ".ee.g..w..";
+    static String script = "";
     static int scriptPos;
 
     private boolean tryMoveByScript() { //for debug only
@@ -275,10 +275,47 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryHeal() {
-        if (self.getType() != FIELD_MEDIC && !self.isHoldingMedikit()) {
+        if (self.getType() != FIELD_MEDIC) {
+            return oldTryHeal();
+        }
+
+        if (teammates.size() == 1) {
             return false;
         }
-        if (self.getType() == FIELD_MEDIC && teammates.size() == 1) {
+
+        char[][] map = createSimpleMap();
+        print("Simple map for healing", map);
+
+        boolean seeSomeEnemy = enemies.size() > 0;
+
+        boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
+        boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
+
+        List<MyAction> actions = new MaxHealingPlanComputer(
+                self.getActionPoints(),
+                map,
+                getHpByOrdinal(),
+                holdingAndShouldUseFieldRation,
+                holdingAndShouldUseMedikit,
+                utils
+        ).getActions();
+
+        if (actions.isEmpty()) {
+            return false;
+        }
+        Move bestMove = actions.get(0).getMove();
+        move.setAction(bestMove.getAction());
+        move.setDirection(bestMove.getDirection());
+        move.setX(bestMove.getX());
+        move.setY(bestMove.getY());
+        return true;
+    }
+
+    private boolean oldTryHeal() {    //todo rework
+        if (!self.isHoldingMedikit()) {
+            return false;
+        }
+        if (teammates.size() == 1) {
             return false;
         }
         Trooper target = getTeammateToHeal();
@@ -292,6 +329,28 @@ public final class MyStrategy implements Strategy {
                     haveTime(getMoveCost(self)) &&
                     moveTo(target, false);
         }
+    }
+
+    private void print(String msg, char[][] map) {
+        if (!local) {
+            return;
+        }
+        System.out.println(msg);
+        for (int j = 0; j < map[0].length; j++) {
+            for (char[] aMap : map) {
+                System.out.print(aMap[j]);
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    private int[] getHpByOrdinal() {
+        int[] hp = new int[TrooperType.values().length];
+        for (Trooper trooper : teammates) {
+            hp[trooper.getType().ordinal()] = trooper.getHitpoints();
+        }
+        return hp;
     }
 
     private boolean tooCurvedPathTo(Unit target, boolean avoidNarrowPathNearBorder) {
@@ -422,8 +481,8 @@ public final class MyStrategy implements Strategy {
     private void init() {
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
-        smallStepNumber++;
-        log("SmallStepNumber = " + smallStepNumber);
+        smallMoveIndex++;
+        log("SmallStepNumber = " + smallMoveIndex);
         cells = world.getCells();
         teammates = getTeammates();
         enemies = getEnemies();
@@ -474,6 +533,23 @@ public final class MyStrategy implements Strategy {
         System.out.println(o);
     }
 
+    char[][] createSimpleMap() {
+        char[][] map = new char[world.getWidth()][world.getHeight()];
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (cells[i][j] != CellType.FREE) {
+                    map[i][j] = '#';
+                } else {
+                    map[i][j] = '.';
+                }
+            }
+        }
+        for (Trooper trooper : teammates) {
+            map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
+        }
+        return map;
+    }
+
     @SuppressWarnings("unused")
     private void printMap() {
         if (!local) {
@@ -486,7 +562,7 @@ public final class MyStrategy implements Strategy {
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
                 if (cells[i][j] != CellType.FREE) {
-                    map[i][j] = '_';
+                    map[i][j] = '#';
                 }
             }
         }
@@ -501,10 +577,10 @@ public final class MyStrategy implements Strategy {
             }
         }
         for (Trooper trooper : teammates) {
-            map[trooper.getX()][trooper.getY()] = trooper.getType().toString().charAt(0);
+            map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
         }
         for (Trooper trooper : enemies) {
-            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(trooper.getType().toString().charAt(0));
+            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
         }
         for (int j = 0; j < map[0].length; j++) {
             for (char[] aMap : map) {
@@ -528,7 +604,7 @@ public final class MyStrategy implements Strategy {
                             j,
                             PRONE
                     )) {
-                        lastSeen[i][j] = smallStepNumber;
+                        lastSeen[i][j] = smallMoveIndex;
                     }
                 }
             }

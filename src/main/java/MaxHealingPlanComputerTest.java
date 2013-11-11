@@ -24,7 +24,7 @@ public class MaxHealingPlanComputerTest {
 
                 //empty
                 ,
-                false);
+                false, false);
     }
 
     @Test
@@ -36,7 +36,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, MyAction.HEAL_SELF
+                false, false, MyAction.HEAL_SELF
         );
 
 
@@ -47,7 +47,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 88);
@@ -57,7 +57,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 89);
@@ -67,7 +67,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
     }
 
@@ -81,7 +81,7 @@ public class MaxHealingPlanComputerTest {
                         "FS"
                 },
 
-                false, MyAction.HEAL_EAST
+                false, false, MyAction.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 90);
@@ -92,7 +92,7 @@ public class MaxHealingPlanComputerTest {
                         "FC"
                 },
 
-                false, MyAction.HEAL_EAST
+                false, false, MyAction.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 90);
@@ -104,7 +104,7 @@ public class MaxHealingPlanComputerTest {
                         "C"
                 },
 
-                false, MyAction.HEAL_SOUTH
+                false, false, MyAction.HEAL_SOUTH
         );
 
         setHp(FIELD_MEDIC, 98);
@@ -117,7 +117,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                MyAction.HEAL_SELF
+                false, MyAction.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -130,7 +130,7 @@ public class MaxHealingPlanComputerTest {
                         "SF"
                 },
 
-                false, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST
+                false, false, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST
         );
     }
 
@@ -144,7 +144,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 true,
 
-                MyAction.EAT_FIELD_RATION, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, MyAction.EAT_FIELD_RATION, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -156,7 +156,8 @@ public class MaxHealingPlanComputerTest {
                 true
 
                 //empty
-        );
+                ,
+                false);
 
         setHp(FIELD_MEDIC, 90);
         setHp(COMMANDER, 90);
@@ -170,7 +171,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 true,
 
-                MyAction.EAT_FIELD_RATION, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST, MyAction.HEAL_SELF
+                false, MyAction.EAT_FIELD_RATION, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST, MyAction.HEAL_SELF
         );
     }
 
@@ -186,7 +187,8 @@ public class MaxHealingPlanComputerTest {
                 false
 
                 //empty
-        );
+                ,
+                false);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
@@ -197,7 +199,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                MyAction.MOVE_EAST, MyAction.HEAL_EAST
+                false, MyAction.MOVE_EAST, MyAction.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -211,7 +213,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                MyAction.MOVE_WEST, MyAction.HEAL_NORTH, MyAction.HEAL_WEST
+                false, MyAction.MOVE_WEST, MyAction.HEAL_NORTH, MyAction.HEAL_WEST
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -224,7 +226,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                MyAction.MOVE_NORTH, MyAction.MOVE_WEST, MyAction.MOVE_WEST, MyAction.HEAL_SOUTH
+                false, MyAction.MOVE_NORTH, MyAction.MOVE_WEST, MyAction.MOVE_WEST, MyAction.HEAL_SOUTH
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -238,7 +240,8 @@ public class MaxHealingPlanComputerTest {
                 false
 
                 //empty
-        );
+                ,
+                false);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
@@ -252,7 +255,141 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                MyAction.MOVE_NORTH, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+                false, MyAction.MOVE_NORTH, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+        );
+    }
+
+    @Test
+    void testBugWithSelfHealing() {
+        setHp(FIELD_MEDIC, 1);
+        check(
+                6,
+                new String[] {
+                        "F."
+                },
+                false,
+
+                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                //not fucking [MOVE_EAST, HEAL_WEST, HEAL_WEST, HEAL_WEST, HEAL_WEST] !
+        );
+    }
+
+    @Test
+    void testMaximizeMinimalHp() {
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 1);
+        setHp(SOLDIER, 1);
+        check(
+                2,
+                new String[] {
+                        "FC",
+                        "S."
+                },
+                false,
+
+                false, MyAction.HEAL_EAST, MyAction.HEAL_SOUTH
+        );
+
+        setHp(FIELD_MEDIC, 19);
+        setHp(SOLDIER, 20);
+        check(
+                5,
+                new String[] {
+                        "F.S",
+                },
+                false,
+
+                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+        );
+
+        setHp(FIELD_MEDIC, 20);
+        setHp(SOLDIER, 20);
+        check(
+                5,
+                new String[] {
+                        "F.S",
+                },
+                false,
+
+                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+        );
+
+        setHp(FIELD_MEDIC, 20);
+        setHp(SOLDIER, 19);
+        check(
+                5,
+                new String[] {
+                        "F.S",
+                },
+                false,
+
+                false, MyAction.MOVE_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+        );
+    }
+
+    @Test
+    void testMedikit() {
+        setHp(FIELD_MEDIC, 1);
+        check(
+                2,
+                new String[] {
+                        "F"
+                },
+                false,
+                true,
+                MyAction.USE_MEDIKIT_SELF
+        );
+
+        setHp(FIELD_MEDIC, 1);
+        setHp(SOLDIER, 50);
+        check(
+                2,
+                new String[] {
+                        "FS"
+                },
+                false,
+                true,
+
+                MyAction.USE_MEDIKIT_EAST
+        );
+
+        setHp(FIELD_MEDIC, 1);
+        check(
+                4,
+                new String[] {
+                        "F"
+                },
+                false,
+                true,
+
+                MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.USE_MEDIKIT_SELF
+        );
+
+        setHp(FIELD_MEDIC, 50);
+        setHp(COMMANDER, 50);
+        check(
+                7,
+                new String[] {
+                        "F..C"
+                },
+                false,
+                true,
+
+                MyAction.HEAL_SELF, MyAction.MOVE_EAST, MyAction.MOVE_EAST, MyAction.USE_MEDIKIT_EAST
+        );
+    }
+
+    @Test
+    void avoidOverHealWithMedikit() {
+        setHp(FIELD_MEDIC, 80);
+        check(
+                2,
+                new String[] {
+                        "F"
+                },
+                false,
+                true,
+                MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
     }
 
@@ -260,13 +397,14 @@ public class MaxHealingPlanComputerTest {
         hp[trooper.ordinal()] = val;
     }
 
-    private void check(int actionPoints, String[] map, boolean holdingFieldRation, MyAction... expectedAr) {
+    private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyAction... expectedAr) {
         char[][] cmap = createMap(map);
         List<MyAction> actual = new MaxHealingPlanComputer(
                 actionPoints,
                 cmap,
                 hp,
                 holdingFieldRation,
+                holdingMedikit,
                 utils
         ).getActions();
         List<MyAction> expected = Arrays.asList(expectedAr);
@@ -278,9 +416,11 @@ public class MaxHealingPlanComputerTest {
     }
 
     private char[][] createMap(String[] map) {
-        char[][] r = new char[map.length][];
+        char[][] r = new char[map[0].length()][map.length];
         for (int i = 0; i < map.length; i++) {
-            r[i] = map[i].toCharArray();
+            for (int j = 0; j < map[0].length(); j++) {
+                r[j][i] = map[i].charAt(j);
+            }
         }
         return r;
     }

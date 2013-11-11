@@ -87,4 +87,33 @@ public class Utils {
         r.setAction(action);
         return r;
     }
+
+    public static char getCharForTrooperType(TrooperType type) {
+        switch (type) {
+            case COMMANDER:
+                return 'C';
+            case FIELD_MEDIC:
+                return 'F';
+            case SOLDIER:
+                return 'S';
+            case SNIPER:
+                return 'R';
+            case SCOUT:
+                return 'T';
+        }
+        throw new RuntimeException();
+    }
+
+    public static boolean isLetter(char ch) {
+        return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
+    }
+
+    public static TrooperType getTrooperTypeByChar(char c) {
+        for(TrooperType type : TrooperType.values()) {
+            if(getCharForTrooperType(type) == c) {
+                return type;
+            }
+        }
+        throw new RuntimeException();
+    }
 }

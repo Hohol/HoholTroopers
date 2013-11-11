@@ -13,14 +13,21 @@ public enum MyAction {
     HEAL_SOUTH(HEAL, SOUTH),
     HEAL_WEST(HEAL, WEST),
 
+    USE_MEDIKIT_NORTH(USE_MEDIKIT, NORTH),
+    USE_MEDIKIT_EAST(USE_MEDIKIT, EAST),
+    USE_MEDIKIT_SOUTH(USE_MEDIKIT, SOUTH),
+    USE_MEDIKIT_WEST(USE_MEDIKIT, WEST),
+
     MOVE_NORTH(MOVE, NORTH),
     MOVE_EAST(MOVE, EAST),
     MOVE_SOUTH(MOVE, SOUTH),
     MOVE_WEST(MOVE, WEST),
 
-    EAT_FIELD_RATION(ActionType.EAT_FIELD_RATION);
+    EAT_FIELD_RATION(ActionType.EAT_FIELD_RATION),
+    USE_MEDIKIT_SELF(USE_MEDIKIT, CURRENT_POINT);
 
     static final MyAction[] directedHeals = {HEAL_NORTH, HEAL_EAST, HEAL_SOUTH, HEAL_WEST};
+    static final MyAction[] directedMedikitUses = {USE_MEDIKIT_NORTH, USE_MEDIKIT_EAST, USE_MEDIKIT_SOUTH, USE_MEDIKIT_WEST};
     static final MyAction[] movements = {MOVE_NORTH, MOVE_EAST, MOVE_SOUTH, MOVE_WEST};
 
     Move move;
@@ -43,5 +50,9 @@ public enum MyAction {
 
     int getDy() {
         return move.getDirection().getOffsetY();
+    }
+
+    public Move getMove() {
+        return move;
     }
 }
