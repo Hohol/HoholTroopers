@@ -1,6 +1,4 @@
-import model.Game;
-import model.TrooperStance;
-import model.TrooperType;
+import model.*;
 
 import static model.TrooperStance.KNEELING;
 import static model.TrooperStance.PRONE;
@@ -10,6 +8,7 @@ public class Utils {
     final static Game hardcodedGame = new Game(
             50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 10, 5, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
     );
+    public static final int INITIAL_TROOPER_HP = 100;
 
     private final Game game;
     private final TrooperParameters trooperParameters;
@@ -65,5 +64,27 @@ public class Utils {
 
     public int getInitialActionPoints(TrooperType type) {
         return trooperParameters.getInitialActionPoints(type);
+    }
+    public static Move createMove(ActionType action, Direction direction) {
+        Move r = new Move();
+        r.setAction(action);
+        r.setDirection(direction);
+        return r;
+    }
+
+    public static Move createMove(ActionType action, int x, int y) {
+        Move r = new Move();
+        r.setAction(action);
+        r.setX(x);
+        r.setY(y);
+        return r;
+    }
+
+    public static char MEDIC_CHAR = 'F';
+
+    public static Move createMove(ActionType action) {
+        Move r = new Move();
+        r.setAction(action);
+        return r;
     }
 }

@@ -10,7 +10,7 @@ public interface TrooperParameters {
 
     int getInitialActionPoints(TrooperType type);
 
-    class HardcodedTrooperParameters implements TrooperParameters {
+    TrooperParameters HARDCODED_TROOPER_PARAMETERS = new TrooperParameters() {
         @Override
         public int getShootCost(TrooperType type) {
             switch (type) {
@@ -73,7 +73,7 @@ public interface TrooperParameters {
             }
             throw new RuntimeException();
         }
-    }
+    };
 
     class TrooperParametersImpl implements TrooperParameters {
 

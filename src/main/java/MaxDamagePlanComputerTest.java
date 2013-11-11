@@ -12,7 +12,7 @@ import static org.testng.Assert.*;
 @Test
 public class MaxDamagePlanComputerTest {
 
-    static final Utils utils = new Utils(Utils.hardcodedGame, new TrooperParameters.HardcodedTrooperParameters());
+    static final Utils utils = new Utils(Utils.hardcodedGame, TrooperParameters.HARDCODED_TROOPER_PARAMETERS);
 
     @Test
     void testEmpty() {
@@ -255,5 +255,5 @@ public class MaxDamagePlanComputerTest {
                 expected,
                 String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
         );
-    }/**/
+    }
 }

@@ -8,7 +8,7 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random(3222);
-    final static Direction[] dirs = {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.EAST};
+    final static Direction[] dirs = {Direction.WEST, Direction.SOUTH, Direction.EAST, Direction.NORTH};
     final static int UNREACHABLE = 666;
     Trooper self;
     World world;
@@ -80,20 +80,23 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
-    static String script = "";
+    static String script = ".ee.g..w..";
     static int scriptPos;
 
     private boolean tryMoveByScript() { //for debug only
-        if(!local) {
+        if (!local) {
             return false;
         }
-        if(scriptPos >= script.length()) {
+        if (scriptPos >= script.length()) {
             return false;
         } else {
             char command = script.charAt(scriptPos);
             scriptPos++;
-            if(command == '.') {
+            if (command == '.') {
                 move.setAction(END_TURN);
+            } else if (command == 'g') {
+                move.setAction(THROW_GRENADE);
+                move.setDirection(Direction.CURRENT_POINT);
             } else {
                 move.setAction(MOVE);
                 move.setDirection(getDirection(command));
@@ -103,8 +106,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private Direction getDirection(char command) {
-        for(Direction dir : dirs) {
-            if(Character.toLowerCase(dir.toString().charAt(0)) == command) {
+        for (Direction dir : dirs) {
+            if (Character.toLowerCase(dir.toString().charAt(0)) == command) {
                 return dir;
             }
         }
@@ -362,7 +365,7 @@ public final class MyStrategy implements Strategy {
         }
         if (isBlockedByMe(teammateToFollow)) {
             int canMakeMoveCnt = self.getActionPoints() / getMoveCost(self);
-            if(canMakeMoveCnt%2 == 0) {
+            if (canMakeMoveCnt % 2 == 0) {
                 move.setAction(MOVE);
                 move.setDirection(Direction.CURRENT_POINT);
             } else {

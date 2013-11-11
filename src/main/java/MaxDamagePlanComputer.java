@@ -20,7 +20,7 @@ public class MaxDamagePlanComputer {
     private boolean bestHoldingFieldRation;
     private TrooperStance bestCurrentStance;
 
-    List<ActionType> actions = new ArrayList<>(), bestActions;
+    List<ActionType> actions = new ArrayList<>(), bestActions = new ArrayList<>();
 
     public MaxDamagePlanComputer(
             TrooperType selfType,
@@ -39,7 +39,6 @@ public class MaxDamagePlanComputer {
         bestTargetHp = targetHp;
         bestHoldingFieldRation = holdingFieldRation;
         bestCurrentStance = currentStance;
-        bestActions = new ArrayList<>();
 
         rec(actionPoints, currentStance, targetHp, holdingFieldRation);
     }
