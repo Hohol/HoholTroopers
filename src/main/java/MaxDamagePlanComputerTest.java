@@ -170,7 +170,7 @@ public class MaxDamagePlanComputerTest {
                 12,
                 STANDING,
                 PRONE,
-                100,
+                90,
                 true,
 
                 LOWER_STANCE, SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
@@ -183,7 +183,7 @@ public class MaxDamagePlanComputerTest {
                 120,
                 true,
 
-                LOWER_STANCE, SHOOT, EAT_FIELD_RATION, SHOOT, SHOOT
+                LOWER_STANCE, LOWER_STANCE, SHOOT, SHOOT
         );
     }
 

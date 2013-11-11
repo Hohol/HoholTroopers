@@ -110,8 +110,11 @@ class MaxDamagePlanComputer {
     }
 
     private boolean better(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
-        if(targetHp == 0) {
-            if(bestTargetHp != 0) {
+        if (bestTargetHp == 0 && targetHp != 0) {
+            return false;
+        }
+        if (targetHp == 0) {
+            if (bestTargetHp != 0) {
                 return true;
             }
             if (holdingFieldRation != bestHoldingFieldRation) {
