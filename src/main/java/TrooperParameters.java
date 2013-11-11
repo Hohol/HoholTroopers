@@ -8,6 +8,8 @@ public interface TrooperParameters {
     int getShootDamage(TrooperType type, TrooperStance stance);
     int getShootCost(TrooperType type);
 
+    int getInitialActionPoints(TrooperType type);
+
     class HardcodedTrooperParameters implements TrooperParameters {
         @Override
         public int getShootCost(TrooperType type) {
@@ -24,6 +26,15 @@ public interface TrooperParameters {
                     return 4;
             }
             throw new RuntimeException();
+        }
+
+        @Override
+        public int getInitialActionPoints(TrooperType type) {
+            if(type == TrooperType.SCOUT) {
+                return 12;
+            } else {
+                return 10;
+            }
         }
 
         @Override
@@ -68,13 +79,16 @@ public interface TrooperParameters {
 
         int[][] damage = new int[TrooperType.values().length][TrooperStance.values().length];
         int[] shootCost = new int[TrooperType.values().length];
+        int[] initialActionPoints = new int[TrooperType.values().length];
 
         public TrooperParametersImpl(List<Trooper> troopers) {
             for(Trooper trooper : troopers) {
+                int typeOrdinal = trooper.getType().ordinal();
                 for(TrooperStance stance : TrooperStance.values()) {
-                    damage[trooper.getType().ordinal()][stance.ordinal()] = trooper.getDamage(stance);
+                    damage[typeOrdinal][stance.ordinal()] = trooper.getDamage(stance);
                 }
-                shootCost[trooper.getType().ordinal()] = trooper.getShootCost();
+                shootCost[typeOrdinal] = trooper.getShootCost();
+                initialActionPoints[typeOrdinal] = trooper.getInitialActionPoints();
             }
         }
 
@@ -86,6 +100,11 @@ public interface TrooperParameters {
         @Override
         public int getShootCost(TrooperType type) {
             return shootCost[type.ordinal()];
+        }
+
+        @Override
+        public int getInitialActionPoints(TrooperType type) {
+            return initialActionPoints[type.ordinal()];
         }
     }
 }

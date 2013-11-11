@@ -250,12 +250,10 @@ public class MaxDamagePlanComputerTest {
                 utils
         ).getActions();
         List<ActionType> expected = Arrays.asList(expectedAr);
-        System.out.println("Actual: " + actual);
-        System.out.println("Expected: " + expected);
-        System.out.println();
         assertEquals(
                 actual,
-                expected
+                expected,
+                String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
         );
     }/**/
 }

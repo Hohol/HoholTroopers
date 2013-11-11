@@ -10,7 +10,7 @@ import static model.ActionType.EAT_FIELD_RATION;
 import static model.ActionType.LOWER_STANCE;
 import static model.ActionType.SHOOT;
 
-class MaxDamagePlanComputer {
+public class MaxDamagePlanComputer {
     private final TrooperType selfType;
     private final TrooperStance minStanceAllowed;
     private final Game game;
@@ -44,14 +44,27 @@ class MaxDamagePlanComputer {
         rec(actionPoints, currentStance, targetHp, holdingFieldRation);
     }
 
-    List<ActionType> getActions() {
+    public List<ActionType> getActions() {
         return bestActions;
     }
 
     private void rec(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
-        if (targetHp <= 0) {
+        if (targetHp < 0) {
             targetHp = 0;
         }
+        updateBest(actionPoints, currentStance, targetHp, holdingFieldRation);
+        if (targetHp == 0) {
+            return;
+        }
+
+        tryEatFieldRation(actionPoints, currentStance, targetHp, holdingFieldRation);
+
+        tryLowerStance(actionPoints, currentStance, targetHp, holdingFieldRation);
+
+        tryShoot(actionPoints, currentStance, targetHp, holdingFieldRation);
+    }
+
+    private void updateBest(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
         if (better(actionPoints, currentStance, targetHp, holdingFieldRation)) {
             bestActionPoints = actionPoints;
             bestCurrentStance = currentStance;
@@ -59,21 +72,24 @@ class MaxDamagePlanComputer {
             bestHoldingFieldRation = holdingFieldRation;
             bestActions = new ArrayList<>(actions);
         }
-        if (targetHp == 0) {
-            return;
-        }
+    }
 
-        if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost()) {
-            addAction(EAT_FIELD_RATION);
+    private void tryShoot(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
+        if (actionPoints >= utils.getShootCost(selfType)) {
+            addAction(SHOOT);
+
             rec(
-                    utils.actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
+                    actionPoints - utils.getShootCost(selfType),
                     currentStance,
-                    targetHp,
-                    false
+                    targetHp - utils.getShootDamage(selfType, currentStance),
+                    holdingFieldRation
             );
+
             popAction();
         }
+    }
 
+    private void tryLowerStance(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
         if (actionPoints >= game.getStanceChangeCost() && currentStance.ordinal() > minStanceAllowed.ordinal()) {
             addAction(LOWER_STANCE);
 
@@ -86,17 +102,17 @@ class MaxDamagePlanComputer {
 
             popAction();
         }
+    }
 
-        if (actionPoints >= utils.getShootCost(selfType)) {
-            addAction(SHOOT);
-
+    private void tryEatFieldRation(int actionPoints, TrooperStance currentStance, int targetHp, boolean holdingFieldRation) {
+        if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost() && actionPoints < utils.getInitialActionPoints(selfType)) {
+            addAction(EAT_FIELD_RATION);
             rec(
-                    actionPoints - utils.getShootCost(selfType),
+                    utils.actionPointsAfterEatingFieldRation(selfType, actionPoints, game),
                     currentStance,
-                    targetHp - utils.getShootDamage(selfType, currentStance),
-                    holdingFieldRation
+                    targetHp,
+                    false
             );
-
             popAction();
         }
     }
