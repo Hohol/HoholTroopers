@@ -45,6 +45,10 @@ public final class MyStrategy implements Strategy {
 
         init();
 
+        if (tryMoveByScript()) {
+            return;
+        }
+
         if (tryHeal()) {
             return;
         }
@@ -74,6 +78,37 @@ public final class MyStrategy implements Strategy {
         }
 
         move.setAction(END_TURN);
+    }
+
+    static String script = "";
+    static int scriptPos;
+
+    private boolean tryMoveByScript() { //for debug only
+        if(!local) {
+            return false;
+        }
+        if(scriptPos >= script.length()) {
+            return false;
+        } else {
+            char command = script.charAt(scriptPos);
+            scriptPos++;
+            if(command == '.') {
+                move.setAction(END_TURN);
+            } else {
+                move.setAction(MOVE);
+                move.setDirection(getDirection(command));
+            }
+        }
+        return true;
+    }
+
+    private Direction getDirection(char command) {
+        for(Direction dir : dirs) {
+            if(Character.toLowerCase(dir.toString().charAt(0)) == command) {
+                return dir;
+            }
+        }
+        return null;
     }
 
     private boolean tryHelpTeammateInFight() {

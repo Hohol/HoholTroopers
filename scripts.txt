@@ -1,0 +1,4 @@
+154406356834455 {
+	.es.s..e. //block in right bottom corner
+	...wwwwnnwwsw.nnwwww..w...nnnnnnnnnnnnnnnnne.nne.nnn. //block in middle of right side
+}
