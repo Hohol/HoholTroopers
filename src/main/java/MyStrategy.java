@@ -125,14 +125,21 @@ public final class MyStrategy implements Strategy {
         if (target == null) {
             return false;
         }
-        if (self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
+
+        Cell cell = getNearestCellFromWhichCanShoot(target);
+        if(distTo(cell.x, cell.y, false) >= 7) {
+            return false;
+        }
+
+        if (manhattanDist(cell.x, cell.y) >= 2 && self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
             move.setAction(RAISE_STANCE);
             return true;
         }
+
         if (!haveTime(getMoveCost(self))) {
             return false;
         }
-        return moveToNearestCellFromWhichCanShoot(target);
+        return moveTo(cell.x, cell.y, false);
     }
 
     private boolean someEnemyInShootingRange() {
@@ -144,7 +151,7 @@ public final class MyStrategy implements Strategy {
         return false;
     }
 
-    private boolean moveToNearestCellFromWhichCanShoot(Trooper target) {
+    private Cell getNearestCellFromWhichCanShoot(Trooper target) {
         int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
@@ -161,10 +168,7 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        if (minDist >= 7) {
-            return false;
-        }
-        return moveTo(x, y, false);
+        return new Cell(x, y);
     }
 
     private Trooper getLeastHpEnemySomeOfTeammatesCanShoot() {
