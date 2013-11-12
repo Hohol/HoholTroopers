@@ -641,14 +641,21 @@ public final class MyStrategy implements Strategy {
             return moveToNearestLongAgoSeenCell();
         } else {
             Trooper toFollow = teammateToFollow;
-            if (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT && tooCurvedPathTo(teammateToFollow, false)) {
+
+            boolean fullTeam = (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT);
+
+            if (fullTeam && tooCurvedPathTo(teammateToFollow, false)) {
                 toFollow = getOtherTeammate();
             }
-            if (self.getType() == FIELD_MEDIC && moveBehind(toFollow)) {
-                return true;
-            }
-            if (self.getType() == COMMANDER && moveAtSide(toFollow)) {
-                return true;
+
+            if (self.getType() == FIELD_MEDIC && fullTeam) {
+                if (moveBehind(toFollow)) {
+                    return true;
+                }
+            } else {
+                if (moveAtSide(toFollow)) {
+                    return true;
+                }
             }
             if (manhattanDist(self, toFollow) == 1) {
                 return false;
