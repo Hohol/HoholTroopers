@@ -184,11 +184,10 @@ public class MaxHealingPlanComputerTest {
                 new String[] {
                         "F.S"
                 },
-                false
-
-                //empty
-                ,
-                false);
+                false,
+                false,
+                MyAction.MOVE_EAST
+        );
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
@@ -310,8 +309,9 @@ public class MaxHealingPlanComputerTest {
                         "F.S",
                 },
                 false,
+                false,
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                MyAction.MOVE_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 20);
@@ -392,6 +392,157 @@ public class MaxHealingPlanComputerTest {
                 MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
     }
+
+    @Test
+    void testMinimizeSumOfDistance() {
+        setHp(SOLDIER, 1);
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 100);
+        check(
+                3,
+                new String[] {
+                        ".S",
+                        "F.",
+                        ".C"
+                },
+                false,
+                false,
+                MyAction.MOVE_EAST, MyAction.HEAL_NORTH
+        );
+
+        setHp(SOLDIER, 1);
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 100);
+        check(
+                3,
+                new String[] {
+                        ".#C",
+                        ".S.",
+                        "F.."
+                },
+                false,
+                false,
+                MyAction.MOVE_EAST, MyAction.HEAL_NORTH
+        );
+
+        setHp(SOLDIER, 100);
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 100);
+        check(
+                12,
+                new String[] {
+                        "..C",
+                        ".S.",
+                        "F.."
+                },
+                false,
+                false,
+                MyAction.MOVE_NORTH, MyAction.MOVE_NORTH, MyAction.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testMinimizeSumOfDistancePrioritizeInjured() {
+        setHp(SOLDIER, 1);
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 100);
+        check(
+                2,
+                new String[] {
+                        "S.F.C"
+                },
+                false,
+                false,
+                MyAction.MOVE_WEST
+        );
+
+        setHp(SOLDIER, 100);
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 1);
+        check(
+                2,
+                new String[] {
+                        "S.F.C"
+                },
+                false,
+                false,
+                MyAction.MOVE_EAST
+        );
+
+        setHp(SNIPER, 1);
+        setHp(COMMANDER, 2);
+        setHp(SOLDIER, 4);
+        setHp(FIELD_MEDIC, 100);
+
+        check(
+                2,
+                new String[] {
+                        "..S..",
+                        ".....",
+                        "R.F.C",
+                        ".....",
+                        "....."
+                },
+                false,
+                false,
+                MyAction.MOVE_WEST
+        );
+
+        setHp(SNIPER, 1);
+        setHp(COMMANDER, 2);
+        setHp(SCOUT, 3);
+        setHp(SOLDIER, 4);
+        setHp(FIELD_MEDIC, 100);
+
+        check(
+                2,
+                new String[] {
+                        "..S..",
+                        ".....",
+                        "R.F.C",
+                        ".....",
+                        "..T.."
+                },
+                false,
+                false,
+                MyAction.MOVE_WEST
+        );
+    }
+
+    @Test
+    void testDoNotTryToReachUnreachable() {
+        setHp(COMMANDER, 1);
+        setHp(FIELD_MEDIC, 100);
+
+        check(
+                12,
+                new String[] {
+                        "........#.......",
+                        "...F....#....C..",
+                        "........#.......",
+                },
+                false,
+                false
+        );
+    }
+
+    @Test
+    void testDoNotGoTooFar() {
+        setHp(COMMANDER, 1);
+        setHp(SOLDIER, 100);
+        setHp(FIELD_MEDIC, 100);
+
+        check(
+                12,
+                new String[] {
+                        "F...............",
+                        "S##############.",
+                        "C..............."
+                },
+                false,
+                false
+        );
+    }/**/
 
     private void setHp(TrooperType trooper, int val) {
         hp[trooper.ordinal()] = val;

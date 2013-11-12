@@ -8,8 +8,6 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     final Random rnd = new Random(3222);
-    final static Direction[] dirs = {Direction.WEST, Direction.SOUTH, Direction.EAST, Direction.NORTH};
-    final static int UNREACHABLE = 666;
     Trooper self;
     World world;
     Game game;
@@ -106,7 +104,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private Direction getDirection(char command) {
-        for (Direction dir : dirs) {
+        for (Direction dir : Utils.dirs) {
             if (Character.toLowerCase(dir.toString().charAt(0)) == command) {
                 return dir;
             }
@@ -255,7 +253,7 @@ public final class MyStrategy implements Strategy {
 
     private boolean tooFarFromTeammates(int x, int y) {
         for (Trooper trooper : teammates) {
-            if (manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 6) {
+            if (Utils.manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 6) {
                 return true;
             }
         }
@@ -278,7 +276,9 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private boolean tryHeal() {
+
+                                //todo ща вроде будут проблемы, если медик не стоит
+    private boolean tryHeal() { //todo rename
         if (self.getType() != FIELD_MEDIC) {
             return oldTryHeal();
         }
@@ -287,17 +287,22 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
+        boolean seeSomeEnemy = enemies.size() > 0;
+        if(allTeammatesFullHp() && !seeSomeEnemy) {
+            return false;
+        }
+
+        //todo refactor
+
         char[][] map = createSimpleMap();
         print("Simple map for healing", map);
-
-        boolean seeSomeEnemy = enemies.size() > 0;
 
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
 
         List<MyAction> actions = new MaxHealingPlanComputer(
                 self.getActionPoints(),
-                map,
+                map,  //map may be modified
                 getHpByOrdinal(),
                 holdingAndShouldUseFieldRation,
                 holdingAndShouldUseMedikit,
@@ -305,9 +310,15 @@ public final class MyStrategy implements Strategy {
         ).getActions();
 
         if (actions.isEmpty()) {
-            return false;
+            move.setAction(END_TURN);
+            return true;
         }
         Move bestMove = actions.get(0).getMove();
+
+        if(bestMove.getAction() == MOVE && !haveTime(getMoveCost(self))) { // todo so wrong
+            return false;
+        }
+
         move.setAction(bestMove.getAction());
         move.setDirection(bestMove.getDirection());
         move.setX(bestMove.getX());
@@ -440,7 +451,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean isBlockedByMe(Trooper teammateToFollow) {
-        return distTo(teammateToFollow.getX(), teammateToFollow.getY(), true) != UNREACHABLE &&
+        return distTo(teammateToFollow.getX(), teammateToFollow.getY(), true) != Utils.UNREACHABLE &&
                 isBlocked(teammateToFollow);
     }
 
@@ -449,7 +460,7 @@ public final class MyStrategy implements Strategy {
         int cnt = 0;
         for (int[] aDist : dist) {
             for (int j = 0; j < aDist.length; j++) {
-                if (dist[j][j] != UNREACHABLE) {
+                if (dist[j][j] != Utils.UNREACHABLE) {
                     cnt++;
                 }
             }
@@ -616,7 +627,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int manhattanDist(Trooper self, Trooper target) {
-        return manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
+        return Utils.manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
     }
 
     private Trooper getTeammateToFollow() {
@@ -639,7 +650,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (self.getActionPoints() <= 4 || overExtended() || anyTeammateNotFullHp() && medicIsAlive()) {
+            if (self.getActionPoints() <= 4 || overExtended() || !allTeammatesFullHp() && medicIsAlive()) {
                 return false;
             }
             return moveToNearestLongAgoSeenCell();
@@ -673,7 +684,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int manhattanDist(int x, int y) {
-        return manhattanDist(self.getX(), self.getY(), x, y);
+        return Utils.manhattanDist(self.getX(), self.getY(), x, y);
     }
 
     private boolean moveAtSide(Trooper trooper) {
@@ -688,7 +699,7 @@ public final class MyStrategy implements Strategy {
         }
         int behD = -1;
         for (int d = 0; d < 4; d++) {
-            Direction dir = dirs[d];
+            Direction dir = Utils.dirs[d];
             if (trooper.getX() + dir.getOffsetX() == behindPos.x &&
                     trooper.getY() + dir.getOffsetY() == behindPos.y) {
                 behD = d;
@@ -698,7 +709,7 @@ public final class MyStrategy implements Strategy {
         Cell r = null;
         int minDist = Integer.MAX_VALUE;
         for (int shift = 1; shift <= 3; shift += 2) {
-            Direction dir = dirs[(behD + shift) % 4];
+            Direction dir = Utils.dirs[(behD + shift) % 4];
             Cell to = new Cell(trooper.getX() + dir.getOffsetX(), trooper.getY() + dir.getOffsetY());
             if (!inField(to.x, to.y)) {
                 continue;
@@ -733,7 +744,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if (!isGoodCell(pos.x, pos.y) && manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
+        if (!isGoodCell(pos.x, pos.y) && Utils.manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
             move.setAction(END_TURN);
             return true;
         }
@@ -756,13 +767,13 @@ public final class MyStrategy implements Strategy {
         return null;
     }
 
-    private boolean anyTeammateNotFullHp() {
+    private boolean allTeammatesFullHp() {
         for (Trooper trooper : teammates) {
             if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private boolean medicIsAlive() {
@@ -831,11 +842,11 @@ public final class MyStrategy implements Strategy {
             throw new RuntimeException();
         }
         int[][] dist = bfs(x, y, avoidNarrowPathNearBorder);
-        if (dist[self.getX()][self.getY()] == UNREACHABLE) {
+        if (dist[self.getX()][self.getY()] == Utils.UNREACHABLE) {
             return false;
         }
 
-        for (Direction dir : dirs) {
+        for (Direction dir : Utils.dirs) {
             int toX = self.getX() + dir.getOffsetX();
             int toY = self.getY() + dir.getOffsetY();
             if (!isGoodCell(toX, toY)) {
@@ -869,25 +880,31 @@ public final class MyStrategy implements Strategy {
         Cell startCell = new Cell(startX, startY);
         Map<Cell, int[][]> cache = avoidNarrowPathNearBorder ? bfsCacheAvoidNarrowPath : bfsCache;
         int[][] dist = cache.get(startCell);
-        if (dist != null) {
-            return dist;
+        if (dist == null) {
+            dist = bfsInternal(startX, startY, avoidNarrowPathNearBorder);
+            cache.put(startCell, dist);
         }
+        return dist;
+    }
+
+    private int[][] bfsInternal(int startX, int startY, boolean avoidNarrowPathNearBorder) {
+        int[][] dist;
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
-        dist = createIntMap(UNREACHABLE);
+        dist = createIntMap(Utils.UNREACHABLE);
         qx.add(startX);
         qy.add(startY);
         dist[startX][startY] = 0;
         while (!qx.isEmpty()) {
             int x = qx.poll();
             int y = qy.poll();
-            for (Direction dir : dirs) {
+            for (Direction dir : Utils.dirs) {
                 int toX = x + dir.getOffsetX();
                 int toY = y + dir.getOffsetY();
                 if (!inField(toX, toY)) {
                     continue;
                 }
-                if (dist[toX][toY] != UNREACHABLE) {
+                if (dist[toX][toY] != Utils.UNREACHABLE) {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
@@ -898,7 +915,6 @@ public final class MyStrategy implements Strategy {
                 qy.add(toY);
             }
         }
-        cache.put(startCell, dist);
         return dist;
     }
 
@@ -921,10 +937,6 @@ public final class MyStrategy implements Strategy {
             return game.getStandingMoveCost();
         }
         throw new IllegalArgumentException();
-    }
-
-    private int manhattanDist(int x, int y, int x1, int y1) {
-        return Math.abs(x - x1) + Math.abs(y - y1);
     }
 
     private boolean isValidMove(Direction dir, Trooper trooper) {
@@ -956,7 +968,7 @@ public final class MyStrategy implements Strategy {
 
     private void moveRandom() {
         ArrayList<Direction> a = new ArrayList<>();
-        for (Direction dir : dirs) {
+        for (Direction dir : Utils.dirs) {
             if (isValidMove(dir)) {
                 a.add(dir);
             }

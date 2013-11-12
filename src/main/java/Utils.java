@@ -1,5 +1,9 @@
 import model.*;
 
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Queue;
+
 import static model.TrooperStance.KNEELING;
 import static model.TrooperStance.PRONE;
 
@@ -9,6 +13,9 @@ public class Utils {
             50, 100, 50, 25, 1.0, 2, 2, 4, 6, 2, 5.0, 10, 5, 1, 5, 3, 0.0, 0.5, 1.0, 0.0, 1.0, 2.0, 1.0, 8, 5.0, 80, 60, 2, 50, 30, 2, 5
     );
     public static final int INITIAL_TROOPER_HP = 100;
+    final static Direction[] dirs = {Direction.WEST, Direction.SOUTH, Direction.EAST, Direction.NORTH};
+    final static int UNREACHABLE = 666;
+    public static final int NUMBER_OF_TROOPER_TYPES = TrooperType.values().length;
 
     private final Game game;
     private final TrooperParameters trooperParameters;
@@ -65,6 +72,7 @@ public class Utils {
     public int getInitialActionPoints(TrooperType type) {
         return trooperParameters.getInitialActionPoints(type);
     }
+
     public static Move createMove(ActionType action, Direction direction) {
         Move r = new Move();
         r.setAction(action);
@@ -79,8 +87,6 @@ public class Utils {
         r.setY(y);
         return r;
     }
-
-    public static char MEDIC_CHAR = 'F';
 
     public static Move createMove(ActionType action) {
         Move r = new Move();
@@ -109,11 +115,49 @@ public class Utils {
     }
 
     public static TrooperType getTrooperTypeByChar(char c) {
-        for(TrooperType type : TrooperType.values()) {
-            if(getCharForTrooperType(type) == c) {
+        for (TrooperType type : TrooperType.values()) {
+            if (getCharForTrooperType(type) == c) {
                 return type;
             }
         }
         throw new RuntimeException();
+    }
+
+    public static int manhattanDist(int x, int y, int x1, int y1) {
+        return Math.abs(x - x1) + Math.abs(y - y1);
+    }
+
+    public static int[][] bfsByMap(char[][] map, int startX, int startY) { //больше бфсов, хороших и одинаковых
+        int[][] dist;
+        Queue<Integer> qx = new ArrayDeque<>();
+        Queue<Integer> qy = new ArrayDeque<>();
+        dist = new int[map.length][map[0].length];
+        for(int[] aDist : dist) {
+            Arrays.fill(aDist, UNREACHABLE);
+        }
+        qx.add(startX);
+        qy.add(startY);
+        dist[startX][startY] = 0;
+        while (!qx.isEmpty()) {
+            int x = qx.poll();
+            int y = qy.poll();
+            for (Direction dir : dirs) {
+                int toX = x + dir.getOffsetX();
+                int toY = y + dir.getOffsetY();
+                if (toX < 0 || toX >= map.length || toY < 0 || toY >= map[0].length) {
+                    continue;
+                }
+                if (dist[toX][toY] != UNREACHABLE) {
+                    continue;
+                }
+                dist[toX][toY] = dist[x][y] + 1;
+                if (map[toX][toY] != '.'){
+                    continue;
+                }
+                qx.add(toX);
+                qy.add(toY);
+            }
+        }
+        return dist;
     }
 }

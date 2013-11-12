@@ -1,6 +1,5 @@
 import model.ActionType;
 import model.Game;
-import model.TrooperType;
 
 import static model.TrooperType.*;
 
@@ -15,12 +14,15 @@ class MaxHealingPlanComputer {
     final List<MyAction> actions = new ArrayList<>();
     final Utils utils;
     final Game game;
+    Cell start;
 
-    List<MyAction> bestActions = new ArrayList<>();
+    List<MyAction> bestActions;
     int bestActionPoints, bestHealedSum;
     boolean bestHoldingFieldRation;
     boolean bestHoldingMedikit;
-    int bestMinHp;
+    int bestMinHp, bestDistSum;
+    int[][][] dist;
+    Cell[] positions = new Cell[Utils.NUMBER_OF_TROOPER_TYPES];
 
     MaxHealingPlanComputer(
             int actionPoints,
@@ -36,32 +38,40 @@ class MaxHealingPlanComputer {
         this.game = utils.getGame();
         moveCost = game.getStandingMoveCost(); //assume that medic is standing
 
-        bestActionPoints = actionPoints;
-        bestHoldingFieldRation = holdingFieldRation;
-
-        Cell start = findStartAndClearHpFromTrash();
+        prepare();
         rec(actionPoints, start.x, start.y, 0, holdingFieldRation, holdingMedikit);
     }
 
-    private Cell findStartAndClearHpFromTrash() {
-        Cell r = null;
-        boolean used[] = new boolean[TrooperType.values().length];
+    private void prepare() {
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                if (map[i][j] == Utils.MEDIC_CHAR) {
-                    r = new Cell(i, j);
-                }
                 if (Utils.isLetter(map[i][j])) {
-                    used[Utils.getTrooperTypeByChar(map[i][j]).ordinal()] = true;
+                    if (map[i][j] == Utils.getCharForTrooperType(FIELD_MEDIC)) {
+                        start = new Cell(i, j);
+                        map[i][j] = '.'; //erase medic
+                    } else {
+                        positions[Utils.getTrooperTypeByChar(map[i][j]).ordinal()] = new Cell(i, j);
+                    }
                 }
             }
         }
-        for (int i = 0; i < hp.length; i++) {
-            if (!used[i]) {
-                hp[i] = Integer.MAX_VALUE;
+        dist = new int[Utils.NUMBER_OF_TROOPER_TYPES][][];
+        for (int trooperIndex = 0; trooperIndex < Utils.NUMBER_OF_TROOPER_TYPES; trooperIndex++) {
+            if (noSuchType(trooperIndex)) {
+                if (trooperIndex != FIELD_MEDIC.ordinal()) {
+                    hp[trooperIndex] = Integer.MAX_VALUE;
+                }
+                continue;
+            }
+            dist[trooperIndex] = Utils.bfsByMap(map, positions[trooperIndex].x, positions[trooperIndex].y);
+            for (int i = 0; i < map.length; i++) {
+                for (int j = 0; j < map[i].length; j++) {
+                    if(dist[trooperIndex][i][j] >= 7) {
+                        dist[trooperIndex][i][j] = Utils.UNREACHABLE;
+                    }
+                }
             }
         }
-        return r;
     }
 
     public List<MyAction> getActions() {
@@ -69,7 +79,7 @@ class MaxHealingPlanComputer {
     }
 
     private void rec(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
-        updateBest(actionPoints, healedSum, holdingFieldRation, holdingMedikit);
+        updateBest(actionPoints, healedSum, holdingFieldRation, holdingMedikit, getDistSum(x, y));
 
         tryEatFieldRation(actionPoints, x, y, healedSum, holdingFieldRation, holdingMedikit);
 
@@ -78,6 +88,32 @@ class MaxHealingPlanComputer {
         tryHealSelf(actionPoints, x, y, healedSum, holdingFieldRation, holdingMedikit);
 
         tryMove(actionPoints, x, y, healedSum, holdingFieldRation, holdingMedikit);
+    }
+
+    private int getDistSum(int x, int y) {
+        int r = 0;
+        int minHp = Integer.MAX_VALUE;
+        for (int i = 0; i < Utils.NUMBER_OF_TROOPER_TYPES; i++) {
+            if (noSuchType(i)) {
+                continue;
+            }
+            minHp = Math.min(minHp, hp[i]);
+        }
+        for (int i = 0; i < Utils.NUMBER_OF_TROOPER_TYPES; i++) {
+            if (noSuchType(i)) {
+                continue;
+            }
+            int d = dist[i][x][y];
+            if(hp[i] == minHp) {
+                d *= 100;
+            }
+            r += d;
+        }
+        return r;
+    }
+
+    private boolean noSuchType(int i) {
+        return positions[i] == null;
     }
 
     private void tryMove(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
@@ -124,7 +160,7 @@ class MaxHealingPlanComputer {
         if (actionPoints >= game.getFieldMedicHealCost()) {
             tryHealTeammates(actionPoints - game.getFieldMedicHealCost(), x, y, healedSum, holdingFieldRation, holdingMedikit, MyAction.directedHeals, game.getFieldMedicHealBonusHitpoints());
         }
-        if(holdingMedikit && actionPoints >= game.getMedikitUseCost()) {
+        if (holdingMedikit && actionPoints >= game.getMedikitUseCost()) {
             tryHealTeammates(actionPoints - game.getMedikitUseCost(), x, y, healedSum, holdingFieldRation, false, MyAction.directedMedikitUses, game.getMedikitBonusHitpoints());
         }
     }
@@ -137,7 +173,7 @@ class MaxHealingPlanComputer {
                 continue;
             }
             char targetChar = map[toX][toY];
-            if (!Utils.isLetter(targetChar) || targetChar == Utils.getCharForTrooperType(FIELD_MEDIC)) {
+            if (!Utils.isLetter(targetChar)) {
                 continue;
             }
             int index = getIndex(targetChar);
@@ -153,7 +189,7 @@ class MaxHealingPlanComputer {
         int newHp = Math.min(oldHp + healValue, Utils.INITIAL_TROOPER_HP);
         int hpDiff = newHp - oldHp;
         boolean avoidOverheal = (healAction.getMove().getAction() == ActionType.USE_MEDIKIT);
-        if(avoidOverheal && hpDiff < healValue) {
+        if (avoidOverheal && hpDiff < healValue) {
             return;
         }
         hp[targetOrdinal] = newHp;
@@ -174,10 +210,10 @@ class MaxHealingPlanComputer {
     }
 
     private void tryHealSelf(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
-        if(actionPoints >= game.getFieldMedicHealCost()) {
+        if (actionPoints >= game.getFieldMedicHealCost()) {
             tryHeal(actionPoints - game.getFieldMedicHealCost(), x, y, healedSum, MyAction.HEAL_SELF, FIELD_MEDIC.ordinal(), game.getFieldMedicHealSelfBonusHitpoints(), holdingFieldRation, holdingMedikit);
         }
-        if(holdingMedikit && actionPoints >= game.getMedikitUseCost()) {
+        if (holdingMedikit && actionPoints >= game.getMedikitUseCost()) {
             tryHeal(actionPoints - game.getMedikitUseCost(), x, y, healedSum, MyAction.USE_MEDIKIT_SELF, FIELD_MEDIC.ordinal(), game.getMedikitHealSelfBonusHitpoints(), holdingFieldRation, false);
         }
     }
@@ -186,14 +222,15 @@ class MaxHealingPlanComputer {
         return toX >= 0 && toX < map.length && toY >= 0 && toY < map[0].length;
     }
 
-    private void updateBest(int actionPoints, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
+    private void updateBest(int actionPoints, int healedSum, boolean holdingFieldRation, boolean holdingMedikit, int dSum) {
         int minHp = getMinHp();
-        if (better(actionPoints, healedSum, holdingFieldRation, minHp, holdingMedikit)) {
+        if (better(actionPoints, healedSum, holdingFieldRation, minHp, holdingMedikit, dSum)) {
             bestActionPoints = actionPoints;
             bestHealedSum = healedSum;
             bestHoldingFieldRation = holdingFieldRation;
             bestMinHp = minHp;
             bestHoldingMedikit = holdingMedikit;
+            bestDistSum = dSum;
 
             bestActions = new ArrayList<>(actions);
         }
@@ -207,7 +244,10 @@ class MaxHealingPlanComputer {
         return mi;
     }
 
-    private boolean better(int actionPoints, int healedSum, boolean holdingFieldRation, int minHp, boolean holdingMedikit) {
+    private boolean better(int actionPoints, int healedSum, boolean holdingFieldRation, int minHp, boolean holdingMedikit, int dSum) {
+        if (bestActions == null) {
+            return true;
+        }
         if (healedSum != bestHealedSum) {
             return healedSum > bestHealedSum;
         }
@@ -220,6 +260,9 @@ class MaxHealingPlanComputer {
         }
         if (holdingFieldRation != bestHoldingFieldRation) {
             return holdingFieldRation;
+        }
+        if (dSum != bestDistSum) {
+            return dSum < bestDistSum;
         }
         if (actionPoints != bestActionPoints) {
             return actionPoints > bestActionPoints;
