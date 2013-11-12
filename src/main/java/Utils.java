@@ -160,4 +160,12 @@ public class Utils {
         }
         return dist;
     }
+
+    public static int divCeil(int a, int b) {
+        return (a + b - 1) / b;
+    }
+
+    public int getFieldRationAddition() {
+        return game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+    }
 }

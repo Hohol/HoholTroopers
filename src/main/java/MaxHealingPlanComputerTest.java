@@ -171,7 +171,9 @@ public class MaxHealingPlanComputerTest {
                 },
                 true,
 
-                false, MyAction.EAT_FIELD_RATION, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST, MyAction.HEAL_SELF
+                false,
+
+                MyAction.EAT_FIELD_RATION, MyAction.HEAL_SELF, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST
         );
     }
 
@@ -362,7 +364,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
 
-                MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.USE_MEDIKIT_SELF
+                MyAction.USE_MEDIKIT_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 50);
@@ -542,7 +544,29 @@ public class MaxHealingPlanComputerTest {
                 false,
                 false
         );
-    }/**/
+    }
+
+    @Test (enabled = false) //manual
+    void testTooSlow() {
+        //setHp(SNIPER, 1);
+        setHp(COMMANDER, 2);
+        //setHp(SCOUT, 3);
+        setHp(SOLDIER, 4);
+        setHp(FIELD_MEDIC, 1);
+
+        check(
+                12,
+                new String[] {
+                        "..........",
+                        "..S.......",
+                        "..F.......",
+                        "..........",
+                        ".........."
+                },
+                true,
+                true
+        );
+    }
 
     private void setHp(TrooperType trooper, int val) {
         hp[trooper.ordinal()] = val;
