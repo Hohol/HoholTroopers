@@ -125,7 +125,7 @@ public final class MyStrategy implements Strategy {
         }
 
         Cell cell = getNearestCellFromWhichCanShoot(target);
-        if(distTo(cell.x, cell.y, false) >= 7) {
+        if(distTo(cell.x, cell.y, false) >= 8) {
             return false;
         }
 
@@ -295,7 +295,7 @@ public final class MyStrategy implements Strategy {
         //todo refactor
 
         char[][] map = createSimpleMap();
-        print("Simple map for healing", map);
+        //print("Simple map for healing", map);
 
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
@@ -574,13 +574,6 @@ public final class MyStrategy implements Strategy {
         for (char[] row : map) {
             Arrays.fill(row, '?');
         }
-        for (int i = 0; i < world.getWidth(); i++) {
-            for (int j = 0; j < world.getHeight(); j++) {
-                if (cells[i][j] != CellType.FREE) {
-                    map[i][j] = '#';
-                }
-            }
-        }
         for (Trooper trooper : teammates) {
             for (int i = 0; i < world.getWidth(); i++) {
                 for (int j = 0; j < world.getHeight(); j++) {
@@ -596,6 +589,13 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : enemies) {
             map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
+        }
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (cells[i][j] != CellType.FREE) {
+                    map[i][j] = '#';
+                }
+            }
         }
         for (int j = 0; j < map[0].length; j++) {
             for (char[] aMap : map) {
