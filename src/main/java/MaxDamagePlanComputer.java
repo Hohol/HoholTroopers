@@ -94,7 +94,7 @@ public class MaxDamagePlanComputer {
 
             rec(
                     actionPoints - game.getStanceChangeCost(),
-                    utils.stanceAfterLowering(currentStance),
+                    Utils.stanceAfterLowering(currentStance),
                     targetHp,
                     holdingFieldRation
             );

@@ -11,9 +11,6 @@ import static org.testng.Assert.*;
 
 @Test
 public class MaxDamagePlanComputerTest {
-
-    static final Utils utils = new Utils(Utils.hardcodedGame, TrooperParameters.HARDCODED_TROOPER_PARAMETERS);
-
     @Test
     void testEmpty() {
         check(
@@ -219,7 +216,7 @@ public class MaxDamagePlanComputerTest {
                                     minStance,
                                     hp,
                                     true,
-                                    utils
+                                    Utils.HARDCODED_UTILS
                             ).getActions();
                             if (r == null || test.size() > r.size()) {
                                 r = test;
@@ -247,7 +244,7 @@ public class MaxDamagePlanComputerTest {
                 currentStance, minStanceAllowed,
                 targetHp,
                 holdingFieldRation,
-                utils
+                Utils.HARDCODED_UTILS
         ).getActions();
         List<ActionType> expected = Arrays.asList(expectedAr);
         assertEquals(

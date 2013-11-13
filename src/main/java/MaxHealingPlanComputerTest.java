@@ -9,7 +9,6 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class MaxHealingPlanComputerTest {
-    Utils utils = new Utils(Utils.hardcodedGame, TrooperParameters.HARDCODED_TROOPER_PARAMETERS);
     int[] hp = new int[TrooperType.values().length];
 
     @Test
@@ -580,7 +579,7 @@ public class MaxHealingPlanComputerTest {
                 hp,
                 holdingFieldRation,
                 holdingMedikit,
-                utils
+                Utils.HARDCODED_UTILS
         ).getActions();
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(

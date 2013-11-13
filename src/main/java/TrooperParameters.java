@@ -38,6 +38,23 @@ public interface TrooperParameters {
         }
 
         @Override
+        public int getShootRange(TrooperType type) {
+            switch (type) {
+                case COMMANDER:
+                    return 7;
+                case FIELD_MEDIC:
+                    return 5;
+                case SOLDIER:
+                    return 8;
+                case SNIPER:
+                    return 10;
+                case SCOUT:
+                    return 6;
+            }
+            throw new RuntimeException();
+        }
+
+        @Override
         public int getShootDamage(TrooperType type, TrooperStance stance) {
             return standingDamage(type) + bonusDamage(type) * (3 - stance.ordinal() - 1);
         }
@@ -75,11 +92,14 @@ public interface TrooperParameters {
         }
     };
 
+    int getShootRange(TrooperType type);
+
     class TrooperParametersImpl implements TrooperParameters {
 
-        int[][] damage = new int[TrooperType.values().length][TrooperStance.values().length];
-        int[] shootCost = new int[TrooperType.values().length];
-        int[] initialActionPoints = new int[TrooperType.values().length];
+        private int[][] damage = new int[TrooperType.values().length][TrooperStance.values().length];
+        private int[] shootCost = new int[TrooperType.values().length];
+        private int[] initialActionPoints = new int[TrooperType.values().length];
+        private int[] range = new int[Utils.NUMBER_OF_TROOPER_TYPES];
 
         public TrooperParametersImpl(List<Trooper> troopers) {
             for(Trooper trooper : troopers) {
@@ -89,6 +109,7 @@ public interface TrooperParameters {
                 }
                 shootCost[typeOrdinal] = trooper.getShootCost();
                 initialActionPoints[typeOrdinal] = trooper.getInitialActionPoints();
+                range[typeOrdinal] = (int)(trooper.getShootingRange() + 0.5);
             }
         }
 
@@ -105,6 +126,11 @@ public interface TrooperParameters {
         @Override
         public int getInitialActionPoints(TrooperType type) {
             return initialActionPoints[type.ordinal()];
+        }
+
+        @Override
+        public int getShootRange(TrooperType type) {
+            return range[type.ordinal()];
         }
     }
 }

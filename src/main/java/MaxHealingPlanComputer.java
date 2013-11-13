@@ -1,30 +1,18 @@
 import model.ActionType;
-import model.Game;
 
 import static model.TrooperType.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class MaxHealingPlanComputer {
-    static int moveCost;
+class MaxHealingPlanComputer extends PlanComputer<HealingState> {
+    int moveCost;
 
-    final char[][] map;
     final int[] hp;
-    final List<MyMove> actions = new ArrayList<>();
-    final Utils utils;
-    final Game game;
     Cell start;
 
-    List<MyMove> bestActions;
-    int bestActionPoints, bestHealedSum;
-    boolean bestHoldingFieldRation;
-    boolean bestHoldingMedikit;
-    int bestMinHp, bestDistSum;
     int[][][] dist;
     Cell[] positions = new Cell[Utils.NUMBER_OF_TROOPER_TYPES];
-
-    int stepCnt;
 
     MaxHealingPlanComputer(
             int actionPoints,
@@ -34,15 +22,14 @@ class MaxHealingPlanComputer {
             boolean holdingMedikit,
             Utils utils
     ) {
-        this.map = map;
+        super(map, utils);
         this.hp = hp;
-        this.utils = utils;
-        this.game = utils.getGame();
         moveCost = game.getStandingMoveCost(); //assume that medic is standing
+        selfType = FIELD_MEDIC;
 
         prepare();
+        cur = new HealingState(new ArrayList<MyMove>(), actionPoints, holdingFieldRation, holdingMedikit, start.x, start.y);
         work(actionPoints, start.x, start.y, 0, holdingFieldRation, holdingMedikit);
-        System.out.println(stepCnt);
     }
 
     private void work(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
@@ -132,11 +119,10 @@ class MaxHealingPlanComputer {
     }
 
     public List<MyMove> getActions() {
-        return bestActions;
+        return best.actions;
     }
 
     private void rec(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
-        stepCnt++;
         updateBest(actionPoints, healedSum, holdingFieldRation, holdingMedikit, getDistSum(x, y));
 
         tryEatFieldRation(actionPoints, x, y, healedSum, holdingFieldRation, holdingMedikit);
@@ -173,43 +159,33 @@ class MaxHealingPlanComputer {
     }
 
     private void tryMove(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
-        if (actionPoints >= moveCost) {
-            for (MyMove movement : MyMove.movements) {
-                int toX = x + movement.getDx();
-                int toY = y + movement.getDy();
-                if (!inField(toX, toY)) {
-                    continue;
-                }
-                if (map[toX][toY] != '.') {
-                    continue;
-                }
-                addAction(movement);
-                rec(
-                        actionPoints - moveCost,
-                        toX,
-                        toY,
-                        healedSum,
-                        holdingFieldRation,
-                        holdingMedikit
-                );
-                popAction();
-            }
-        }
+        cur.actionPoints = actionPoints;
+        cur.x = x;
+        cur.y = y;
+        cur.healedSum = healedSum;
+        cur.holdingFieldRation = holdingFieldRation;
+        cur.holdingMedikit = holdingMedikit;
+        tryMove();
+    }
+
+    @Override
+    protected void rec() {
+        rec(cur.actionPoints, cur.x, cur.y, cur.healedSum, cur.holdingFieldRation, cur.holdingMedikit);
+    }
+
+    @Override
+    protected boolean freeCell(int toX, int toY) {
+        return map[toX][toY] == '.';
     }
 
     private void tryEatFieldRation(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
-        if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost() && actionPoints < utils.getInitialActionPoints(FIELD_MEDIC)) {
-            addAction(MyMove.EAT_FIELD_RATION);
-            rec(
-                    utils.actionPointsAfterEatingFieldRation(FIELD_MEDIC, actionPoints, game),
-                    x,
-                    y,
-                    healedSum,
-                    false,
-                    holdingMedikit
-            );
-            popAction();
-        }
+        cur.actionPoints = actionPoints;
+        cur.x = x;
+        cur.y = y;
+        cur.healedSum = healedSum;
+        cur.holdingFieldRation = holdingFieldRation;
+        cur.holdingMedikit = holdingMedikit;
+        tryEatFieldRation();
     }
 
     private void tryHealTeammates(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
@@ -265,21 +241,15 @@ class MaxHealingPlanComputer {
         hp[targetOrdinal] = oldHp;
     }
 
-    private boolean inField(int toX, int toY) {
-        return toX >= 0 && toX < map.length && toY >= 0 && toY < map[0].length;
-    }
-
     private void updateBest(int actionPoints, int healedSum, boolean holdingFieldRation, boolean holdingMedikit, int dSum) {
-        int minHp = getMinHp();
-        if (better(actionPoints, healedSum, holdingFieldRation, minHp, holdingMedikit, dSum)) {
-            bestActionPoints = actionPoints;
-            bestHealedSum = healedSum;
-            bestHoldingFieldRation = holdingFieldRation;
-            bestMinHp = minHp;
-            bestHoldingMedikit = holdingMedikit;
-            bestDistSum = dSum;
-
-            bestActions = new ArrayList<>(actions);
+        cur.actionPoints = actionPoints;
+        cur.healedSum = healedSum;
+        cur.holdingMedikit = holdingMedikit;
+        cur.holdingFieldRation = holdingFieldRation;
+        cur.distSum = dSum;
+        cur.minHp = getMinHp();
+        if (cur.better(best)) {
+            best = new HealingState(cur);
         }
     }
 
@@ -289,40 +259,6 @@ class MaxHealingPlanComputer {
             mi = Math.min(mi, v);
         }
         return mi;
-    }
-
-    private boolean better(int actionPoints, int healedSum, boolean holdingFieldRation, int minHp, boolean holdingMedikit, int dSum) {
-        if (bestActions == null) {
-            return true;
-        }
-        if (healedSum != bestHealedSum) {
-            return healedSum > bestHealedSum;
-        }
-
-        if (minHp != bestMinHp) {
-            return minHp > bestMinHp;
-        }
-        if (holdingMedikit != bestHoldingMedikit) {
-            return holdingMedikit;
-        }
-        if (holdingFieldRation != bestHoldingFieldRation) {
-            return holdingFieldRation;
-        }
-        if (dSum != bestDistSum) {
-            return dSum < bestDistSum;
-        }
-        if (actionPoints != bestActionPoints) {
-            return actionPoints > bestActionPoints;
-        }
-        return false;
-    }
-
-    private void addAction(MyMove action) {
-        actions.add(action);
-    }
-
-    private void popAction() {
-        actions.remove(actions.size() - 1);
     }
 
     private int getIndex(char targetChar) {

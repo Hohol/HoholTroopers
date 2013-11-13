@@ -16,6 +16,10 @@ public class Utils {
     final static Direction[] dirs = {Direction.WEST, Direction.SOUTH, Direction.EAST, Direction.NORTH};
     final static int UNREACHABLE = 666;
     public static final int NUMBER_OF_TROOPER_TYPES = TrooperType.values().length;
+    public static final int NUMBER_OF_DIRECTION_TYPES = Direction.values().length;
+    public static final int NUMBER_OF_ACTION_TYPES = ActionType.values().length;
+    public static final Utils HARDCODED_UTILS = new Utils(Utils.hardcodedGame, TrooperParameters.HARDCODED_TROOPER_PARAMETERS);
+    public static final int NUMBER_OF_STANCES = TrooperStance.values().length;
 
     private final Game game;
     private final TrooperParameters trooperParameters;
@@ -35,7 +39,7 @@ public class Utils {
         return r;
     }
 
-    public TrooperStance stanceAfterLowering(TrooperStance stance) {
+    public static TrooperStance stanceAfterLowering(TrooperStance stance) {
         switch (stance) {
             case PRONE:
                 return null;
@@ -84,24 +88,11 @@ public class Utils {
     }
 
     public static Move createMove(ActionType action, Direction direction) {
-        Move r = new Move();
-        r.setAction(action);
-        r.setDirection(direction);
-        return r;
-    }
-
-    public static Move createMove(ActionType action, int x, int y) {
-        Move r = new Move();
-        r.setAction(action);
-        r.setX(x);
-        r.setY(y);
-        return r;
+        return createMove(action, direction, -1, -1);
     }
 
     public static Move createMove(ActionType action) {
-        Move r = new Move();
-        r.setAction(action);
-        return r;
+        return createMove(action, null, -1, -1);
     }
 
     public static char getCharForTrooperType(TrooperType type) {
@@ -184,5 +175,50 @@ public class Utils {
                a.getDirection() == b.getDirection() &&
                a.getX() == b.getX() &&
                a.getY() == b.getY();
+    }
+
+    public static Move createMove(ActionType action, Direction dir, int x, int y) {
+        Move r = new Move();
+        r.setAction(action);
+        r.setDirection(dir);
+        r.setX(x);
+        r.setY(y);
+        return r;
+    }
+
+    public static boolean isSmallLetter(char ch) {
+        return ch >= 'a' && ch <= 'z';
+    }
+
+    public static boolean isCapitalLetter(char ch) {
+        return ch >= 'A' && ch <= 'Z';
+    }
+
+    public int getShootRange(TrooperType type) {
+        return trooperParameters.getShootRange(type);
+    }
+
+    public int getMoveCost(TrooperStance stance) {
+        switch (stance) {
+            case PRONE:
+                return game.getProneMoveCost();
+            case KNEELING:
+                return game.getKneelingMoveCost();
+            case STANDING:
+                return game.getStandingMoveCost();
+        }
+        throw new RuntimeException();
+    }
+
+    public static TrooperStance stanceAfterRaising(TrooperStance stance) {
+        switch (stance) {
+            case PRONE:
+                return KNEELING;
+            case KNEELING:
+                return TrooperStance.STANDING;
+            case STANDING:
+                throw new RuntimeException();
+        }
+        throw new RuntimeException();
     }
 }

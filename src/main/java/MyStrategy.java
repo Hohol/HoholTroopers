@@ -955,16 +955,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMoveCost(Trooper self) {
-        if (self.getStance() == KNEELING) {
-            return game.getKneelingMoveCost();
-        }
-        if (self.getStance() == PRONE) {
-            return game.getProneMoveCost();
-        }
-        if (self.getStance() == STANDING) {
-            return game.getStandingMoveCost();
-        }
-        throw new IllegalArgumentException();
+        return utils.getMoveCost(self.getStance());
     }
 
     private boolean isValidMove(Direction dir, Trooper trooper) {
