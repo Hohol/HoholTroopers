@@ -25,6 +25,16 @@ public class Utils {
         this.trooperParameters = trooperParameters;
     }
 
+    public static char[][] toCharAndTranspose(String[] map) {
+        char[][] r = new char[map[0].length()][map.length];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length(); j++) {
+                r[j][i] = map[i].charAt(j);
+            }
+        }
+        return r;
+    }
+
     public TrooperStance stanceAfterLowering(TrooperStance stance) {
         switch (stance) {
             case PRONE:
@@ -167,5 +177,12 @@ public class Utils {
 
     public int getFieldRationAddition() {
         return game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+    }
+
+    public static boolean equalMoves(Move a, Move b) {
+        return a.getAction() == b.getAction() &&
+               a.getDirection() == b.getDirection() &&
+               a.getX() == b.getX() &&
+               a.getY() == b.getY();
     }
 }

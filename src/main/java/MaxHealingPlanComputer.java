@@ -11,12 +11,12 @@ class MaxHealingPlanComputer {
 
     final char[][] map;
     final int[] hp;
-    final List<MyAction> actions = new ArrayList<>();
+    final List<MyMove> actions = new ArrayList<>();
     final Utils utils;
     final Game game;
     Cell start;
 
-    List<MyAction> bestActions;
+    List<MyMove> bestActions;
     int bestActionPoints, bestHealedSum;
     boolean bestHoldingFieldRation;
     boolean bestHoldingMedikit;
@@ -47,7 +47,7 @@ class MaxHealingPlanComputer {
 
     private void work(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
         if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost() && actionPoints < utils.getInitialActionPoints(FIELD_MEDIC)) {
-            addAction(MyAction.EAT_FIELD_RATION);
+            addAction(MyMove.EAT_FIELD_RATION);
             work(
                     utils.actionPointsAfterEatingFieldRation(FIELD_MEDIC, actionPoints, game),
                     x,
@@ -63,7 +63,7 @@ class MaxHealingPlanComputer {
 
         if (holdingMedikit && actionPoints >= game.getMedikitUseCost() && missingHp >= game.getMedikitHealSelfBonusHitpoints()) {
             int oldHp = hp[FIELD_MEDIC.ordinal()];
-            addAction(MyAction.USE_MEDIKIT_SELF);
+            addAction(MyMove.USE_MEDIKIT_SELF);
             work(
                     actionPoints - game.getMedikitUseCost(),
                     x,
@@ -83,7 +83,7 @@ class MaxHealingPlanComputer {
         for (int i = 0; i <= T; i++) {
             if (i != 0) {
                 hp[FIELD_MEDIC.ordinal()] += game.getFieldMedicHealSelfBonusHitpoints();
-                addAction(MyAction.HEAL_SELF);
+                addAction(MyMove.HEAL_SELF);
             }
             rec(
                     actionPoints - i * game.getFieldMedicHealCost(),
@@ -131,7 +131,7 @@ class MaxHealingPlanComputer {
         }
     }
 
-    public List<MyAction> getActions() {
+    public List<MyMove> getActions() {
         return bestActions;
     }
 
@@ -174,7 +174,7 @@ class MaxHealingPlanComputer {
 
     private void tryMove(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
         if (actionPoints >= moveCost) {
-            for (MyAction movement : MyAction.movements) {
+            for (MyMove movement : MyMove.movements) {
                 int toX = x + movement.getDx();
                 int toY = y + movement.getDy();
                 if (!inField(toX, toY)) {
@@ -199,7 +199,7 @@ class MaxHealingPlanComputer {
 
     private void tryEatFieldRation(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
         if (holdingFieldRation && actionPoints >= game.getFieldRationEatCost() && actionPoints < utils.getInitialActionPoints(FIELD_MEDIC)) {
-            addAction(MyAction.EAT_FIELD_RATION);
+            addAction(MyMove.EAT_FIELD_RATION);
             rec(
                     utils.actionPointsAfterEatingFieldRation(FIELD_MEDIC, actionPoints, game),
                     x,
@@ -214,15 +214,15 @@ class MaxHealingPlanComputer {
 
     private void tryHealTeammates(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit) {
         if (actionPoints >= game.getFieldMedicHealCost()) {
-            tryHealTeammates(actionPoints - game.getFieldMedicHealCost(), x, y, healedSum, holdingFieldRation, holdingMedikit, MyAction.directedHeals, game.getFieldMedicHealBonusHitpoints());
+            tryHealTeammates(actionPoints - game.getFieldMedicHealCost(), x, y, healedSum, holdingFieldRation, holdingMedikit, MyMove.directedHeals, game.getFieldMedicHealBonusHitpoints());
         }
         if (holdingMedikit && actionPoints >= game.getMedikitUseCost()) {
-            tryHealTeammates(actionPoints - game.getMedikitUseCost(), x, y, healedSum, holdingFieldRation, false, MyAction.directedMedikitUses, game.getMedikitBonusHitpoints());
+            tryHealTeammates(actionPoints - game.getMedikitUseCost(), x, y, healedSum, holdingFieldRation, false, MyMove.directedMedikitUses, game.getMedikitBonusHitpoints());
         }
     }
 
-    private void tryHealTeammates(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit, MyAction[] heals, int healValue) {
-        for (MyAction heal : heals) {
+    private void tryHealTeammates(int actionPoints, int x, int y, int healedSum, boolean holdingFieldRation, boolean holdingMedikit, MyMove[] heals, int healValue) {
+        for (MyMove heal : heals) {
             int toX = x + heal.getDx();
             int toY = y + heal.getDy();
             if (!inField(toX, toY)) {
@@ -237,7 +237,7 @@ class MaxHealingPlanComputer {
         }
     }
 
-    private void tryHeal(int actionPoints, int x, int y, int healedSum, MyAction healAction, int targetOrdinal, int healValue, boolean holdingFieldRation, boolean holdingMedikit) {
+    private void tryHeal(int actionPoints, int x, int y, int healedSum, MyMove healAction, int targetOrdinal, int healValue, boolean holdingFieldRation, boolean holdingMedikit) {
         int oldHp = hp[targetOrdinal];
         if (oldHp >= Utils.INITIAL_TROOPER_HP) {
             return;
@@ -317,7 +317,7 @@ class MaxHealingPlanComputer {
         return false;
     }
 
-    private void addAction(MyAction action) {
+    private void addAction(MyMove action) {
         actions.add(action);
     }
 

@@ -36,7 +36,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, false, MyAction.HEAL_SELF
+                false, false, MyMove.HEAL_SELF
         );
 
 
@@ -47,7 +47,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 88);
@@ -57,7 +57,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 89);
@@ -67,7 +67,7 @@ public class MaxHealingPlanComputerTest {
                         "F"
                 },
 
-                false, false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
     }
 
@@ -81,7 +81,7 @@ public class MaxHealingPlanComputerTest {
                         "FS"
                 },
 
-                false, false, MyAction.HEAL_EAST
+                false, false, MyMove.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 90);
@@ -92,7 +92,7 @@ public class MaxHealingPlanComputerTest {
                         "FC"
                 },
 
-                false, false, MyAction.HEAL_EAST
+                false, false, MyMove.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 90);
@@ -104,7 +104,7 @@ public class MaxHealingPlanComputerTest {
                         "C"
                 },
 
-                false, false, MyAction.HEAL_SOUTH
+                false, false, MyMove.HEAL_SOUTH
         );
 
         setHp(FIELD_MEDIC, 98);
@@ -117,7 +117,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.HEAL_SELF
+                false, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -130,7 +130,7 @@ public class MaxHealingPlanComputerTest {
                         "SF"
                 },
 
-                false, false, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST
+                false, false, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST
         );
     }
 
@@ -144,7 +144,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 true,
 
-                false, MyAction.EAT_FIELD_RATION, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -173,7 +173,7 @@ public class MaxHealingPlanComputerTest {
 
                 false,
 
-                MyAction.EAT_FIELD_RATION, MyAction.HEAL_SELF, MyAction.HEAL_NORTH, MyAction.HEAL_NORTH, MyAction.HEAL_WEST, MyAction.HEAL_WEST
+                MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST
         );
     }
 
@@ -188,7 +188,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_EAST
+                MyMove.MOVE_EAST
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -200,7 +200,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.MOVE_EAST, MyAction.HEAL_EAST
+                false, MyMove.MOVE_EAST, MyMove.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -214,7 +214,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.MOVE_WEST, MyAction.HEAL_NORTH, MyAction.HEAL_WEST
+                false, MyMove.MOVE_WEST, MyMove.HEAL_NORTH, MyMove.HEAL_WEST
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -227,7 +227,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.MOVE_NORTH, MyAction.MOVE_WEST, MyAction.MOVE_WEST, MyAction.HEAL_SOUTH
+                false, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.HEAL_SOUTH
         );
 
         setHp(FIELD_MEDIC, 100);
@@ -256,7 +256,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.MOVE_NORTH, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+                false, MyMove.MOVE_NORTH, MyMove.HEAL_EAST, MyMove.HEAL_EAST
         );
     }
 
@@ -270,7 +270,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
                 //not fucking [MOVE_EAST, HEAL_WEST, HEAL_WEST, HEAL_WEST, HEAL_WEST] !
         );
     }
@@ -288,7 +288,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.HEAL_EAST, MyAction.HEAL_SOUTH
+                false, MyMove.HEAL_EAST, MyMove.HEAL_SOUTH
         );
 
         setHp(FIELD_MEDIC, 19);
@@ -300,7 +300,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 20);
@@ -313,7 +313,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 false,
 
-                MyAction.MOVE_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+                MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
         );
 
         setHp(FIELD_MEDIC, 20);
@@ -325,7 +325,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
 
-                false, MyAction.MOVE_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST, MyAction.HEAL_EAST
+                false, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
         );
     }
 
@@ -339,7 +339,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 true,
-                MyAction.USE_MEDIKIT_SELF
+                MyMove.USE_MEDIKIT_SELF
         );
 
         setHp(FIELD_MEDIC, 1);
@@ -352,7 +352,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
 
-                MyAction.USE_MEDIKIT_EAST
+                MyMove.USE_MEDIKIT_EAST
         );
 
         setHp(FIELD_MEDIC, 1);
@@ -364,7 +364,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
 
-                MyAction.USE_MEDIKIT_SELF, MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                MyMove.USE_MEDIKIT_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
 
         setHp(FIELD_MEDIC, 50);
@@ -377,7 +377,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
 
-                MyAction.HEAL_SELF, MyAction.MOVE_EAST, MyAction.MOVE_EAST, MyAction.USE_MEDIKIT_EAST
+                MyMove.HEAL_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_EAST
         );
     }
 
@@ -391,7 +391,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 true,
-                MyAction.HEAL_SELF, MyAction.HEAL_SELF
+                MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
     }
 
@@ -409,7 +409,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_EAST, MyAction.HEAL_NORTH
+                MyMove.MOVE_EAST, MyMove.HEAL_NORTH
         );
 
         setHp(SOLDIER, 1);
@@ -424,7 +424,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_EAST, MyAction.HEAL_NORTH
+                MyMove.MOVE_EAST, MyMove.HEAL_NORTH
         );
 
         setHp(SOLDIER, 100);
@@ -439,7 +439,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_NORTH, MyAction.MOVE_NORTH, MyAction.MOVE_EAST
+                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_EAST
         );
     }
 
@@ -455,7 +455,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_WEST
+                MyMove.MOVE_WEST
         );
 
         setHp(SOLDIER, 100);
@@ -468,7 +468,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_EAST
+                MyMove.MOVE_EAST
         );
 
         setHp(SNIPER, 1);
@@ -487,7 +487,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_WEST
+                MyMove.MOVE_WEST
         );
 
         setHp(SNIPER, 1);
@@ -507,7 +507,7 @@ public class MaxHealingPlanComputerTest {
                 },
                 false,
                 false,
-                MyAction.MOVE_WEST
+                MyMove.MOVE_WEST
         );
     }
 
@@ -572,9 +572,9 @@ public class MaxHealingPlanComputerTest {
         hp[trooper.ordinal()] = val;
     }
 
-    private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyAction... expectedAr) {
-        char[][] cmap = createMap(map);
-        List<MyAction> actual = new MaxHealingPlanComputer(
+    private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyMove... expectedAr) {
+        char[][] cmap = Utils.toCharAndTranspose(map);
+        List<MyMove> actual = new MaxHealingPlanComputer(
                 actionPoints,
                 cmap,
                 hp,
@@ -582,21 +582,11 @@ public class MaxHealingPlanComputerTest {
                 holdingMedikit,
                 utils
         ).getActions();
-        List<MyAction> expected = Arrays.asList(expectedAr);
+        List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(
                 actual,
                 expected,
                 String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
         );
-    }
-
-    private char[][] createMap(String[] map) {
-        char[][] r = new char[map[0].length()][map.length];
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[0].length(); j++) {
-                r[j][i] = map[i].charAt(j);
-            }
-        }
-        return r;
     }
 }
