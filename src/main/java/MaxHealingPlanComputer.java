@@ -123,7 +123,7 @@ class MaxHealingPlanComputer {
             dist[trooperIndex] = Utils.bfsByMap(map, positions[trooperIndex].x, positions[trooperIndex].y);
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[i].length; j++) {
-                    if (dist[trooperIndex][i][j] >= 7) {
+                    if (dist[trooperIndex][i][j] > MyStrategy.MAX_DISTANCE_MEDIC_SHOULD_HEAL) {
                         dist[trooperIndex][i][j] = Utils.UNREACHABLE;
                     }
                 }

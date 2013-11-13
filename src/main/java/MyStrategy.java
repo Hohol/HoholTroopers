@@ -7,6 +7,7 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
+    public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     final Random rnd = new Random(3222);
     Trooper self;
     World world;
@@ -25,6 +26,8 @@ public final class MyStrategy implements Strategy {
     static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
 
     static EnumMap<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
+
+    Trooper medic, sniper, soldier, commander, scout;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -78,6 +81,7 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
+    //m s c
     static String script = "";
     static int scriptPos;
 
@@ -125,7 +129,7 @@ public final class MyStrategy implements Strategy {
         }
 
         Cell cell = getNearestCellFromWhichCanShoot(target);
-        if(distTo(cell.x, cell.y, false) >= 8) {
+        if (distTo(cell.x, cell.y, false) >= 8) {
             return false;
         }
 
@@ -277,7 +281,7 @@ public final class MyStrategy implements Strategy {
     }
 
 
-                                //todo ща вроде будут проблемы, если медик не стоит
+    //todo ща вроде будут проблемы, если медик не стоит
     private boolean tryHeal() { //todo rename
         if (self.getType() != FIELD_MEDIC) {
             return oldTryHeal();
@@ -288,7 +292,7 @@ public final class MyStrategy implements Strategy {
         }
 
         boolean seeSomeEnemy = enemies.size() > 0;
-        if(allTeammatesFullHp() && !seeSomeEnemy) {
+        if (allTeammatesFullHp() && !seeSomeEnemy) {
             return false;
         }
 
@@ -315,7 +319,7 @@ public final class MyStrategy implements Strategy {
         }
         Move bestMove = actions.get(0).getMove();
 
-        if(bestMove.getAction() == MOVE && !haveTime(getMoveCost(self))) { // todo so wrong
+        if (bestMove.getAction() == MOVE && !haveTime(getMoveCost(self))) { // todo so wrong
             return false;
         }
 
@@ -512,7 +516,17 @@ public final class MyStrategy implements Strategy {
         updateLastSeen();
         updatePositionHistory();
         verifyDamage();
+        printHp();
         printMap();
+    }
+
+    private void printHp() {
+        if (!local) {
+            return;
+        }
+        for (Trooper trooper : teammates) {
+            System.out.println(trooper.getType() + ": " + trooper.getHitpoints() + " hp");
+        }
     }
 
     private void updatePositionHistory() {
@@ -650,7 +664,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (self.getActionPoints() <= 4 || overExtended() || !allTeammatesFullHp() && medicIsAlive()) {
+            if (self.getActionPoints() <= 4 || overExtended() || someoneNotFullHpAndMedicCanHealHim()) {
                 return false;
             }
             return moveToNearestLongAgoSeenCell();
@@ -677,6 +691,20 @@ public final class MyStrategy implements Strategy {
             }
             return moveTo(toFollow, false);
         }
+    }
+
+    private boolean someoneNotFullHpAndMedicCanHealHim() {
+        if (medic == null) {
+            return false;
+        }
+        int[][] dist = bfs(medic.getX(), medic.getY(), false);
+        for (Trooper trooper : teammates) {
+            if (trooper.getHitpoints() < trooper.getMaximalHitpoints() &&
+                    dist[trooper.getX()][trooper.getY()] <= MAX_DISTANCE_MEDIC_SHOULD_HEAL) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean tooCurvedPathTo(int x, int y, boolean avoidNarrowPathNearBorder) {
@@ -1069,12 +1097,42 @@ public final class MyStrategy implements Strategy {
     }
 
     public ArrayList<Trooper> getTeammates() {
+
+        commander = null;
+        medic = null;
+        soldier = null;
+        sniper = null;
+        scout = null;
+
         ArrayList<Trooper> r = new ArrayList<>();
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
                 r.add(trooper);
+                switch (trooper.getType()) {
+                    case COMMANDER:
+                        commander = trooper;
+                        break;
+                    case FIELD_MEDIC:
+                        medic = trooper;
+                        break;
+                    case SOLDIER:
+                        soldier = trooper;
+                        break;
+                    case SNIPER:
+                        sniper = trooper;
+                        break;
+                    case SCOUT:
+                        scout = trooper;
+                        break;
+                }
             }
         }
+        Collections.sort(r, new Comparator<Trooper>() {
+            @Override
+            public int compare(Trooper o1, Trooper o2) {
+                return Long.compare(o1.getId(), o2.getId());
+            }
+        });
         return r;
     }
 
