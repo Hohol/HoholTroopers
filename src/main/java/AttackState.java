@@ -6,18 +6,31 @@ import java.util.List;
 class AttackState extends State<AttackState> {
     int killedCnt;
     int damageSum;
+    int focusFireParameter;
     boolean holdingGrenade;
 
     public AttackState(AttackState s) {
-        this(new ArrayList<>(s.actions), s.actionPoints, s.holdingFieldRation, s.holdingGrenade, s.killedCnt, s.damageSum, s.stance, s.x, s.y);
+        this(new ArrayList<>(s.actions), s.actionPoints, s.holdingFieldRation, s.holdingGrenade, s.killedCnt, s.damageSum, s.stance, s.x, s.y, s.focusFireParameter);
     }
 
-    public AttackState(List<MyMove> actions, int actionPoints, boolean holdingFieldRation, boolean holdingGrenade, int killedCnt, int damageSum, TrooperStance stance, int x, int y) {
+    public AttackState(
+            List<MyMove> actions,
+            int actionPoints,
+            boolean holdingFieldRation,
+            boolean holdingGrenade,
+            int killedCnt,
+            int damageSum,
+            TrooperStance stance,
+            int x,
+            int y,
+            int focusFireParameter
+    ) {
         super(actions, actionPoints, holdingFieldRation, x, y, stance);
         this.killedCnt = killedCnt;
         this.damageSum = damageSum;
         this.actionPoints = actionPoints;
         this.holdingGrenade = holdingGrenade;
+        this.focusFireParameter = focusFireParameter;
     }
 
     @Override
@@ -37,6 +50,11 @@ class AttackState extends State<AttackState> {
         if (holdingFieldRation != old.holdingFieldRation) {
             return holdingFieldRation;
         }
+
+        if (focusFireParameter != old.focusFireParameter) {
+            return focusFireParameter > old.focusFireParameter;
+        }
+
         if (actionPoints != old.actionPoints) {
             return actionPoints > old.actionPoints;
         }

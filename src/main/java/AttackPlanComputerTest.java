@@ -537,6 +537,33 @@ public class AttackPlanComputerTest {
                 true,
                 MyMove.grenade(2,1)
         );
+
+        //---------
+        setMap(
+                "S3..F.f"
+        );
+        addEnemy(6, 0, 80, STANDING);
+        check(
+                8,
+                0, 0,
+                STANDING,
+                false,
+                true
+        );
+
+        //---------
+        setMap(
+                "S3.F..f"
+        );
+        addEnemy(6, 0, 80, STANDING);
+        check(
+                8,
+                0, 0,
+                STANDING,
+                false,
+                true,
+                MyMove.grenade(5, 0)
+        );
     }
 
     @Test
@@ -578,12 +605,76 @@ public class AttackPlanComputerTest {
                 false,
                 MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
         );
+
+
+
+        setMap(
+                "....c",
+                "S.C..",
+                "s...."
+        );
+        addEnemy(4, 0, 100, STANDING);
+        addEnemy(0, 2, 120, STANDING);
+        check(
+                5,
+                2, 1,
+                STANDING,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
+        );
+
+        //---------------
+
+        setMap(
+                "cs.....S."
+        );
+        addEnemy(0, 0, 100, STANDING);
+        addEnemy(1, 0, 120, STANDING);
+        check(
+                4,
+                7, 0,
+                STANDING,
+                false,
+                false,
+                MyMove.shoot(0,0)
+        );
+
+        //--------------
+        setMap(
+                "cs.....SC"
+        );
+        addEnemy(0, 0, 100, STANDING);
+        addEnemy(1, 0, 120, STANDING);
+        check(
+                4,
+                7, 0,
+                STANDING,
+                false,
+                false,
+                MyMove.shoot(1,0)
+        );
+
+        //--------------
+        setMap(
+                "cs......SC"
+        );
+        addEnemy(0, 0, 100, STANDING);
+        addEnemy(1, 0, 120, STANDING);
+        check(
+                4,
+                8, 0,
+                STANDING,
+                false,
+                false,
+                MyMove.shoot(1,0)
+        );
     }
 
-    @Test
+    /*@Test
     void testCollectBonus() {
         assertTrue(false);
-    }
+    }/**/
 
 
     private void addEnemy(int x, int y, int newHp, TrooperStance stance) {

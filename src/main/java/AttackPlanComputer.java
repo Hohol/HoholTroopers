@@ -1,4 +1,5 @@
 import model.TrooperStance;
+import model.TrooperType;
 
 import static model.TrooperStance.*;
 
@@ -10,6 +11,7 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
     private boolean[] visibilities;
     TrooperStance[][] stances;
     private int[][] hp;
+    private int[][] sqrDistSum;
 
     public AttackPlanComputer(
             int actionPoints,
@@ -29,7 +31,7 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
         this.visibilities = visibilities;
         this.stances = stances;
 
-        cur = new AttackState(new ArrayList<MyMove>(), actionPoints, holdingFieldRation, holdingGrenade, 0, 0, stance, x, y);
+        cur = new AttackState(new ArrayList<MyMove>(), actionPoints, holdingFieldRation, holdingGrenade, 0, 0, stance, x, y, 0);
 
         prepare();
 
@@ -39,6 +41,7 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
     private void prepare() {
         selfType = Utils.getTrooperTypeByChar(map[cur.x][cur.y]);
         map[cur.x][cur.y] = '.';
+        sqrDistSum = new int[map.length][map[0].length];
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 char ch = map[i][j];
@@ -47,6 +50,17 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
                 } else {
                     hp[i][j] = Integer.MAX_VALUE;
                 }
+                if (Utils.isCapitalLetter(ch)) {
+                    updateSqrDistSum(i, j);
+                }
+            }
+        }
+    }
+
+    private void updateSqrDistSum(int x, int y) {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                sqrDistSum[i][j] += Utils.sqrDist(x, y, i, j);
             }
         }
     }
@@ -187,7 +201,11 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
     }
 
     private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance) {
-        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(utils.getShootRange(selfType))) {
+        return canShoot(viewerX, viewerY, objectX, objectY, stance, selfType);
+    }
+
+    private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
+        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(utils.getShootRange(type))) {
             return false;
         }
         return visible(viewerX, viewerY, objectX, objectY, stance);
@@ -257,8 +275,20 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
 
 
     private void updateBest() {
+        cur.focusFireParameter = getFocusFireParameter();
         if (cur.better(best)) {
             best = new AttackState(cur);
         }
+    }
+
+    private int getFocusFireParameter() {
+        int r = 0;
+        for (Cell enemy : enemyPositions) {
+            if (hp[enemy.x][enemy.y] <= 0) {
+                continue;
+            }
+            r += (10000 - sqrDistSum[enemy.x][enemy.y]) * (Utils.INITIAL_TROOPER_HP * 2 - hp[enemy.x][enemy.y]);
+        }
+        return r;
     }
 }
