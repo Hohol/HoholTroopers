@@ -81,7 +81,7 @@ public final class MyStrategy implements Strategy {
     private boolean newTryShoot() {
         List<MyMove> actions = getAttackPlan().actions;
 
-        if(actions.isEmpty()) {
+        if (actions.isEmpty()) {
             return false;
         }
         moveByPlan(actions);
@@ -99,7 +99,7 @@ public final class MyStrategy implements Strategy {
     boolean interesting(List<MyMove> actions) {
         for (MyMove move : actions) {
             ActionType action = move.getMove().getAction();
-            if(action == THROW_GRENADE || action == RAISE_STANCE || action == LOWER_STANCE || action == EAT_FIELD_RATION) {
+            if (action == THROW_GRENADE || action == RAISE_STANCE || action == LOWER_STANCE || action == EAT_FIELD_RATION) {
                 return true;
             }
         }
@@ -338,7 +338,7 @@ public final class MyStrategy implements Strategy {
         }
 
         AttackState attackPlan = getAttackPlan();
-        if(attackPlan.killedCnt > 0 || attackPlan.damageSum >= 80) {
+        if (attackPlan.killedCnt > 0 || attackPlan.damageSum >= 80) {
             moveByPlan(attackPlan.actions);
             return true;
         }
@@ -398,6 +398,9 @@ public final class MyStrategy implements Strategy {
             return false;
         }
         if (teammates.size() == 1) {
+            return false;
+        }
+        if (enemies.size() == 0) {
             return false;
         }
         Trooper target = getTeammateToHeal();
@@ -560,7 +563,7 @@ public final class MyStrategy implements Strategy {
         if (utils == null) {
             utils = new Utils(game, new TrooperParameters.TrooperParametersImpl(teammates));
         }
-        if(vision == null) {
+        if (vision == null) {
             vision = world.getCellVisibilities();
         }
         updateLastSeen();
