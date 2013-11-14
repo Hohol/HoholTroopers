@@ -194,6 +194,10 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
         if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(utils.getShootRange(selfType))) {
             return false;
         }
+        return visible(viewerX, viewerY, objectX, objectY, stance);
+    }
+
+    private boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
         int width = map.length;
         int height = map[0].length;
         int stanceCount = Utils.NUMBER_OF_STANCES;

@@ -17,6 +17,7 @@ public final class MyStrategy implements Strategy {
     boolean[][] occupiedByTrooper;
     static int[][] lastSeen;
     static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+    static boolean[] vision;
 
     List<Trooper> teammates, enemies;
     Trooper teammateToFollow;
@@ -54,11 +55,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryThrowGrenade()) {
-            return;
-        }
-
-        if (tryShoot()) {
+        if (newTryShoot()) {
             return;
         }
 
@@ -79,6 +76,58 @@ public final class MyStrategy implements Strategy {
         }
 
         move.setAction(END_TURN);
+    }
+
+    private boolean newTryShoot() {
+        List<MyMove> actions = new AttackPlanComputer(
+                self.getActionPoints(),
+                self.getX(),
+                self.getY(),
+                createSimpleMapForShooting(),
+                getEnemyHp(),
+                self.isHoldingFieldRation(),
+                self.isHoldingGrenade(),
+                self.getStance(),
+                vision,
+                getStances(),
+                utils
+        ).getActions();
+
+        if(actions.isEmpty()) {
+            return false;
+        }
+        Move bestMove = actions.get(0).getMove();
+        move.setAction(bestMove.getAction());
+        move.setDirection(bestMove.getDirection());
+        move.setX(bestMove.getX());
+        move.setY(bestMove.getY());
+        return true;
+    }
+
+    boolean interesting(List<MyMove> actions) {
+        for (MyMove move : actions) {
+            ActionType action = move.getMove().getAction();
+            if(action == THROW_GRENADE || action == RAISE_STANCE || action == LOWER_STANCE || action == EAT_FIELD_RATION) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private TrooperStance[][] getStances() {
+        TrooperStance[][] stances = new TrooperStance[world.getWidth()][world.getHeight()];
+        for (Trooper trooper : enemies) {
+            stances[trooper.getX()][trooper.getY()] = trooper.getStance();
+        }
+        return stances;
+    }
+
+    private int[][] getEnemyHp() {
+        int[][] r = createIntMap(Integer.MAX_VALUE);
+        for (Trooper trooper : enemies) {
+            r[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
+        }
+        return r;
     }
 
     //m s c
@@ -298,7 +347,7 @@ public final class MyStrategy implements Strategy {
 
         //todo refactor
 
-        char[][] map = createSimpleMap();
+        char[][] map = createSimpleMapForHealing();
         //print("Simple map for healing", map);
 
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
@@ -472,22 +521,6 @@ public final class MyStrategy implements Strategy {
         return cnt < 10;
     }
 
-    private boolean tryThrowGrenade() {
-        if (!haveTime(game.getGrenadeThrowCost())) {
-            return false;
-        }
-        if (!self.isHoldingGrenade()) {
-            return false;
-        }
-        for (Trooper trooper : enemies) {
-            if (canThrowGrenade(trooper)) {
-                throwGrenade(trooper);
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void throwGrenade(Trooper trooper) {
         move.setAction(THROW_GRENADE);
         setDirection(trooper);
@@ -512,6 +545,9 @@ public final class MyStrategy implements Strategy {
         }
         if (utils == null) {
             utils = new Utils(game, new TrooperParameters.TrooperParametersImpl(teammates));
+        }
+        if(vision == null) {
+            vision = world.getCellVisibilities();
         }
         updateLastSeen();
         updatePositionHistory();
@@ -562,7 +598,7 @@ public final class MyStrategy implements Strategy {
         System.out.println(o);
     }
 
-    char[][] createSimpleMap() {
+    char[][] createSimpleMapForHealing() {
         char[][] map = new char[world.getWidth()][world.getHeight()];
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
@@ -575,6 +611,14 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : teammates) {
             map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
+        }
+        return map;
+    }
+
+    char[][] createSimpleMapForShooting() { //наверно ее и для лечения можно, но надо потестить - мало ли
+        char[][] map = createSimpleMapForHealing();
+        for (Trooper trooper : enemies) {
+            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
         }
         return map;
     }
