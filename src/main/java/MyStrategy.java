@@ -725,7 +725,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (self.getActionPoints() <= 4 || overExtended() || someoneNotFullHpAndMedicCanHealHim()) {
+            if (self.getActionPoints() <= 4 && world.getMoveIndex() >= 1 || overExtended() || someoneNotFullHpAndMedicCanHealHim()) {
                 return false;
             }
             return moveToNearestLongAgoSeenCell();
