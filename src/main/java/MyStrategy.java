@@ -358,7 +358,7 @@ public final class MyStrategy implements Strategy {
                 holdingAndShouldUseFieldRation,
                 holdingAndShouldUseMedikit,
                 utils
-        ).getActions();
+        ).getPlan().actions;
 
         if (actions.isEmpty()) {
             move.setAction(END_TURN);

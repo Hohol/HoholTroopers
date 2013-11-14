@@ -94,10 +94,14 @@ public class MyMove {
         if (move.getAction() == SHOOT) {
             return "shoot(" + move.getX() + ", " + move.getY() + ")";
         }
-        if (move.getAction() == HEAL && move.getDirection() == CURRENT_POINT) {
-            return "HEAL_SELF";
+        if (move.getAction() == HEAL || move.getAction() == USE_MEDIKIT) {
+            if (move.getDirection() == CURRENT_POINT) {
+                return move.getAction() + "_SELF";
+            } else {
+                return move.getAction() + "_" + move.getDirection();
+            }
         }
-        if (move.getAction() == MOVE){
+        if (move.getAction() == MOVE) {
             return "MOVE_" + move.getDirection();
         }
         if (move.getAction() == HEAL) {
@@ -109,6 +113,7 @@ public class MyMove {
     public static MyMove shoot(int x, int y) {
         return MyMove.of(SHOOT, x, y);
     }
+
     public static MyMove grenade(int x, int y) {
         return MyMove.of(THROW_GRENADE, x, y);
     }

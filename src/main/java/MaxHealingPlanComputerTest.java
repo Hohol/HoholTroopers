@@ -29,13 +29,14 @@ public class MaxHealingPlanComputerTest {
     @Test
     void testTrivial() {
         setHp(FIELD_MEDIC, 97);
-        check(
+        checkWithExpectedHealedSum(
                 5,
                 new String[]{
                         "F"
                 },
-
-                false, false, MyMove.HEAL_SELF
+                false, false,
+                3,
+                MyMove.HEAL_SELF
         );
 
 
@@ -172,7 +173,7 @@ public class MaxHealingPlanComputerTest {
 
                 false,
 
-                MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST
+                MyMove.EAT_FIELD_RATION, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_SELF
         );
     }
 
@@ -343,14 +344,14 @@ public class MaxHealingPlanComputerTest {
 
         setHp(FIELD_MEDIC, 1);
         setHp(SOLDIER, 50);
-        check(
+        checkWithExpectedHealedSum(
                 2,
                 new String[] {
                         "FS"
                 },
                 false,
                 true,
-
+                50,
                 MyMove.USE_MEDIKIT_EAST
         );
 
@@ -368,15 +369,31 @@ public class MaxHealingPlanComputerTest {
 
         setHp(FIELD_MEDIC, 50);
         setHp(COMMANDER, 50);
-        check(
+        checkWithExpectedHealedSum(
                 7,
                 new String[] {
                         "F..C"
                 },
                 false,
                 true,
-
+                53,
                 MyMove.HEAL_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_EAST
+        );
+    }
+
+    @Test
+    void testTest() {
+        setHp(FIELD_MEDIC, 50);
+        setHp(COMMANDER, 50);
+        checkWithExpectedHealedSum(
+                4,
+                new String[] {
+                        "FC"
+                },
+                false,
+                true,
+                56,
+                MyMove.USE_MEDIKIT_EAST, MyMove.HEAL_SELF, MyMove.HEAL_SELF
         );
     }
 
@@ -567,25 +584,99 @@ public class MaxHealingPlanComputerTest {
         );
     }
 
+    @Test
+    void testSomeAnotherBug() {
+        setHp(COMMANDER, 90);
+        setHp(SOLDIER, 95);
+        setHp(FIELD_MEDIC, 100);
+
+        check(
+                8,
+                new String[] {
+                        "SF....C",
+                },
+                true,
+                false,
+                MyMove.HEAL_WEST, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
+        );
+    }
+
+    @Test
+    void testOneMoreBug() {
+        setHp(COMMANDER, 90);
+        setHp(FIELD_MEDIC, 97);
+
+        check(
+                8,
+                new String[] {
+                        "F....C",
+                },
+                true,
+                false,
+                MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
+        );
+    }
+
+    @Test
+    void testOneMoreBug2() {
+        setHp(FIELD_MEDIC, 1);
+
+        checkWithExpectedHealedSum(
+                8,
+                new String[] {
+                        "F",
+                },
+                true,
+                false,
+                33,
+                MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
+        );
+    }
+
+    @Test
+    void testOneMoreBug3() {
+        setHp(FIELD_MEDIC, 99);
+
+        checkWithExpectedHealedSum(
+                1,
+                new String[] {
+                        "F",
+                },
+                true,
+                false,
+                1,
+                MyMove.HEAL_SELF
+        );
+    }
+
     private void setHp(TrooperType trooper, int val) {
         hp[trooper.ordinal()] = val;
     }
 
     private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyMove... expectedAr) {
+        checkWithExpectedHealedSum(actionPoints, map, holdingFieldRation, holdingMedikit, -1, expectedAr);
+    }
+
+    private void checkWithExpectedHealedSum(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, int expectedHealSum, MyMove... expectedAr) {
         char[][] cmap = Utils.toCharAndTranspose(map);
-        List<MyMove> actual = new MaxHealingPlanComputer(
+        HealingState plan = new MaxHealingPlanComputer(
                 actionPoints,
                 cmap,
                 hp,
                 holdingFieldRation,
                 holdingMedikit,
                 Utils.HARDCODED_UTILS
-        ).getActions();
+        ).getPlan();
+
+        List<MyMove> actual = plan.actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(
                 actual,
                 expected,
-                String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
+                String.format("\n\nActual: %s \nExpected: %s\nActual heal: %s\n Expected heal: %s\n\n", actual, expected, plan.healedSum, expectedHealSum)
         );
+        if(expectedHealSum != -1) {
+            assertEquals(plan.healedSum, expectedHealSum);
+        }
     }
 }
