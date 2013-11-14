@@ -535,7 +535,7 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        return cnt < 10;
+        return cnt < 20;
     }
 
     private void throwGrenade(Trooper trooper) {
