@@ -51,7 +51,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryHeal()) {
+        if (tryActAsCoolMedic()) {
             return;
         }
 
@@ -79,29 +79,21 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean newTryShoot() {
-        List<MyMove> actions = new AttackPlanComputer(
-                self.getActionPoints(),
-                self.getX(),
-                self.getY(),
-                createSimpleMapForShooting(),
-                getEnemyHp(),
-                self.isHoldingFieldRation(),
-                self.isHoldingGrenade(),
-                self.getStance(),
-                vision,
-                getStances(),
-                utils
-        ).getActions();
+        List<MyMove> actions = getAttackPlan().actions;
 
         if(actions.isEmpty()) {
             return false;
         }
+        moveByPlan(actions);
+        return true;
+    }
+
+    private void moveByPlan(List<MyMove> actions) {
         Move bestMove = actions.get(0).getMove();
         move.setAction(bestMove.getAction());
         move.setDirection(bestMove.getDirection());
         move.setX(bestMove.getX());
         move.setY(bestMove.getY());
-        return true;
     }
 
     boolean interesting(List<MyMove> actions) {
@@ -331,7 +323,7 @@ public final class MyStrategy implements Strategy {
 
 
     //todo ща вроде будут проблемы, если медик не стоит
-    private boolean tryHeal() { //todo rename
+    private boolean tryActAsCoolMedic() { //todo rename
         if (self.getType() != FIELD_MEDIC) {
             return oldTryHeal();
         }
@@ -343,6 +335,12 @@ public final class MyStrategy implements Strategy {
         boolean seeSomeEnemy = enemies.size() > 0;
         if (allTeammatesFullHp() && !seeSomeEnemy) {
             return false;
+        }
+
+        AttackState attackPlan = getAttackPlan();
+        if(attackPlan.killedCnt > 0 || attackPlan.damageSum >= 80) {
+            moveByPlan(attackPlan.actions);
+            return true;
         }
 
         //todo refactor
@@ -377,6 +375,22 @@ public final class MyStrategy implements Strategy {
         move.setX(bestMove.getX());
         move.setY(bestMove.getY());
         return true;
+    }
+
+    private AttackState getAttackPlan() {
+        return new AttackPlanComputer(
+                self.getActionPoints(),
+                self.getX(),
+                self.getY(),
+                createSimpleMapForShooting(),
+                getEnemyHp(),
+                self.isHoldingFieldRation(),
+                self.isHoldingGrenade(),
+                self.getStance(),
+                vision,
+                getStances(),
+                utils
+        ).getPlan();
     }
 
     private boolean oldTryHeal() {    //todo rework

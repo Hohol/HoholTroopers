@@ -73,4 +73,8 @@ public abstract class PlanComputer <S extends State> {
             popAction();
         }
     }
+
+    public S getPlan() {
+        return best;
+    }
 }

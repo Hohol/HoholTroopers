@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class AttackPlanComputerTest {
@@ -559,6 +560,32 @@ public class AttackPlanComputerTest {
         );
     }
 
+
+    @Test
+    void testFocusFire() {
+        setMap(
+                "....c",
+                "S.C..",
+                "s...."
+        );
+        addEnemy(4, 0, 100, STANDING);
+        addEnemy(0, 2, 120, STANDING);
+        check(
+                5,
+                2, 1,
+                STANDING,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
+        );
+    }
+
+    @Test
+    void testCollectBonus() {
+        assertTrue(false);
+    }
+
+
     private void addEnemy(int x, int y, int newHp, TrooperStance stance) {
         char ch = map[x][y];
         if (ch < 'a' || ch > 'z') {
@@ -665,7 +692,7 @@ public class AttackPlanComputerTest {
                 getVisibilities(),
                 stances,
                 Utils.HARDCODED_UTILS
-        ).getActions();
+        ).getPlan().actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(
                 actual,

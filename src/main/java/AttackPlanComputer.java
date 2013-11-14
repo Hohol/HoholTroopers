@@ -51,10 +51,6 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
         }
     }
 
-    public List<MyMove> getActions() {
-        return best.actions;
-    }
-
     protected void rec() {
         updateBest();
         tryThrowGrenade();
@@ -94,10 +90,10 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
             return false;
         }
         if (forbidden(ex, ey) ||
-            forbidden(ex + 1, ey) ||
-            forbidden(ex - 1, ey) ||
-            forbidden(ex, ey + 1) ||
-            forbidden(ex, ey - 1)) {
+                forbidden(ex + 1, ey) ||
+                forbidden(ex - 1, ey) ||
+                forbidden(ex, ey + 1) ||
+                forbidden(ex, ey - 1)) {
             return false;
         }
         return true;
