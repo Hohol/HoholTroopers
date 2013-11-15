@@ -33,7 +33,6 @@ public abstract class PlanComputer <S extends State> {
         this.visibilities = visibilities;
     }
 
-    abstract protected void rec();
     abstract protected void updateBest();
 
 
@@ -371,5 +370,34 @@ public abstract class PlanComputer <S extends State> {
             tryThrowGrenade(pos.x, pos.y + 1);
             tryThrowGrenade(pos.x, pos.y - 1);
         }
+    }
+
+    protected void rec() {
+        BonusType bonus = bonuses[cur.x][cur.y];
+        boolean oldHoldingGrenade = cur.holdingGrenade;
+        boolean oldHoldingFieldRation = cur.holdingFieldRation;
+
+        if (bonus == BonusType.GRENADE && !cur.holdingGrenade) {
+            bonuses[cur.x][cur.y] = null;
+            cur.holdingGrenade = true;
+        }
+        if (bonus == BonusType.FIELD_RATION && !cur.holdingFieldRation) {
+            bonuses[cur.x][cur.y] = null;
+            cur.holdingFieldRation = true;
+        }
+
+        updateBest();
+        tryEatFieldRation();
+        tryHealAsMedic();
+        tryHealWithMedikit();
+        tryMove();
+        tryThrowGrenade();
+        tryShoot();
+        tryRaiseStance();
+        tryLowerStance();
+
+        bonuses[cur.x][cur.y] = bonus;
+        cur.holdingGrenade = oldHoldingGrenade;
+        cur.holdingFieldRation = oldHoldingFieldRation;
     }
 }

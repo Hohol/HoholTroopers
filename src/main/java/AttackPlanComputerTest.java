@@ -341,7 +341,7 @@ public class AttackPlanComputerTest {
                 0, 2,
                 STANDING,
                 true,
-                false, MyMove.EAT_FIELD_RATION, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
+                false, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
         );
     }
 
@@ -737,7 +737,7 @@ public class AttackPlanComputerTest {
     }
 
     @Test
-    void testBerserkMedic2() {
+    void testBerserkMedic() {
         setMap("F.s");
         addEnemy(2, 0, 1000, STANDING);
         addBonus(0, 0, FIELD_RATION);

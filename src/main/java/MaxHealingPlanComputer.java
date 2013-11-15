@@ -1,3 +1,5 @@
+import model.BonusType;
+
 import static model.TrooperType.*;
 
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ class MaxHealingPlanComputer extends PlanComputer<HealingState> {
         super(map, utils, null, null, null, null);
         selfType = FIELD_MEDIC;
 
+        bonuses = new BonusType[map.length][map[0].length];
         Cell start = getStart();
         prepare(hp1d);
         cur = new HealingState(new ArrayList<MyMove>(), actionPoints, holdingFieldRation, holdingMedikit, start.x, start.y, selfHp, 0, 0, 0, false, 0);
@@ -67,17 +70,6 @@ class MaxHealingPlanComputer extends PlanComputer<HealingState> {
                 }
             }
         }
-    }
-
-    @Override
-    public void rec() {
-        updateBest();
-        tryEatFieldRation();
-
-        tryHealAsMedic();
-        tryHealWithMedikit();
-
-        tryMove();
     }
 
     @Override
