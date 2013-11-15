@@ -187,11 +187,11 @@ public class Utils {
         return r;
     }
 
-    public static boolean isSmallLetter(char ch) {
+    public static boolean isEnemyChar(char ch) {
         return ch >= 'a' && ch <= 'z';
     }
 
-    public static boolean isCapitalLetter(char ch) {
+    public static boolean isTeammateChar(char ch) {
         return ch >= 'A' && ch <= 'Z';
     }
 

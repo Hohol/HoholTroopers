@@ -1,25 +1,31 @@
 import model.TrooperStance;
 
+import java.util.ArrayList;
 import java.util.List;
 
-abstract class State <S extends State> {
+class State {
 
     List<MyMove> actions;
     int actionPoints;
     boolean holdingFieldRation;
+    boolean holdingMedikit;
+    boolean holdingGrenade;
     int x;
     int y;
     TrooperStance stance;
     int selfHp;
+
+    //----
+
     int healedSum;
-    boolean holdingMedikit;
     int killedCnt;
     int damageSum;
+
     int focusFireParameter;
-    boolean holdingGrenade;
+    int minHp;
+    int distSum;
 
     protected State(
-            List<MyMove> actions,
             int actionPoints,
             boolean holdingFieldRation,
             int x,
@@ -27,13 +33,9 @@ abstract class State <S extends State> {
             TrooperStance stance,
             int hp,
             boolean holdingMedikit,
-            int killedCnt,
-            int damageSum,
-            int focusFireParameter,
-            boolean holdingGrenade,
-            int healedSum
+            boolean holdingGrenade
     ) {
-        this.actions = actions;
+        this.actions = new ArrayList<>();
         this.actionPoints = actionPoints;
         this.holdingFieldRation = holdingFieldRation;
         this.y = y;
@@ -41,12 +43,60 @@ abstract class State <S extends State> {
         this.stance = stance;
         this.selfHp = hp;
         this.holdingMedikit = holdingMedikit;
-        this.killedCnt = killedCnt;
-        this.damageSum = damageSum;
-        this.focusFireParameter = focusFireParameter;
         this.holdingGrenade = holdingGrenade;
-        this.healedSum = healedSum;
     }
 
-    abstract boolean better(S cur);
+    protected State(State cur) {
+        this(cur.actionPoints, cur.holdingFieldRation, cur.x, cur.y, cur.stance, cur.selfHp, cur.holdingMedikit, cur.holdingGrenade);
+        this.actions = new ArrayList<>(cur.actions);
+        this.killedCnt = cur.killedCnt;
+        this.damageSum = cur.damageSum;
+        this.healedSum = cur.healedSum;
+        this.focusFireParameter = cur.focusFireParameter;
+        this.minHp = cur.minHp;
+        this.distSum = cur.distSum;
+    }
+
+    boolean better(State old) {
+        if (old == null) {
+            return true;
+        }
+
+        if (killedCnt != old.killedCnt) {
+            return killedCnt > old.killedCnt;
+        }
+        if (damageSum != old.damageSum) {
+            return damageSum > old.damageSum;
+        }
+
+        if (healedSum != old.healedSum) {
+            return healedSum > old.healedSum;
+        }
+
+        if (minHp != old.minHp) {
+            return minHp > old.minHp;
+        }
+        if (holdingMedikit != old.holdingMedikit) {
+            return holdingMedikit;
+        }
+        if (holdingFieldRation != old.holdingFieldRation) {
+            return holdingFieldRation;
+        }
+        if (distSum != old.distSum) {
+            return distSum < old.distSum;
+        }
+        if (actionPoints != old.actionPoints) {
+            return actionPoints > old.actionPoints;
+        }
+
+        if (holdingGrenade != old.holdingGrenade) {
+            return holdingGrenade;
+        }
+
+        if (focusFireParameter != old.focusFireParameter) {
+            return focusFireParameter > old.focusFireParameter;
+        }
+
+        return false;
+    }
 }

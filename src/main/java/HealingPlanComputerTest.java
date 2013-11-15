@@ -681,14 +681,34 @@ public class HealingPlanComputerTest {
 
     private void checkWithExpectedHealedSum(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, int expectedHealSum, MyMove... expectedAr) {
         char[][] cmap = Utils.toCharAndTranspose(map);
-        HealingState plan = new HealingPlanComputer(
+        int x = -1, y = -1;
+        for (int i = 0; i < cmap.length; i++) {
+            for (int j = 0; j < cmap[i].length; j++) {
+                if(cmap[i][j] == Utils.getCharForTrooperType(FIELD_MEDIC)) {
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        int[][] hp2d = new int[cmap.length][cmap[0].length];
+        for (int i = 0; i < cmap.length; i++) {
+            for (int j = 0; j < cmap[i].length; j++) {
+                if (Utils.isTeammateChar(cmap[i][j])) {
+                        int index = Utils.getTrooperTypeByChar(cmap[i][j]).ordinal();
+                        hp2d[i][j] = hp1d[index];
+                }
+            }
+        }
+        State plan = new HealingPlanComputer(
                 actionPoints,
                 cmap,
-                hp1d,
                 holdingFieldRation,
                 holdingMedikit,
                 Utils.HARDCODED_UTILS,
-                hp1d[FIELD_MEDIC.ordinal()]
+                hp1d[FIELD_MEDIC.ordinal()],
+                x,
+                y,
+                hp2d
         ).getPlan();
 
         List<MyMove> actual = plan.actions;
@@ -701,5 +721,9 @@ public class HealingPlanComputerTest {
         if(expectedHealSum != -1) {
             assertEquals(plan.healedSum, expectedHealSum);
         }
+    }
+
+    private int[][] createHp2d() {
+        throw new RuntimeException("Not supported yet");
     }
 }

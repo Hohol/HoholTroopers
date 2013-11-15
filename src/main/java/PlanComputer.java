@@ -10,20 +10,22 @@ import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
 import static model.TrooperType.FIELD_MEDIC;
 
-public abstract class PlanComputer <S extends State> {
+public abstract class PlanComputer {
     protected final char[][] map;
     protected final Game game;
     protected final Utils utils;
     protected final List<Cell> enemyPositions = new ArrayList<>();
     protected final List<Cell> allyPositions = new ArrayList<>();
-    protected S cur, best;
+    protected State cur, best;
     protected TrooperType selfType;
     protected int[][] hp;
     protected boolean[] visibilities;
+    protected int[][] sqrDistSum;
     BonusType[][] bonuses;
     TrooperStance[][] stances;
+    List<int[][]> dist;
 
-    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities) {
+    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
         this.utils = utils;
         this.game = utils.getGame();
@@ -31,9 +33,36 @@ public abstract class PlanComputer <S extends State> {
         this.bonuses = bonuses;
         this.stances = stances;
         this.visibilities = visibilities;
+        this.cur = state;
+        this.hp = hp;
+        prepare();
     }
 
-    abstract protected void updateBest();
+    private void prepare() {
+        selfType = Utils.getTrooperTypeByChar(map[cur.x][cur.y]);
+        map[cur.x][cur.y] = '.';
+        sqrDistSum = new int[map.length][map[0].length];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                char ch = map[i][j];
+                if (Utils.isEnemyChar(ch)) {
+                    enemyPositions.add(new Cell(i, j));
+                } else if (Utils.isTeammateChar(ch)) {
+                    allyPositions.add(new Cell(i, j));
+                    updateSqrDistSum(i, j);
+                } else {
+                    hp[i][j] = Integer.MAX_VALUE;
+                }
+            }
+        }
+    }
+
+    void updateBest() {
+        cur.focusFireParameter = getFocusFireParameter();
+        if (cur.better(best)) {
+            best = new State(cur);
+        }
+    }
 
 
     protected void addAction(MyMove action) {
@@ -88,7 +117,7 @@ public abstract class PlanComputer <S extends State> {
         }
     }
 
-    public S getPlan() {
+    public State getPlan() {
         return best;
     }
 
@@ -147,7 +176,7 @@ public abstract class PlanComputer <S extends State> {
                 continue;
             }
             char targetChar = map[toX][toY];
-            if (!Utils.isCapitalLetter(targetChar)) {
+            if (!Utils.isTeammateChar(targetChar)) {
                 continue;
             }
             newTryHeal(healValue, healCost, heal, avoidOverheal, new Cell(toX, toY));
@@ -183,7 +212,7 @@ public abstract class PlanComputer <S extends State> {
         if (!inField(ex, ey)) {
             return;
         }
-        if (!Utils.isSmallLetter(map[ex][ey])) {
+        if (!Utils.isEnemyChar(map[ex][ey])) {
             return;
         }
 
@@ -200,7 +229,7 @@ public abstract class PlanComputer <S extends State> {
         if (!inField(ex, ey)) {
             return;
         }
-        if (!Utils.isSmallLetter(map[ex][ey])) {
+        if (!Utils.isEnemyChar(map[ex][ey])) {
             return;
         }
 
@@ -328,7 +357,7 @@ public abstract class PlanComputer <S extends State> {
         if (x == cur.x && y == cur.y) {
             return true;
         }
-        if (Utils.isCapitalLetter(map[x][y])) {
+        if (Utils.isTeammateChar(map[x][y])) {
             return true;
         }
         return false;
@@ -399,5 +428,49 @@ public abstract class PlanComputer <S extends State> {
         bonuses[cur.x][cur.y] = bonus;
         cur.holdingGrenade = oldHoldingGrenade;
         cur.holdingFieldRation = oldHoldingFieldRation;
+    }
+
+    protected void updateSqrDistSum(int x, int y) {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                sqrDistSum[i][j] += Utils.sqrDist(x, y, i, j);
+            }
+        }
+    }
+
+    protected int getFocusFireParameter() {
+        int r = 0;
+        for (Cell enemy : enemyPositions) {
+            if (hp[enemy.x][enemy.y] <= 0) {
+                continue;
+            }
+            r += (10000 - sqrDistSum[enemy.x][enemy.y]) * (Utils.INITIAL_TROOPER_HP * 2 - hp[enemy.x][enemy.y]);
+        }
+        return r;
+    }
+
+    protected int getMinHp() {
+        int mi = cur.selfHp;
+        for (Cell cell : allyPositions) {
+            mi = Math.min(mi, hp[cell.x][cell.y]);
+        }
+        return mi;
+    }
+
+    protected int getDistToTeammatesSum() {
+        int r = 0;
+        int minHp = Integer.MAX_VALUE;
+        for (Cell cell : allyPositions) {
+            minHp = Math.min(minHp, hp[cell.x][cell.y]);
+        }
+        for (int i = 0; i < allyPositions.size(); i++) {
+            Cell cell = allyPositions.get(i);
+            int d = dist.get(i)[cur.x][cur.y];
+            if (hp[cell.x][cell.y] == minHp) {
+                d *= 100;
+            }
+            r += d;
+        }
+        return r;
     }
 }

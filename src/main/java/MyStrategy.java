@@ -346,7 +346,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        AttackState attackPlan = getAttackPlan();
+        State attackPlan = getAttackPlan();
         if (attackPlan.killedCnt > 0 || attackPlan.damageSum >= 80) {
             moveByPlan(attackPlan.actions);
             return true;
@@ -363,11 +363,12 @@ public final class MyStrategy implements Strategy {
         List<MyMove> actions = new HealingPlanComputer(
                 self.getActionPoints(),
                 map,  //map may be modified
-                getHpByOrdinal(),
                 holdingAndShouldUseFieldRation,
                 holdingAndShouldUseMedikit,
                 utils,
-                self.getHitpoints()
+                self.getHitpoints(),
+                self.getX(),self.getY(),
+                createHp2d()
         ).getPlan().actions;
 
         if (actions.isEmpty()) {
@@ -387,7 +388,11 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
-    private AttackState getAttackPlan() {
+    private int[][] createHp2d() {
+        throw new RuntimeException("Not supported yet");
+    }
+
+    private State getAttackPlan() {
         return new AttackPlanComputer(
                 self.getActionPoints(),
                 self.getX(),
@@ -400,8 +405,7 @@ public final class MyStrategy implements Strategy {
                 vision,
                 getStances(),
                 bonuses,
-                utils,
-                self.getHitpoints()
+                utils
         ).getPlan();
     }
 

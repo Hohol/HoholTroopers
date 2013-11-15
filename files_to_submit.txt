@@ -5,7 +5,5 @@ TrooperParameters.java
 HealingPlanComputer.java
 MyMove.java
 AttackPlanComputer.java
-AttackState.java
 PlanComputer.java
-HealingState.java
 State.java

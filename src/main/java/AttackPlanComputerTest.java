@@ -43,20 +43,6 @@ public class AttackPlanComputerTest {
                 0, 0,
                 STANDING, false, false, MyMove.shoot(1, 0)
         );
-        //-----------------------
-        setMap(
-                "S..s",
-                "....",
-                "c..."
-        );
-        addEnemy(3, 0, 100, STANDING);
-        addEnemy(0, 2, 30, STANDING);
-
-        check(
-                4,
-                0, 0,
-                STANDING, false, false, MyMove.shoot(0, 2)
-        );
 
         //----------------------
         setMap(
@@ -81,6 +67,23 @@ public class AttackPlanComputerTest {
         );
         addEnemy(3, 0, 1, STANDING);
         addEnemy(0, 2, 2, STANDING);
+
+        check(
+                4,
+                0, 0,
+                STANDING, false, false, MyMove.shoot(0, 2)
+        );
+    }
+
+    @Test
+    void testShootBugRightAnswer() {
+        setMap(
+                "S..c",
+                "....",
+                "s..."
+        );
+        addEnemy(3, 0, 100, STANDING);
+        addEnemy(0, 2, 30, STANDING);
 
         check(
                 4,
@@ -211,7 +214,8 @@ public class AttackPlanComputerTest {
                 2,
                 0, 0,
                 STANDING,
-                false, false);
+                false, false
+        );
     }
 
     @Test
@@ -891,8 +895,15 @@ public class AttackPlanComputerTest {
             boolean holdingFieldRation,
             boolean holdingGrenade, MyMove... expectedAr
     ) {
-        if (!Utils.isCapitalLetter(map[x][y])) {
+        if (!Utils.isTeammateChar(map[x][y])) {
             throw new RuntimeException("No allied trooper in cell (" + x + ", " + y + ")");
+        }
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                if(Utils.isTeammateChar(map[i][j])) {
+                    hp[i][j] = Utils.INITIAL_TROOPER_HP;
+                }
+            }
         }
         List<MyMove> actual = new AttackPlanComputer(
                 actionPoints,
@@ -906,8 +917,7 @@ public class AttackPlanComputerTest {
                 getVisibilities(),
                 stances,
                 bonuses,
-                Utils.HARDCODED_UTILS,
-                0
+                Utils.HARDCODED_UTILS
         ).getPlan().actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(
