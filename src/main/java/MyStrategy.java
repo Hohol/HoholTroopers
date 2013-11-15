@@ -548,7 +548,7 @@ public final class MyStrategy implements Strategy {
         int cnt = 0;
         for (int[] aDist : dist) {
             for (int j = 0; j < aDist.length; j++) {
-                if (dist[j][j] != Utils.UNREACHABLE) {
+                if (aDist[j] != Utils.UNREACHABLE) {
                     cnt++;
                 }
             }
