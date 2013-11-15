@@ -9,7 +9,7 @@ import static org.testng.Assert.assertEquals;
 
 @Test
 public class MaxHealingPlanComputerTest {
-    int[] hp = new int[TrooperType.values().length];
+    int[] hp1d = new int[TrooperType.values().length];
 
     @Test
     void testEmpty() {
@@ -364,7 +364,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
 
-                MyMove.USE_MEDIKIT_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
+                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_SELF
         );
 
         setHp(FIELD_MEDIC, 50);
@@ -393,7 +393,7 @@ public class MaxHealingPlanComputerTest {
                 false,
                 true,
                 56,
-                MyMove.USE_MEDIKIT_EAST, MyMove.HEAL_SELF, MyMove.HEAL_SELF
+                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_EAST
         );
     }
 
@@ -672,7 +672,7 @@ public class MaxHealingPlanComputerTest {
     }
 
     private void setHp(TrooperType trooper, int val) {
-        hp[trooper.ordinal()] = val;
+        hp1d[trooper.ordinal()] = val;
     }
 
     private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyMove... expectedAr) {
@@ -684,10 +684,11 @@ public class MaxHealingPlanComputerTest {
         HealingState plan = new MaxHealingPlanComputer(
                 actionPoints,
                 cmap,
-                hp,
+                hp1d,
                 holdingFieldRation,
                 holdingMedikit,
-                Utils.HARDCODED_UTILS
+                Utils.HARDCODED_UTILS,
+                hp1d[FIELD_MEDIC.ordinal()]
         ).getPlan();
 
         List<MyMove> actual = plan.actions;

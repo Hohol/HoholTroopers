@@ -906,7 +906,8 @@ public class AttackPlanComputerTest {
                 getVisibilities(),
                 stances,
                 bonuses,
-                Utils.HARDCODED_UTILS
+                Utils.HARDCODED_UTILS,
+                0
         ).getPlan().actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(

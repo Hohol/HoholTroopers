@@ -366,7 +366,8 @@ public final class MyStrategy implements Strategy {
                 getHpByOrdinal(),
                 holdingAndShouldUseFieldRation,
                 holdingAndShouldUseMedikit,
-                utils
+                utils,
+                self.getHitpoints()
         ).getPlan().actions;
 
         if (actions.isEmpty()) {
@@ -399,7 +400,8 @@ public final class MyStrategy implements Strategy {
                 vision,
                 getStances(),
                 bonuses,
-                utils
+                utils,
+                self.getHitpoints()
         ).getPlan();
     }
 

@@ -4,13 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 class AttackState extends State<AttackState> {
-    int killedCnt;
-    int damageSum;
-    int focusFireParameter;
-    boolean holdingGrenade;
 
     public AttackState(AttackState s) {
-        this(new ArrayList<>(s.actions), s.actionPoints, s.holdingFieldRation, s.holdingGrenade, s.killedCnt, s.damageSum, s.stance, s.x, s.y, s.focusFireParameter);
+        this(new ArrayList<>(s.actions), s.actionPoints, s.holdingFieldRation, s.holdingGrenade, s.killedCnt, s.damageSum, s.stance, s.x, s.y, s.focusFireParameter, s.selfHp, s.healedSum, s.holdingMedikit);
     }
 
     public AttackState(
@@ -23,14 +19,12 @@ class AttackState extends State<AttackState> {
             TrooperStance stance,
             int x,
             int y,
-            int focusFireParameter
+            int focusFireParameter,
+            int selfHp,
+            int healedSum,
+            boolean holdingMedikit
     ) {
-        super(actions, actionPoints, holdingFieldRation, x, y, stance);
-        this.killedCnt = killedCnt;
-        this.damageSum = damageSum;
-        this.actionPoints = actionPoints;
-        this.holdingGrenade = holdingGrenade;
-        this.focusFireParameter = focusFireParameter;
+        super(actions, actionPoints, holdingFieldRation, x, y, stance, selfHp, holdingMedikit, killedCnt, damageSum, focusFireParameter, holdingGrenade, healedSum);
     }
 
     @Override
