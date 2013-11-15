@@ -649,6 +649,28 @@ public class MaxHealingPlanComputerTest {
         );
     }
 
+    @Test
+    void testProbablyBug() {
+        setHp(FIELD_MEDIC, 100);
+        setHp(COMMANDER, 25);
+        setHp(SOLDIER, 60);
+
+        checkWithExpectedHealedSum(
+                12,
+                new String[] {
+                        ".C",
+                        "SF"
+                },
+                false,
+                true,
+                100,
+
+                MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH,
+                MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST,
+                MyMove.USE_MEDIKIT_NORTH
+        );
+    }
+
     private void setHp(TrooperType trooper, int val) {
         hp[trooper.ordinal()] = val;
     }

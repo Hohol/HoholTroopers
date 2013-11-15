@@ -268,7 +268,7 @@ public final class MyStrategy implements Strategy {
             if (isHoldingBonus(bonus.getType())) {
                 continue;
             }
-            if (tooFarFromTeammates(bonus)) {
+            if (bonusTooFarFromTeammates(bonus)) {
                 continue;
             }
             if (!isGoodCell(bonus.getX(), bonus.getY()) || isNarrowPathNearBorder(bonus.getX(), bonus.getY())) {
@@ -301,13 +301,13 @@ public final class MyStrategy implements Strategy {
     }
 
 
-    private boolean tooFarFromTeammates(Unit unit) {
-        return tooFarFromTeammates(unit.getX(), unit.getY());
+    private boolean bonusTooFarFromTeammates(Unit unit) {
+        return bonusTooFarFromTeammates(unit.getX(), unit.getY());
     }
 
-    private boolean tooFarFromTeammates(int x, int y) {
+    private boolean bonusTooFarFromTeammates(int x, int y) {
         for (Trooper trooper : teammates) {
-            if (Utils.manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 6) {
+            if (Utils.manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 7) {
                 return true;
             }
         }
