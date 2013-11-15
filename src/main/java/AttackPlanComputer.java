@@ -1,3 +1,4 @@
+import model.BonusType;
 import model.TrooperStance;
 import model.TrooperType;
 
@@ -10,6 +11,7 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
     private final List<Cell> enemyPositions = new ArrayList<>();
     private boolean[] visibilities;
     TrooperStance[][] stances;
+    BonusType[][] bonuses;
     private int[][] hp;
     private int[][] sqrDistSum;
 
@@ -24,12 +26,14 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
             TrooperStance stance,
             boolean[] visibilities,
             TrooperStance[][] stances,
+            BonusType[][] bonuses,
             Utils utils
     ) {
         super(map, utils);
         this.hp = hp;
         this.visibilities = visibilities;
         this.stances = stances;
+        this.bonuses = bonuses;
 
         cur = new AttackState(new ArrayList<MyMove>(), actionPoints, holdingFieldRation, holdingGrenade, 0, 0, stance, x, y, 0);
 
@@ -66,6 +70,19 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
     }
 
     protected void rec() {
+        BonusType bonus = bonuses[cur.x][cur.y];
+        boolean oldHoldingGrenade = cur.holdingGrenade;
+        boolean oldHoldingFieldRation = cur.holdingFieldRation;
+        if (bonus == BonusType.GRENADE && !cur.holdingGrenade) {
+            bonuses[cur.x][cur.y] = null;
+            cur.holdingGrenade = true;
+        }
+        if (bonus == BonusType.FIELD_RATION && !cur.holdingFieldRation) {
+            bonuses[cur.x][cur.y] = null;
+            cur.holdingFieldRation = true;
+        }
+
+
         updateBest();
         tryThrowGrenade();
         tryEatFieldRation();
@@ -73,6 +90,10 @@ public class AttackPlanComputer extends PlanComputer<AttackState> {
         tryMove();
         tryRaiseStance();
         tryLowerStance();
+
+        bonuses[cur.x][cur.y] = bonus;
+        cur.holdingGrenade = oldHoldingGrenade;
+        cur.holdingFieldRation = oldHoldingFieldRation;
     }
 
     private void tryThrowGrenade() {

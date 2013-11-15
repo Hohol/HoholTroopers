@@ -1,5 +1,7 @@
 import static model.TrooperStance.*;
+import static model.BonusType.*;
 
+import model.BonusType;
 import model.TrooperStance;
 import org.testng.annotations.Test;
 
@@ -14,6 +16,7 @@ public class AttackPlanComputerTest {
     char[][] map;
     int[][] hp;
     TrooperStance[][] stances;
+    private BonusType[][] bonuses;
 
     @Test
     void testEmpty() {
@@ -504,7 +507,7 @@ public class AttackPlanComputerTest {
                 PRONE,
                 false,
                 true,
-                MyMove.shoot(2,0), MyMove.shoot(2, 0)
+                MyMove.shoot(2, 0), MyMove.shoot(2, 0)
         );
     }
 
@@ -521,7 +524,7 @@ public class AttackPlanComputerTest {
                 STANDING,
                 false,
                 true,
-                MyMove.shoot(2,0), MyMove.shoot(2, 0)
+                MyMove.shoot(2, 0), MyMove.shoot(2, 0)
         );
         //---------
         setMap(
@@ -535,7 +538,7 @@ public class AttackPlanComputerTest {
                 STANDING,
                 false,
                 true,
-                MyMove.grenade(2,1)
+                MyMove.grenade(2, 1)
         );
 
         //---------
@@ -607,7 +610,6 @@ public class AttackPlanComputerTest {
         );
 
 
-
         setMap(
                 "....c",
                 "S.C..",
@@ -637,7 +639,7 @@ public class AttackPlanComputerTest {
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(0,0)
+                MyMove.shoot(0, 0)
         );
 
         //--------------
@@ -652,7 +654,7 @@ public class AttackPlanComputerTest {
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(1,0)
+                MyMove.shoot(1, 0)
         );
 
         //--------------
@@ -667,14 +669,122 @@ public class AttackPlanComputerTest {
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(1,0)
+                MyMove.shoot(1, 0)
         );
     }
 
-    /*@Test
+    @Test
     void testCollectBonus() {
-        assertTrue(false);
-    }/**/
+        setMap(
+                "S^..s"
+        );
+        addEnemy(4, 0, 80, STANDING);
+        check(
+                7,
+                0, 0,
+                STANDING,
+                false,
+                true,
+                MyMove.MOVE_EAST, MyMove.EAT_FIELD_RATION, MyMove.grenade(4, 0)
+        );
+        //--------------
+
+        setMap(
+                "^..s",
+                "S33."
+        );
+        addEnemy(3, 0, 79, STANDING);
+        check(
+                7,
+                0, 1,
+                STANDING,
+                false,
+                true,
+                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
+        );
+        //--------------
+
+        setMap(
+                "^..s",
+                "S33."
+        );
+        addEnemy(3, 0, 79, STANDING);
+        check(
+                7,
+                0, 1,
+                STANDING,
+                false,
+                true,
+                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
+        );
+    }
+
+    @Test
+    void testStayOnBonus() {
+        setMap(
+                "F..s"
+        );
+        addEnemy(3, 0, 80, STANDING);
+        addBonus(0, 0, GRENADE);
+        check(
+                8,
+                0, 0,
+                STANDING,
+                false,
+                false,
+                MyMove.grenade(3, 0)
+        );
+    }
+
+    @Test
+    void testBerserkMedic2() {
+        setMap("F.s");
+        addEnemy(2, 0, 1000, STANDING);
+        addBonus(0, 0, FIELD_RATION);
+        check(
+                12,
+                0, 0,
+                PRONE,
+                true, // FIELD_RATION
+                false,
+
+                MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0),
+                MyMove.EAT_FIELD_RATION, MyMove.shoot(2, 0),
+                MyMove.EAT_FIELD_RATION, MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0)
+                // OMG STAHP!1
+        );
+    }
+
+    @Test
+    void test2Grenades2FieldRations() {
+        setMap(
+                "........",
+                ".sc.....",
+                ".f..*...",
+                "....S..."
+        );
+        addEnemy(1, 1, 120, STANDING);
+        addEnemy(2, 1, 100, STANDING);
+        addEnemy(1, 2, 100, STANDING);
+        addBonus(4, 3, FIELD_RATION);
+
+        check(
+                12,
+                4, 3,
+                STANDING,
+                true,
+                true,
+
+                MyMove.grenade(1, 1), MyMove.EAT_FIELD_RATION, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.grenade(1, 1)
+        );
+    }
+
+    private void addBonus(int x, int y, BonusType bonus) {
+        if (!Utils.isLetter(map[x][y])) {
+            throw new RuntimeException("No trooper at cell(" + x + ", " + y + ")");
+        }
+        bonuses[x][y] = bonus;
+    }
 
 
     private void addEnemy(int x, int y, int newHp, TrooperStance stance) {
@@ -690,6 +800,19 @@ public class AttackPlanComputerTest {
         this.map = Utils.toCharAndTranspose(map);
         hp = new int[this.map.length][this.map[0].length];
         stances = new TrooperStance[this.map.length][this.map[0].length];
+        bonuses = new BonusType[this.map.length][this.map[0].length];
+        addBonuses();
+    }
+
+    private void addBonuses() {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                bonuses[i][j] = Utils.getBonusTypeByChar(map[i][j]);
+                if (bonuses[i][j] != null) {
+                    map[i][j] = '.';
+                }
+            }
+        }
     }
 
     private boolean[] getVisibilities() {
@@ -782,6 +905,7 @@ public class AttackPlanComputerTest {
                 stance,
                 getVisibilities(),
                 stances,
+                bonuses,
                 Utils.HARDCODED_UTILS
         ).getPlan().actions;
         List<MyMove> expected = Arrays.asList(expectedAr);

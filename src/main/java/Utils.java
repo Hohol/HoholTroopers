@@ -6,6 +6,7 @@ import java.util.Queue;
 
 import static model.TrooperStance.KNEELING;
 import static model.TrooperStance.PRONE;
+import static model.BonusType.*;
 
 public class Utils {
 
@@ -218,6 +219,29 @@ public class Utils {
                 return TrooperStance.STANDING;
             case STANDING:
                 throw new RuntimeException();
+        }
+        throw new RuntimeException();
+    }
+
+    public static BonusType getBonusTypeByChar(char ch) {
+        switch(ch) {
+            case '^':
+                return FIELD_RATION;
+            case '+':
+                return MEDIKIT;
+            case '*':
+                return GRENADE;
+        }
+        return null;
+    }
+    public static char getCharForBonusType(BonusType type) {
+        switch (type) {
+            case GRENADE:
+                return '*';
+            case MEDIKIT:
+                return '+';
+            case FIELD_RATION:
+                return '^';
         }
         throw new RuntimeException();
     }

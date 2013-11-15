@@ -29,6 +29,7 @@ public final class MyStrategy implements Strategy {
     static EnumMap<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
 
     Trooper medic, sniper, soldier, commander, scout;
+    private BonusType[][] bonuses;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -55,7 +56,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (newTryShoot()) {
+        if (tryAttack()) {
             return;
         }
 
@@ -78,7 +79,10 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
-    private boolean newTryShoot() {
+    private boolean tryAttack() {
+        if (enemies.size() == 0) {
+            return false;
+        }
         List<MyMove> actions = getAttackPlan().actions;
 
         if (actions.isEmpty()) {
@@ -97,10 +101,15 @@ public final class MyStrategy implements Strategy {
     }
 
     boolean interesting(List<MyMove> actions) {
+        int x = self.getX();
+        int y = self.getY();
         for (MyMove move : actions) {
-            ActionType action = move.getMove().getAction();
-            if (action == THROW_GRENADE || action == RAISE_STANCE || action == LOWER_STANCE || action == EAT_FIELD_RATION) {
-                return true;
+            if (move.getMove().getAction() == MOVE) {
+                x += move.getMove().getDirection().getOffsetX();
+                y += move.getMove().getDirection().getOffsetY();
+                if (bonuses[x][y] != null && bonuses[x][y] != BonusType.MEDIKIT) {
+                    return true;
+                }
             }
         }
         return false;
@@ -389,8 +398,17 @@ public final class MyStrategy implements Strategy {
                 self.getStance(),
                 vision,
                 getStances(),
+                bonuses,
                 utils
         ).getPlan();
+    }
+
+    private BonusType[][] getBonuses() {
+        BonusType[][] bonuses = new BonusType[world.getWidth()][world.getHeight()];
+        for (Bonus bonus : world.getBonuses()) {
+            bonuses[bonus.getX()][bonus.getY()] = bonus.getType();
+        }
+        return bonuses;
     }
 
     private boolean oldTryHeal() {    //todo rework
@@ -538,11 +556,6 @@ public final class MyStrategy implements Strategy {
         return cnt < 20;
     }
 
-    private void throwGrenade(Trooper trooper) {
-        move.setAction(THROW_GRENADE);
-        setDirection(trooper);
-    }
-
     private boolean haveTime(int actionCost) {
         return self.getActionPoints() >= actionCost;
     }
@@ -557,6 +570,7 @@ public final class MyStrategy implements Strategy {
         enemies = getEnemies();
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
+        bonuses = getBonuses();
         if (lastSeen == null) {
             lastSeen = createIntMap(0);
         }
