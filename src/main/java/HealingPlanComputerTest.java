@@ -8,7 +8,7 @@ import static model.TrooperType.*;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class MaxHealingPlanComputerTest {
+public class HealingPlanComputerTest {
     int[] hp1d = new int[TrooperType.values().length];
 
     @Test
@@ -681,7 +681,7 @@ public class MaxHealingPlanComputerTest {
 
     private void checkWithExpectedHealedSum(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, int expectedHealSum, MyMove... expectedAr) {
         char[][] cmap = Utils.toCharAndTranspose(map);
-        HealingState plan = new MaxHealingPlanComputer(
+        HealingState plan = new HealingPlanComputer(
                 actionPoints,
                 cmap,
                 hp1d,

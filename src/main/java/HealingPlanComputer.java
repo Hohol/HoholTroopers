@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class MaxHealingPlanComputer extends PlanComputer<HealingState> {
+class HealingPlanComputer extends PlanComputer<HealingState> {
 
     List<int[][]> dist;
 
-    MaxHealingPlanComputer(
+    HealingPlanComputer(
             int actionPoints,
             char[][] map,
             int[] hp1d,

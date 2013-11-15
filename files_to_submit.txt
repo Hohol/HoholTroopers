@@ -2,7 +2,7 @@ MyStrategy.java
 Cell.java
 Utils.java
 TrooperParameters.java
-MaxHealingPlanComputer.java
+HealingPlanComputer.java
 MyMove.java
 AttackPlanComputer.java
 AttackState.java

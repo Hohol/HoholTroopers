@@ -360,7 +360,7 @@ public final class MyStrategy implements Strategy {
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
 
-        List<MyMove> actions = new MaxHealingPlanComputer(
+        List<MyMove> actions = new HealingPlanComputer(
                 self.getActionPoints(),
                 map,  //map may be modified
                 getHpByOrdinal(),
