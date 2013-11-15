@@ -1088,66 +1088,6 @@ public final class MyStrategy implements Strategy {
         return -7; // >_<
     }
 
-    boolean tryShoot() {
-        Trooper target = getEnemyToShoot();
-        if (target == null) {
-            return false;
-        }
-
-        TrooperStance minStance = getMinStanceCanStillShoot(target);
-
-        List<ActionType> plan = new MaxDamagePlanComputer(
-                self.getType(),
-                self.getActionPoints(),
-                self.getStance(), minStance,
-                target.getHitpoints(),
-                self.isHoldingFieldRation(),
-                utils
-        ).getActions();
-
-        if (plan.isEmpty()) {
-            move.setAction(END_TURN);
-            return true;
-        }
-
-        ActionType action = plan.get(0);
-        if (action == SHOOT) {
-            shoot(target);
-        } else {
-            move.setAction(action);
-        }
-        return true;
-    }
-
-    private TrooperStance getMinStanceCanStillShoot(Trooper target) {
-        for (TrooperStance stance : TrooperStance.values()) {
-            if (canShoot(target, stance)) {
-                return stance;
-            }
-        }
-        throw new RuntimeException();
-    }
-
-    private Trooper getEnemyToShoot() {
-        Trooper r = null;
-        int maxCanShootCnt = 0;
-        for (Trooper target : enemies) {
-            if (canShoot(target)) {
-                int canShootCnt = numberOfTeammatesWhoCanShoot(target);
-                if (r == null || canShootCnt > maxCanShootCnt || canShootCnt == maxCanShootCnt && target.getHitpoints() < r.getHitpoints()) {
-                    r = target;
-                    maxCanShootCnt = canShootCnt;
-                }
-            }
-        }
-        return r;
-    }
-
-    private void shoot(Trooper trooper) {
-        move.setAction(SHOOT);
-        setDirection(trooper.getX(), trooper.getY());
-    }
-
     private boolean canShoot(Trooper target) {
         return canShoot(self, target);
     }
