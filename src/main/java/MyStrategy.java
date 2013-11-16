@@ -84,10 +84,6 @@ public final class MyStrategy implements Strategy {
         }
 
         List<MyMove> actions = getPlan(seeSomeEnemy).actions;
-
-        if (actions.isEmpty()) {
-            return false;
-        }
         moveByPlan(actions);
         return true;
     }
@@ -100,6 +96,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private void moveByPlan(List<MyMove> actions) {
+        if (actions.isEmpty()) {
+            move.setAction(END_TURN);
+            return;
+        }
         Move bestMove = actions.get(0).getMove();
         move.setAction(bestMove.getAction());
         move.setDirection(bestMove.getDirection());
