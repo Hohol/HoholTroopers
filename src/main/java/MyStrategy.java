@@ -35,6 +35,7 @@ public final class MyStrategy implements Strategy {
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
     static boolean[][] weCanSee;
     static List<Cell> suspiciousCells = new ArrayList<>();
+    static Cell lastSeenEnemyPos;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -52,7 +53,11 @@ public final class MyStrategy implements Strategy {
         this.move = move;
 
         init();
+        moveInternal();
+        finish();
+    }
 
+    void moveInternal() {
         if (tryMoveByScript()) {
             return;
         }
@@ -64,11 +69,11 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryMoveToBonus()) {
+        if (tryDealWithInvisibleShooters()) {
             return;
         }
 
-        if (tryDealWithInvisibleShooters()) {
+        if (tryMoveToBonus()) {
             return;
         }
 
@@ -79,8 +84,6 @@ public final class MyStrategy implements Strategy {
         if (tryDeblock()) {
             return;
         }
-
-        move.setAction(END_TURN);
     }
 
     private void printSuspiciousCells() {
@@ -588,6 +591,7 @@ public final class MyStrategy implements Strategy {
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
+
         if (lastSeen == null) {
             lastSeen = createIntMap(0);
         }
@@ -598,12 +602,21 @@ public final class MyStrategy implements Strategy {
             vision = world.getCellVisibilities();
         }
         updateWeCanSee();
+        if (lastSeenEnemyPos != null && weCanSee[lastSeenEnemyPos.x][lastSeenEnemyPos.y] && Utils.manhattanDist(self.getX(), self.getY(), lastSeenEnemyPos.x, lastSeenEnemyPos.y) <= 2) {
+            lastSeenEnemyPos = null;
+        }
         updateHpHistory();
         updateLastSeen();
         updatePositionHistory();
         verifyDamage();
         printHp();
         printMap();
+    }
+
+    private void finish() {
+        if (!enemies.isEmpty()) {
+            lastSeenEnemyPos = new Cell(enemies.get(0).getX(), enemies.get(0).getY());
+        }
     }
 
     private void updateWeCanSee() {
@@ -753,6 +766,9 @@ public final class MyStrategy implements Strategy {
         if (self.getId() == teammateToFollow.getId()) {
             if (self.getActionPoints() <= 4 && world.getMoveIndex() >= 1 || overExtended() || someoneNotFullHpAndMedicCanHealHim()) {
                 return false;
+            }
+            if (lastSeenEnemyPos != null) {
+                return moveTo(lastSeenEnemyPos.x, lastSeenEnemyPos.y, true);
             }
             return moveToNearestLongAgoSeenCell();
         } else {
