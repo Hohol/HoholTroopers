@@ -60,12 +60,12 @@ class State {
         if (killedCnt != old.killedCnt) {
             return killedCnt > old.killedCnt;
         }
-        if (damageSum != old.damageSum) {
-            return damageSum > old.damageSum;
-        }
 
-        if (healedSum != old.healedSum) {
-            return healedSum > old.healedSum;
+        int hpDiff = damageSum + healedSum;
+        int oldHpDiff = old.damageSum + old.healedSum;
+
+        if (hpDiff != oldHpDiff) {
+            return hpDiff > oldHpDiff;
         }
 
         if (minHp != old.minHp) {

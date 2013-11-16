@@ -17,4 +17,19 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false);
     }
+    @Test
+    void medicShouldHeal() {
+        setMap("SF.s");
+
+        setTrooper(0, 0, 1, STANDING);
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.USE_MEDIKIT_WEST
+        );
+    }
 }

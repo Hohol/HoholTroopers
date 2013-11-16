@@ -101,10 +101,10 @@ public class AbstractPlanComputerTest {
         addBonuses();
     }
 
-    protected void addTrooper(int x, int y, int newHp, TrooperStance stance) {
+    protected void setTrooper(int x, int y, int newHp, TrooperStance stance) {
         char ch = map[x][y];
-        if (ch < 'a' || ch > 'z') {
-            throw new RuntimeException("No enemy trooper in cell (" + x + ", " + y + ")");
+        if (!Utils.isLetter(ch)) {
+            throw new RuntimeException("No trooper in cell (" + x + ", " + y + ")");
         }
         hp[x][y] = newHp;
         stances[x][y] = stance;
@@ -112,7 +112,7 @@ public class AbstractPlanComputerTest {
 
     protected void addBonus(int x, int y, BonusType bonus) {
         if (!Utils.isLetter(map[x][y])) {
-            throw new RuntimeException("No trooper at cell(" + x + ", " + y + ")");
+            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
         }
         bonuses[x][y] = bonus;
     }
