@@ -457,6 +457,7 @@ public class PlanComputer {
         BonusType bonus = bonuses[cur.x][cur.y];
         boolean oldHoldingGrenade = cur.holdingGrenade;
         boolean oldHoldingFieldRation = cur.holdingFieldRation;
+        boolean oldHoldingMedikit = cur.holdingMedikit;
 
         if (bonus == BonusType.GRENADE && !cur.holdingGrenade) {
             bonuses[cur.x][cur.y] = null;
@@ -465,6 +466,10 @@ public class PlanComputer {
         if (bonus == BonusType.FIELD_RATION && !cur.holdingFieldRation) {
             bonuses[cur.x][cur.y] = null;
             cur.holdingFieldRation = true;
+        }
+        if (bonus == BonusType.MEDIKIT && !cur.holdingMedikit) {
+            bonuses[cur.x][cur.y] = null;
+            cur.holdingMedikit = true;
         }
 
         updateBest();
@@ -480,6 +485,7 @@ public class PlanComputer {
         bonuses[cur.x][cur.y] = bonus;
         cur.holdingGrenade = oldHoldingGrenade;
         cur.holdingFieldRation = oldHoldingFieldRation;
+        cur.holdingMedikit = oldHoldingMedikit;
     }
 
     private void updateSqrDistSum(int x, int y) {

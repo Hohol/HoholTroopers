@@ -143,7 +143,48 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 true,
                 false,
-                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.grenade(0,1)
+                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.grenade(0, 1)
+        );
+    }
+
+    @Test
+    void testCollectMedikit() {
+        setMap(
+                "FS",
+                ".+"
+        );
+
+        setTrooper(1, 0, 1, STANDING);
+
+        check(
+                FIELD_MEDIC,
+                6,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH
+        );
+    }
+
+    @Test
+    void testCollectMedikit2() {
+        setMap(
+                "FSC",
+                ".++"
+        );
+
+        setTrooper(1, 0, 1, STANDING);
+        setTrooper(2, 0, 1, STANDING);
+
+        check(
+                FIELD_MEDIC,
+                10,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH
         );
     }
 }
