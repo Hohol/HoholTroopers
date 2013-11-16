@@ -4,6 +4,8 @@ import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static model.TrooperStance.PRONE;
@@ -158,7 +160,9 @@ public class PlanComputer {
             int oldActionPoints = cur.actionPoints;
             cur.actionPoints = utils.actionPointsAfterEatingFieldRation(selfType, cur.actionPoints, game);
             cur.holdingFieldRation = false;
+            cur.fieldRationsUsed++;
             rec();
+            cur.fieldRationsUsed--;
             cur.holdingFieldRation = true;
             cur.actionPoints = oldActionPoints;
             popAction();
@@ -520,5 +524,10 @@ public class PlanComputer {
             r += d;
         }
         return r;
+    }
+
+    @SuppressWarnings("unused")
+    boolean stopOn(MyMove ...move) { //for debug only
+        return Arrays.asList(move).equals(cur.actions);
     }
 }

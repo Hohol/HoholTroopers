@@ -17,6 +17,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false);
     }
+
     @Test
     void medicShouldHeal() {
         setMap("SF.s");
@@ -50,6 +51,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_NORTH
         );
     }
+
     @Test
     void testHelp2() {
         setMap(
@@ -110,5 +112,38 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void testDoNotWasteFieldRation() {
+        setMap(
+                "f...S^"
+        );
 
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.shoot(0, 0)
+        );
+    }
+
+    @Test
+    void testDoNotWasteFieldRation2() {
+        setMap(
+                "f......C.",
+                "s...^..SF"
+        );
+
+        check(
+                SOLDIER,
+                12,
+                STANDING,
+                false,
+                true,
+                false,
+                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.grenade(0,1)
+        );
+    }
 }

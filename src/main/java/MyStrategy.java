@@ -169,89 +169,6 @@ public final class MyStrategy implements Strategy {
         return null;
     }
 
-    /*private boolean tryHelpTeammateInFight() {
-        if (self.getType() == FIELD_MEDIC) {
-            return false;
-        }
-        if (someEnemyInShootingRange()) {
-            return false;
-        }
-        Trooper target = getLeastHpEnemySomeOfTeammatesCanShoot();
-        if (target == null) {
-            return false;
-        }
-
-        Cell cell = getNearestCellFromWhichCanShoot(target);
-        if (distTo(cell.x, cell.y, false) >= 8) {
-            return false;
-        }
-
-        if (manhattanDist(cell.x, cell.y) >= 2 && self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
-            move.setAction(RAISE_STANCE);
-            return true;
-        }
-
-        if (!haveTime(getMoveCost(self))) {
-            return false;
-        }
-        return moveTo(cell.x, cell.y, false);
-    }/**/
-
-    private boolean someEnemyInShootingRange() {
-        for (Trooper trooper : enemies) {
-            if (canShoot(trooper)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Cell getNearestCellFromWhichCanShoot(Trooper target) {
-        int minDist = Integer.MAX_VALUE;
-        int x = -1, y = -1;
-
-        int[][] dist = bfs(self.getX(), self.getY(), false);
-        for (int i = 0; i < world.getWidth(); i++) {
-            for (int j = 0; j < world.getHeight(); j++) {
-                if (world.isVisible(
-                        self.getShootingRange(), i, j, STANDING,
-                        target.getX(), target.getY(), target.getStance()
-                ) && dist[i][j] < minDist && isGoodCell(i, j)) {
-                    minDist = dist[i][j];
-                    x = i;
-                    y = j;
-                }
-            }
-        }
-        return new Cell(x, y);
-    }
-
-    private Trooper getLeastHpEnemySomeOfTeammatesCanShoot() {
-        Trooper r = null;
-        for (Trooper trooper : enemies) {
-            if (someTeammateCanShoot(trooper)) {
-                if (r == null || trooper.getHitpoints() < r.getHitpoints()) {
-                    r = trooper;
-                }
-            }
-        }
-        return r;
-    }
-
-    private boolean someTeammateCanShoot(Trooper target) {
-        return numberOfTeammatesWhoCanShoot(target) > 0;
-    }
-
-    private int numberOfTeammatesWhoCanShoot(Trooper target) {
-        int cnt = 0;
-        for (Trooper trooper : teammates) {
-            if (canShoot(trooper, target)) {
-                cnt++;
-            }
-        }
-        return cnt;
-    }
-
     private boolean tryMoveToBonus() {
         Bonus bonus = chooseBonus();
         if (bonus == null) {
@@ -550,6 +467,9 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : teammates) {
             System.out.println(trooper.getType() + ": " + trooper.getHitpoints() + " hp");
+        }
+        for (Trooper trooper : enemies) {
+            System.out.println("Enemy " + trooper.getType() + ": " + trooper.getHitpoints() + " hp");
         }
     }
 

@@ -21,6 +21,7 @@ class State {
     int healedSum;
     int killedCnt;
     int damageSum;
+    int fieldRationsUsed;
 
     int focusFireParameter;
     int minHp;
@@ -55,6 +56,7 @@ class State {
         this.distSum = cur.distSum;
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
+        this.fieldRationsUsed = cur.fieldRationsUsed;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -95,9 +97,6 @@ class State {
                 return distSum < old.distSum;
             }
         }
-        if (actionPoints != old.actionPoints) {
-            return actionPoints > old.actionPoints;
-        }
 
         if (holdingGrenade != old.holdingGrenade) {
             return holdingGrenade;
@@ -105,6 +104,14 @@ class State {
 
         if (focusFireParameter != old.focusFireParameter) {
             return focusFireParameter > old.focusFireParameter;
+        }
+
+        if (fieldRationsUsed != old.fieldRationsUsed) {
+            return fieldRationsUsed < old.fieldRationsUsed;
+        }
+
+        if (actionPoints != old.actionPoints) {
+            return actionPoints > old.actionPoints;
         }
 
         return false;

@@ -288,8 +288,9 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void testMoveThroughDeadEnemy() {
         setMap(
-                "3c",
-                "Fs"
+                "3c.",
+                "Fs.",
+                "..."
         );
         setTrooper(1, 0, 1, PRONE);
         setTrooper(1, 1, 9, KNEELING);
