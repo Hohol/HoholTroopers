@@ -1,4 +1,5 @@
 import model.TrooperStance;
+import model.TrooperType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ class State {
     int focusFireParameter;
     int minHp;
     int distSum;
+    int helpFactor;
+    int helpDist;
 
     protected State(
             int actionPoints,
@@ -50,9 +53,11 @@ class State {
         this.focusFireParameter = cur.focusFireParameter;
         this.minHp = cur.minHp;
         this.distSum = cur.distSum;
+        this.helpFactor = cur.helpFactor;
+        this.helpDist = cur.helpDist;
     }
 
-    boolean better(State old) {
+    boolean better(State old, TrooperType selfType) {
         if (old == null) {
             return true;
         }
@@ -68,6 +73,14 @@ class State {
             return hpDiff > oldHpDiff;
         }
 
+        if (helpDist != old.helpDist) {
+            return helpDist < old.helpDist;
+        }
+
+        if (helpFactor != old.helpFactor) {
+            return helpFactor > old.helpFactor;
+        }
+
         if (minHp != old.minHp) {
             return minHp > old.minHp;
         }
@@ -77,8 +90,10 @@ class State {
         if (holdingFieldRation != old.holdingFieldRation) {
             return holdingFieldRation;
         }
-        if (distSum != old.distSum) {
-            return distSum < old.distSum;
+        if (selfType == TrooperType.FIELD_MEDIC) {
+            if (distSum != old.distSum) {
+                return distSum < old.distSum;
+            }
         }
         if (actionPoints != old.actionPoints) {
             return actionPoints > old.actionPoints;

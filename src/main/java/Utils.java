@@ -130,16 +130,34 @@ public class Utils {
     }
 
     public static int[][] bfsByMap(char[][] map, int startX, int startY) { //больше бфсов, хороших и одинаковых
+        return bfsByMap(map, startX, startY, null);
+    }
+
+    private static int[][] bfsByMap(char[][] map, int startX, int startY, int[][] isStartCell) {
         int[][] dist;
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
         dist = new int[map.length][map[0].length];
-        for(int[] aDist : dist) {
+        for (int[] aDist : dist) {
             Arrays.fill(aDist, UNREACHABLE);
         }
-        qx.add(startX);
-        qy.add(startY);
-        dist[startX][startY] = 0;
+        if (startX != -1) {
+            qx.add(startX);
+            qy.add(startY);
+            dist[startX][startY] = 0;
+        } else {
+            for (int i = 0; i < map.length; i++) {
+                for (int j = 0; j < map[i].length; j++) {
+                    if (isStartCell[i][j] == 0) {
+                        continue;
+                    }
+                    qx.add(i);
+                    qy.add(j);
+                    dist[i][j] = 0;
+                }
+            }
+        }
+
         while (!qx.isEmpty()) {
             int x = qx.poll();
             int y = qy.poll();
@@ -153,7 +171,7 @@ public class Utils {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (map[toX][toY] != '.'){
+                if (map[toX][toY] != '.') {
                     continue;
                 }
                 qx.add(toX);
@@ -161,6 +179,10 @@ public class Utils {
             }
         }
         return dist;
+    }
+
+    public static int[][] bfsForHelp(char[][] map, int[][] isStartCell) { //start from each cell where startMap != 0
+        return bfsByMap(map, -1, -1, isStartCell);
     }
 
     public static int divCeil(int a, int b) {
@@ -173,9 +195,9 @@ public class Utils {
 
     public static boolean equalMoves(Move a, Move b) {
         return a.getAction() == b.getAction() &&
-               a.getDirection() == b.getDirection() &&
-               a.getX() == b.getX() &&
-               a.getY() == b.getY();
+                a.getDirection() == b.getDirection() &&
+                a.getX() == b.getX() &&
+                a.getY() == b.getY();
     }
 
     public static Move createMove(ActionType action, Direction dir, int x, int y) {
@@ -224,7 +246,7 @@ public class Utils {
     }
 
     public static BonusType getBonusTypeByChar(char ch) {
-        switch(ch) {
+        switch (ch) {
             case '^':
                 return FIELD_RATION;
             case '+':
@@ -234,6 +256,7 @@ public class Utils {
         }
         return null;
     }
+
     public static char getCharForBonusType(BonusType type) {
         switch (type) {
             case GRENADE:

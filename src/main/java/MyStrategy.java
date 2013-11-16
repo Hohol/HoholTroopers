@@ -8,6 +8,7 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
+
     final Random rnd = new Random(3222);
     Trooper self;
     World world;
@@ -56,9 +57,9 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryHelpTeammateInFight()) {
+        /*if (tryHelpTeammateInFight()) {
             return;
-        }
+        }/**/
 
         if (tryMoveToBonus()) {
             return;
@@ -168,7 +169,7 @@ public final class MyStrategy implements Strategy {
         return null;
     }
 
-    private boolean tryHelpTeammateInFight() {
+    /*private boolean tryHelpTeammateInFight() {
         if (self.getType() == FIELD_MEDIC) {
             return false;
         }
@@ -194,7 +195,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
         return moveTo(cell.x, cell.y, false);
-    }
+    }/**/
 
     private boolean someEnemyInShootingRange() {
         for (Trooper trooper : enemies) {

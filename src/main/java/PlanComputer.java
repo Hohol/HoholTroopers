@@ -11,19 +11,23 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.FIELD_MEDIC;
 
 public class PlanComputer {
-    protected final char[][] map;
-    protected final Game game;
-    protected final Utils utils;
-    protected final List<Cell> enemyPositions = new ArrayList<>();
-    protected final List<Cell> allyPositions = new ArrayList<>();
-    protected State cur, best;
-    protected TrooperType selfType;
-    protected int[][] hp;
-    protected boolean[] visibilities;
-    protected int[][] sqrDistSum;
+
+    private final char[][] map;
+    private final Game game;
+    private final Utils utils;
+    private final List<Cell> enemyPositions = new ArrayList<>();
+    private final List<Cell> allyPositions = new ArrayList<>();
+    private State cur, best;
+    private TrooperType selfType;
+    private int[][] hp;
+    private boolean[] visibilities;
+    private int[][] sqrDistSum;
     BonusType[][] bonuses;
     TrooperStance[][] stances;
-    List<int[][]> dist;
+
+    List<int[][]> bfsDistFromTeammateForHealing;
+    private int[][] helpFactor;
+    private int[][] helpDist;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
@@ -56,10 +60,10 @@ public class PlanComputer {
                 }
             }
         }
-        dist = new ArrayList<>();
+        bfsDistFromTeammateForHealing = new ArrayList<>();
         for (Cell cell : allyPositions) {
             int[][] curDist = Utils.bfsByMap(map, cell.x, cell.y);
-            dist.add(curDist);
+            bfsDistFromTeammateForHealing.add(curDist);
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[i].length; j++) {
                     if (curDist[i][j] > MyStrategy.MAX_DISTANCE_MEDIC_SHOULD_HEAL) {
@@ -68,31 +72,60 @@ public class PlanComputer {
                 }
             }
         }
+        prepareHelp();
+    }
+
+    private void prepareHelp() {
+        helpFactor = new int[map.length][map[0].length];
+        for (Cell cell : allyPositions) {
+            TrooperType type = Utils.getTrooperTypeByChar(map[cell.x][cell.y]);
+            for (Cell e : enemyPositions) {
+                int stance = stances[cell.x][cell.y].ordinal();
+                if (canShoot(cell.x, cell.y, e.x, e.y, stance, type)) {
+                    for (int i = 0; i < map.length; i++) {
+                        for (int j = 0; j < map[i].length; j++) {
+                            if (!freeCell(i, j)) {
+                                continue;
+                            }
+                            if (canShoot(i, j, e.x, e.y, stances[e.x][e.y].ordinal(), selfType)) {
+                                helpFactor[i][j]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        helpDist = Utils.bfsForHelp(map, helpFactor);
     }
 
     void updateBest() {
+
+        //todo то, что вычисляется за O(1), можно и не хранить
+
         cur.distSum = getDistToTeammatesSum();
         cur.minHp = getMinHp();
         cur.focusFireParameter = getFocusFireParameter();
-        if (cur.better(best)) {
+        cur.helpFactor = helpFactor[cur.x][cur.y];
+        cur.helpDist = helpDist[cur.x][cur.y];
+        if (cur.better(best, selfType)) {
             best = new State(cur);
         }
     }
 
 
-    protected void addAction(MyMove action) {
+    private void addAction(MyMove action) {
         cur.actions.add(action);
     }
 
-    protected void popAction() {
+    private void popAction() {
         cur.actions.remove(cur.actions.size() - 1);
     }
 
-    protected boolean inField(int toX, int toY) {
+    private boolean inField(int toX, int toY) {
         return toX >= 0 && toX < map.length && toY >= 0 && toY < map[0].length;
     }
 
-    protected void tryMove() {
+    private void tryMove() {
         int moveCost = utils.getMoveCost(cur.stance);
         if (cur.actionPoints < moveCost) {
             return;
@@ -119,7 +152,7 @@ public class PlanComputer {
         }
     }
 
-    protected void tryEatFieldRation() {
+    private void tryEatFieldRation() {
         if (cur.holdingFieldRation && cur.actionPoints >= game.getFieldRationEatCost() && cur.actionPoints < utils.getInitialActionPoints(selfType)) {
             addAction(MyMove.EAT_FIELD_RATION);
             int oldActionPoints = cur.actionPoints;
@@ -136,7 +169,7 @@ public class PlanComputer {
         return best;
     }
 
-    protected void newTryHeal(int healValue, int healCost, MyMove healAction, boolean avoidOverheal, Cell c) {
+    private void newTryHeal(int healValue, int healCost, MyMove healAction, boolean avoidOverheal, Cell c) {
         if (cur.actionPoints < healCost) {
             return;
         }
@@ -173,7 +206,7 @@ public class PlanComputer {
         popAction();
     }
 
-    protected void tryHealSelfWithMedikit() {
+    private void tryHealSelfWithMedikit() {
         if (!cur.holdingMedikit) {
             return;
         }
@@ -183,7 +216,7 @@ public class PlanComputer {
         cur.holdingMedikit = true;
     }
 
-    protected void tryHealTeammates(MyMove[] heals, int healValue, int healCost, boolean avoidOverheal) {
+    private void tryHealTeammates(MyMove[] heals, int healValue, int healCost, boolean avoidOverheal) {
         for (MyMove heal : heals) {
             int toX = cur.x + heal.getDx();
             int toY = cur.y + heal.getDy();
@@ -198,7 +231,7 @@ public class PlanComputer {
         }
     }
 
-    protected void tryHealWithMedikit() {
+    private void tryHealWithMedikit() {
         if (cur.holdingMedikit) {
             cur.holdingMedikit = false;
             tryHealTeammates(MyMove.directedMedikitUses, game.getMedikitBonusHitpoints(), game.getMedikitUseCost(), true);
@@ -207,11 +240,11 @@ public class PlanComputer {
         tryHealSelfWithMedikit();
     }
 
-    protected void tryHealSelfWithAbility() {
+    private void tryHealSelfWithAbility() {
         newTryHeal(game.getFieldMedicHealSelfBonusHitpoints(), game.getFieldMedicHealCost(), MyMove.HEAL_SELF, false, null);
     }
 
-    protected void tryHealAsMedic() {
+    private void tryHealAsMedic() {
         if (selfType != FIELD_MEDIC) {
             return;
         }
@@ -219,7 +252,7 @@ public class PlanComputer {
         tryHealSelfWithAbility();
     }
 
-    protected boolean freeCell(int x, int y) {
+    private boolean freeCell(int x, int y) {
         return map[x][y] == '.' || hp[x][y] <= 0;
     }
 
@@ -240,7 +273,7 @@ public class PlanComputer {
         hp[ex][ey] -= damage;
     }
 
-    protected void undealDamage(int ex, int ey, int damage) {
+    private void undealDamage(int ex, int ey, int damage) {
         if (!inField(ex, ey)) {
             return;
         }
@@ -257,7 +290,7 @@ public class PlanComputer {
         hp[ex][ey] += damage;
     }
 
-    protected void unshoot(int ex, int ey) {
+    private void unshoot(int ex, int ey) {
         int damage = utils.getShootDamage(selfType, cur.stance);
         cur.actionPoints += utils.getShootCost(selfType);
 
@@ -266,7 +299,7 @@ public class PlanComputer {
         popAction();
     }
 
-    protected void shoot(int ex, int ey) {
+    private void shoot(int ex, int ey) {
         addAction(MyMove.shoot(ex, ey));
 
         int damage = utils.getShootDamage(selfType, cur.stance);
@@ -274,7 +307,7 @@ public class PlanComputer {
         dealDamage(ex, ey, damage);
     }
 
-    protected boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
+    private boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
         int width = map.length;
         int height = map[0].length;
         int stanceCount = Utils.NUMBER_OF_STANCES;
@@ -285,18 +318,18 @@ public class PlanComputer {
                 + stance];
     }
 
-    protected boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
+    private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
         if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(utils.getShootRange(type))) {
             return false;
         }
         return visible(viewerX, viewerY, objectX, objectY, stance);
     }
 
-    protected boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance) {
+    private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance) {
         return canShoot(viewerX, viewerY, objectX, objectY, stance, selfType);
     }
 
-    protected void tryShoot() {
+    private void tryShoot() {
         int shootCost = utils.getShootCost(selfType);
         if (cur.actionPoints < shootCost) {
             return;
@@ -311,7 +344,7 @@ public class PlanComputer {
         }
     }
 
-    protected void tryLowerStance() {
+    private void tryLowerStance() {
         if (cur.actionPoints < game.getStanceChangeCost()) {
             return;
         }
@@ -327,7 +360,7 @@ public class PlanComputer {
         popAction();
     }
 
-    protected void tryRaiseStance() {
+    private void tryRaiseStance() {
         if (cur.actionPoints < game.getStanceChangeCost()) {
             return;
         }
@@ -343,7 +376,7 @@ public class PlanComputer {
         popAction();
     }
 
-    protected void unthrowGrenade(int ex, int ey) {
+    private void unthrowGrenade(int ex, int ey) {
         popAction();
         cur.actionPoints += game.getGrenadeThrowCost();
         cur.holdingGrenade = true;
@@ -354,7 +387,7 @@ public class PlanComputer {
         undealDamage(ex, ey - 1, game.getGrenadeCollateralDamage());
     }
 
-    protected void throwGrenade(int ex, int ey) {
+    private void throwGrenade(int ex, int ey) {
         addAction(MyMove.grenade(ex, ey));
         cur.actionPoints -= game.getGrenadeThrowCost();
         cur.holdingGrenade = false;
@@ -365,7 +398,7 @@ public class PlanComputer {
         dealDamage(ex, ey - 1, game.getGrenadeCollateralDamage());
     }
 
-    protected boolean forbidden(int x, int y) {
+    private boolean forbidden(int x, int y) {
         if (!inField(x, y)) {
             return false;
         }
@@ -378,7 +411,7 @@ public class PlanComputer {
         return false;
     }
 
-    protected boolean canThrowGrenade(int ex, int ey) {
+    private boolean canThrowGrenade(int ex, int ey) {
         if (!inField(ex, ey)) {
             return false;
         }
@@ -395,7 +428,7 @@ public class PlanComputer {
         return true;
     }
 
-    protected void tryThrowGrenade(int x, int y) {
+    private void tryThrowGrenade(int x, int y) {
         if (canThrowGrenade(x, y)) {
             throwGrenade(x, y);
             rec();
@@ -403,7 +436,7 @@ public class PlanComputer {
         }
     }
 
-    protected void tryThrowGrenade() {
+    private void tryThrowGrenade() {
         if (!cur.holdingGrenade || cur.actionPoints < game.getGrenadeThrowCost()) {
             return;
         }
@@ -416,7 +449,7 @@ public class PlanComputer {
         }
     }
 
-    protected void rec() {
+    private void rec() {
         BonusType bonus = bonuses[cur.x][cur.y];
         boolean oldHoldingGrenade = cur.holdingGrenade;
         boolean oldHoldingFieldRation = cur.holdingFieldRation;
@@ -445,7 +478,7 @@ public class PlanComputer {
         cur.holdingFieldRation = oldHoldingFieldRation;
     }
 
-    protected void updateSqrDistSum(int x, int y) {
+    private void updateSqrDistSum(int x, int y) {
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 sqrDistSum[i][j] += Utils.sqrDist(x, y, i, j);
@@ -453,7 +486,7 @@ public class PlanComputer {
         }
     }
 
-    protected int getFocusFireParameter() {
+    private int getFocusFireParameter() {
         int r = 0;
         for (Cell enemy : enemyPositions) {
             if (hp[enemy.x][enemy.y] <= 0) {
@@ -464,7 +497,7 @@ public class PlanComputer {
         return r;
     }
 
-    protected int getMinHp() {
+    private int getMinHp() {
         int mi = cur.selfHp;
         for (Cell cell : allyPositions) {
             mi = Math.min(mi, hp[cell.x][cell.y]);
@@ -472,7 +505,7 @@ public class PlanComputer {
         return mi;
     }
 
-    protected int getDistToTeammatesSum() {
+    private int getDistToTeammatesSum() {
         int r = 0;
         int minHp = Integer.MAX_VALUE;
         for (Cell cell : allyPositions) {
@@ -480,7 +513,7 @@ public class PlanComputer {
         }
         for (int i = 0; i < allyPositions.size(); i++) {
             Cell cell = allyPositions.get(i);
-            int d = dist.get(i)[cur.x][cur.y];
+            int d = bfsDistFromTeammateForHealing.get(i)[cur.x][cur.y];
             if (hp[cell.x][cell.y] == minHp) {
                 d *= 100;
             }
