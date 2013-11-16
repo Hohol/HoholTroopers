@@ -187,4 +187,137 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH
         );
     }
+
+    @Test
+    void testHelpDoNotGoTooFar() {
+        setMap(
+                ".####...........s........####.",
+                ".####..####...##..c####..####.",
+                ".......####..####..####.......",
+                ".......####.f####..####.......",
+                ".####..####...##...####..####.",
+                ".####....................####.",
+                ".####............C.......####.",
+                ".####..####..####.S####..####.",
+                ".......####..####..####.......",
+                ".......####..####..####.......",
+                ".......####..####..####.......",
+                "..................F..........."
+        );
+
+        check(
+                FIELD_MEDIC,
+                10,
+                STANDING,
+                false,
+                true,
+                false,
+                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testHelpDoNotGoTooFar2() {
+        setMap(
+                ".####...........s........####.",
+                ".####..####...##...####..####.",
+                ".......####..####..####.......",
+                ".......####.f####..####.......",
+                ".####..####...##...####..####.",
+                ".####....................####.",
+                ".####............S.......####.",
+                ".####..####..####.F####..####.",
+                ".......####..####..####.......",
+                ".......####..####..####.......",
+                ".......####..####..####.......",
+                "..................C..........."
+        );
+
+        check(
+                COMMANDER,
+                10,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testHelpBug() {
+        setMap(
+                ".s",
+                ".S",
+                "C3",
+                ".F"
+        );
+
+        check(
+                COMMANDER,
+                4,
+                STANDING,
+                false,
+                true,
+                false,
+                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testMedicDistPriority() {
+        setMap(
+                "..f..C",
+                "3F3...",
+                "S....."
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_SOUTH
+        );
+    }
+
+    @Test
+    void testNonMedicDistPriority() {
+        setMap(
+                "..f..S",
+                "3C3...",
+                "F....."
+        );
+
+        check(
+                COMMANDER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_NORTH
+        );
+    }
+    @Test
+    void testNonMedicDistPriority2() {
+        setMap(
+                "Cf....",
+                "......",
+                "F.S...",
+                "......"
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
+        );
+    }
 }

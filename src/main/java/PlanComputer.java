@@ -5,7 +5,6 @@ import model.TrooperType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static model.TrooperStance.PRONE;
@@ -97,14 +96,22 @@ public class PlanComputer {
                 }
             }
         }
+        int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                if (distFromMe[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
+                    helpFactor[i][j] = 0;
+                }
+            }
+        }
         helpDist = Utils.bfsForHelp(map, helpFactor);
     }
 
     void updateBest() {
 
-        //todo то, что вычисляется за O(1), можно и не хранить
+        //todo ??, ??? ??????????? ?? O(1), ????? ? ?? ???????
 
-        cur.distSum = getDistToTeammatesSum();
+        cur.healDist = getDistToTeammatesSum();
         cur.minHp = getMinHp();
         cur.focusFireParameter = getFocusFireParameter();
         cur.helpFactor = helpFactor[cur.x][cur.y];
@@ -533,7 +540,7 @@ public class PlanComputer {
     }
 
     @SuppressWarnings("unused")
-    boolean stopOn(MyMove ...move) { //for debug only
+    boolean stopOn(MyMove... move) { //for debug only
         return Arrays.asList(move).equals(cur.actions);
     }
 }

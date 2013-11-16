@@ -25,7 +25,7 @@ class State {
 
     int focusFireParameter;
     int minHp;
-    int distSum;
+    int healDist;
     int helpFactor;
     int helpDist;
 
@@ -53,7 +53,7 @@ class State {
         this.healedSum = cur.healedSum;
         this.focusFireParameter = cur.focusFireParameter;
         this.minHp = cur.minHp;
-        this.distSum = cur.distSum;
+        this.healDist = cur.healDist;
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
@@ -75,27 +75,32 @@ class State {
             return hpDiff > oldHpDiff;
         }
 
-        if (helpDist != old.helpDist) {
-            return helpDist < old.helpDist;
+        int msb = medicSpecificCompare(old);
+        int nmsb = nonMedicSpecificBetter(old);
+
+        if (selfType == TrooperType.FIELD_MEDIC) {
+            if (msb != 0) {
+                return msb < 0;
+            }
+            if (nmsb != 0) {
+                return nmsb < 0;
+            }
+
+        } else {
+            if (nmsb != 0) {
+                return nmsb < 0;
+            }
+
+            if (msb != 0) {
+                return msb < 0;
+            }
         }
 
-        if (helpFactor != old.helpFactor) {
-            return helpFactor > old.helpFactor;
-        }
-
-        if (minHp != old.minHp) {
-            return minHp > old.minHp;
-        }
         if (holdingMedikit != old.holdingMedikit) {
             return holdingMedikit;
         }
         if (holdingFieldRation != old.holdingFieldRation) {
             return holdingFieldRation;
-        }
-        if (selfType == TrooperType.FIELD_MEDIC) {
-            if (distSum != old.distSum) {
-                return distSum < old.distSum;
-            }
         }
 
         if (holdingGrenade != old.holdingGrenade) {
@@ -115,5 +120,26 @@ class State {
         }
 
         return false;
+    }
+
+    int medicSpecificCompare(State old) {
+        if (minHp != old.minHp) {
+            return old.minHp - minHp;
+        }
+        if (healDist != old.healDist) {
+            return healDist - old.healDist;
+        }
+        return 0;
+    }
+
+    private int nonMedicSpecificBetter(State old) {
+        if (helpDist != old.helpDist) {
+            return helpDist - old.helpDist;
+        }
+
+        if (helpFactor != old.helpFactor) {
+            return old.helpFactor - helpFactor;
+        }
+        return 0;
     }
 }

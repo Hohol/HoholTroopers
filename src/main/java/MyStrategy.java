@@ -8,6 +8,7 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
+    public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
     final Random rnd = new Random(3222);
     Trooper self;
