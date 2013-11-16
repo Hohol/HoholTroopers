@@ -5,3 +5,4 @@ TrooperParameters.java
 MyMove.java
 PlanComputer.java
 State.java
+MutableTrooper.java

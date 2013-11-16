@@ -23,7 +23,7 @@ public final class MyStrategy implements Strategy {
     static boolean[] vision;
 
     List<Trooper> teammates;
-    List<MutableTrooper> enemies;
+    Set<MutableTrooper> enemies;
     Trooper teammateToFollow;
     static int smallMoveIndex;
     final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
@@ -35,7 +35,7 @@ public final class MyStrategy implements Strategy {
     Trooper medic, sniper, soldier, commander, scout;
     private BonusType[][] bonuses;
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
-    static boolean[][] weCanSee;
+    static boolean[][] wasSeenOnCurrentBigMove;
     static List<Cell> suspiciousCells = new ArrayList<>();
     static Cell lastSeenEnemyPos;
     static int prevScore, curScore;
@@ -94,7 +94,6 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean tryRandomShoot() {
-        wasRandomShoot = false;
         if (!haveTime(self.getShootCost())) {
             return false;
         }
@@ -108,11 +107,12 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 if (world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(), i, j, STANDING) &&
-                        !world.isVisible(self.getVisionRange(), self.getX(), self.getY(), self.getStance(), i, j, STANDING)) {
+                        !wasSeenOnCurrentBigMove[i][j]) {
                     cells.add(new Cell(i, j));
                 }
             }
         }
+        printCells("Random shoot cells", cells);
         if (cells.isEmpty()) {
             return false;
         }
@@ -120,22 +120,28 @@ public final class MyStrategy implements Strategy {
         move.setAction(SHOOT);
         setDirection(cell.x, cell.y);
         wasRandomShoot = true;
+        log("Random shoot to (" + cell.x + ", " + cell.y + ")");
         return true;
     }
 
-    private void printSuspiciousCells() {
+    private void printCells(String message, List<Cell> cells) {
         if (!local) {
             return;
         }
-        if (suspiciousCells.isEmpty()) {
-            log("No suspiciousCells");
+        if (cells.isEmpty()) {
+            log("No cells");
             return;
         }
         char[][] map = getMapForPrinting();
-        for (Cell cell : suspiciousCells) {
+        for (Cell cell : cells) {
             map[cell.x][cell.y] = '!';
         }
-        print("Suspicious cells", map);
+        print(message, map);
+    }
+
+    private void printSuspiciousCells() {
+        printCells("Suspicious cells", suspiciousCells);
+
     }
 
     private char[][] getMapForPrinting() {
@@ -143,9 +149,9 @@ public final class MyStrategy implements Strategy {
         for (char[] row : map) {
             Arrays.fill(row, '?');
         }
-        for (int i = 0; i < weCanSee.length; i++) {
-            for (int j = 0; j < weCanSee[i].length; j++) {
-                if (weCanSee[i][j]) {
+        for (int i = 0; i < wasSeenOnCurrentBigMove.length; i++) {
+            for (int j = 0; j < wasSeenOnCurrentBigMove[i].length; j++) {
+                if (wasSeenOnCurrentBigMove[i][j]) {
                     map[i][j] = '.';
                 }
             }
@@ -226,7 +232,7 @@ public final class MyStrategy implements Strategy {
     private void removeVisibleCellsFromSuspicious() {
         for (int i = suspiciousCells.size() - 1; i >= 0; i--) {
             Cell c = suspiciousCells.get(i);
-            if (weCanSee[c.x][c.y]) {
+            if (wasSeenOnCurrentBigMove[c.x][c.y]) {
                 suspiciousCells.remove(i);
             }
         }
@@ -240,7 +246,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 if (world.isVisible(utils.getShootRange(SOLDIER), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
-                        !weCanSee[i][j]) {
+                        !wasSeenOnCurrentBigMove[i][j]) {
                     suspiciousCells.add(new Cell(i, j));
                 }
             }
@@ -622,13 +628,14 @@ public final class MyStrategy implements Strategy {
         if(wasRandomShoot && curScore != prevScore) {
             log("Random shoot just hit someone!");
         }
+        wasRandomShoot = false;
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
         smallMoveIndex++;
         log("SmallStepNumber = " + smallMoveIndex);
         cells = world.getCells();
         teammates = getTeammates();
-        enemies = getEnemies();
+        updateEnemies();
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
@@ -643,7 +650,7 @@ public final class MyStrategy implements Strategy {
             vision = world.getCellVisibilities();
         }
         updateWeCanSee();
-        if (lastSeenEnemyPos != null && weCanSee[lastSeenEnemyPos.x][lastSeenEnemyPos.y] && Utils.manhattanDist(self.getX(), self.getY(), lastSeenEnemyPos.x, lastSeenEnemyPos.y) <= 2) {
+        if (lastSeenEnemyPos != null && wasSeenOnCurrentBigMove[lastSeenEnemyPos.x][lastSeenEnemyPos.y] && Utils.manhattanDist(self.getX(), self.getY(), lastSeenEnemyPos.x, lastSeenEnemyPos.y) <= 2) {
             lastSeenEnemyPos = null;
         }
         updateHpHistory();
@@ -666,20 +673,79 @@ public final class MyStrategy implements Strategy {
 
     private void finish() {
         if (!enemies.isEmpty()) {
-            lastSeenEnemyPos = new Cell(enemies.get(0).getX(), enemies.get(0).getY());
+            MutableTrooper t = enemies.iterator().next();
+            lastSeenEnemyPos = new Cell(t.getX(), t.getY());
         }
         prevScore = curScore;
+        if(lastSubMove()) {
+            enemies.clear();
+            wasSeenOnCurrentBigMove = null;
+        }
+        dealDamageToEnemies();
+    }
+
+    private void dealDamageToEnemies() {
+        Iterator<MutableTrooper> it = enemies.iterator();
+        while(it.hasNext()) {
+            MutableTrooper trooper = it.next();
+            if (move.getAction() == THROW_GRENADE) {
+                int d = Utils.manhattanDist(trooper.getX(), trooper.getY(), move.getX(), move.getY());
+                if(d == 0) {
+                    trooper.decHp(game.getGrenadeDirectDamage());
+                } else if(d == 1) {
+                    trooper.decHp(game.getGrenadeCollateralDamage());
+                }
+            } else if(move.getAction() == SHOOT) {
+                trooper.decHp(utils.getShootDamage(self.getType(), self.getStance()));
+            }
+            if(trooper.getHitpoints() <= 0) {
+                it.remove();
+            }
+        }
+    }
+
+    private boolean lastSubMove() {
+        int actionCost = 0;
+        switch (move.getAction()) {
+            case END_TURN:
+                return true;
+            case MOVE:
+                actionCost = utils.getMoveCost(self.getStance());
+                break;
+            case SHOOT:
+                actionCost = self.getShootCost();
+                break;
+            case RAISE_STANCE:
+            case LOWER_STANCE:
+                actionCost = game.getStanceChangeCost();
+                break;
+            case THROW_GRENADE:
+                actionCost = game.getGrenadeThrowCost();
+                break;
+            case USE_MEDIKIT:
+                actionCost = game.getMedikitUseCost();
+                break;
+            case EAT_FIELD_RATION:
+                return false;
+            case HEAL:
+                actionCost = game.getFieldMedicHealCost();
+                break;
+            case REQUEST_ENEMY_DISPOSITION:
+                actionCost = game.getCommanderRequestEnemyDispositionCost();
+                break;
+        }
+        return actionCost == self.getActionPoints();
     }
 
     private void updateWeCanSee() {
-        if (weCanSee == null) {
-            weCanSee = new boolean[world.getWidth()][world.getHeight()];
+        if (wasSeenOnCurrentBigMove == null) {
+            wasSeenOnCurrentBigMove = new boolean[world.getWidth()][world.getHeight()];
         }
         for (Trooper trooper : teammates) {
             for (int i = 0; i < world.getWidth(); i++) {
                 for (int j = 0; j < world.getHeight(); j++) {
                     if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(), i, j, PRONE)) {
-                        weCanSee[i][j] = true;
+                        wasSeenOnCurrentBigMove[i][j] = true;
                     }
                 }
             }
@@ -719,23 +785,22 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private List<MutableTrooper> getEnemies() {
-        List<MutableTrooper> enemies = new ArrayList<>();
+    private void updateEnemies() {
+        if(enemies == null) {
+            enemies = new HashSet<>();
+        }
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
+                MutableTrooper mt = new MutableTrooper(trooper);
+                if(enemies.contains(mt)) {
+                    enemies.remove(mt);
+                }
                 enemies.add(new MutableTrooper(trooper));
             }
         }
-        Collections.sort(enemies, new Comparator<MutableTrooper>() {
-            @Override
-            public int compare(MutableTrooper o1, MutableTrooper o2) {
-                return Long.compare(o1.getId(), o2.getId());
-            }
-        });
-        return enemies;
     }
 
-    private void log(Object o) {
+    private static void log(Object o) {
         if (!local) {
             return;
         }

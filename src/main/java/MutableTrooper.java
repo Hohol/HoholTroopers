@@ -205,4 +205,15 @@ public final class MutableTrooper extends Unit {
     public void decHp(int d) {
         hitpoints -= d;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        MutableTrooper t = (MutableTrooper)o;
+        return getId() == t.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.valueOf(getId()).hashCode();
+    }
 }
