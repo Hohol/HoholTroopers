@@ -58,10 +58,6 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        /*if (tryHelpTeammateInFight()) {
-            return;
-        }/**/
-
         if (tryMoveToBonus()) {
             return;
         }
@@ -109,7 +105,8 @@ public final class MyStrategy implements Strategy {
         move.setY(bestMove.getY());
     }
 
-    boolean interesting(List<MyMove> actions) {
+    @SuppressWarnings("unused")
+    boolean interesting(List<MyMove> actions) { // for debug only
         int x = self.getX();
         int y = self.getY();
         for (MyMove move : actions) {
@@ -192,7 +189,7 @@ public final class MyStrategy implements Strategy {
             if (bonusTooFarFromTeammates(bonus)) {
                 continue;
             }
-            if (!isGoodCell(bonus.getX(), bonus.getY()) || isNarrowPathNearBorder(bonus.getX(), bonus.getY())) {
+            if (!isFreeCell(bonus.getX(), bonus.getY()) || isNarrowPathNearBorder(bonus.getX(), bonus.getY())) {
                 continue;
             }
             int d = dist[bonus.getX()][bonus.getY()];
@@ -263,7 +260,16 @@ public final class MyStrategy implements Strategy {
                 bonuses,
                 getStances(),
                 vision,
-                new State(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), holdingAndShouldUseFieldRation, holdingAndShouldUseGrenade, holdingAndShouldUseMedikit)
+                new State(
+                        self.getActionPoints(),
+                        self.getHitpoints(),
+                        self.getX(),
+                        self.getY(),
+                        self.getStance(),
+                        holdingAndShouldUseFieldRation,
+                        holdingAndShouldUseGrenade,
+                        holdingAndShouldUseMedikit
+                )
         ).getPlan();
     }
 
@@ -421,9 +427,9 @@ public final class MyStrategy implements Strategy {
     private boolean isBlocked(Trooper trooper) {
         int[][] dist = bfs(trooper.getX(), trooper.getY(), true);
         int cnt = 0;
-        for (int[] aDist : dist) {
-            for (int j = 0; j < aDist.length; j++) {
-                if (aDist[j] != Utils.UNREACHABLE) {
+        for (int i = 0; i < dist.length; i++) {
+            for (int j = 0; j < dist[i].length; j++) {
+                if (dist[i][j] != Utils.UNREACHABLE && isFreeCell(i, j)) {
                     cnt++;
                 }
             }
@@ -720,7 +726,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if (!isGoodCell(pos.x, pos.y) && Utils.manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
+        if (!isFreeCell(pos.x, pos.y) && Utils.manhattanDist(self.getX(), self.getY(), pos.x, pos.y) == 1) {
             move.setAction(END_TURN);
             return true;
         }
@@ -825,7 +831,7 @@ public final class MyStrategy implements Strategy {
         for (Direction dir : Utils.dirs) {
             int toX = self.getX() + dir.getOffsetX();
             int toY = self.getY() + dir.getOffsetY();
-            if (!isGoodCell(toX, toY)) {
+            if (!isFreeCell(toX, toY)) {
                 continue;
             }
             if (dist[toX][toY] == dist[self.getX()][self.getY()] - 1) {
@@ -884,7 +890,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (!isGoodCell(toX, toY) || avoidNarrowPathNearBorder && isNarrowPathNearBorder(toX, toY)) {
+                if (!isFreeCell(toX, toY) || avoidNarrowPathNearBorder && isNarrowPathNearBorder(toX, toY)) {
                     continue;
                 }
                 qx.add(toX);
@@ -910,14 +916,14 @@ public final class MyStrategy implements Strategy {
         int toX = trooper.getX() + dir.getOffsetX();
         int toY = trooper.getY() + dir.getOffsetY();
 
-        return isGoodCell(toX, toY) && !isNarrowPathNearBorder(toX, toY);
+        return isFreeCell(toX, toY) && !isNarrowPathNearBorder(toX, toY);
     }
 
     private boolean isValidMove(Direction dir) {
         return isValidMove(dir, self);
     }
 
-    private boolean isGoodCell(int toX, int toY) {
+    private boolean isFreeCell(int toX, int toY) {
         return inField(toX, toY) && cells[toX][toY] == CellType.FREE &&
                 !occupiedByTrooper[toX][toY];
     }
