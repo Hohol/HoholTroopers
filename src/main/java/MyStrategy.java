@@ -11,6 +11,8 @@ public final class MyStrategy implements Strategy {
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
     final Random rnd = new Random(3222);
+    Random rnd2 = new Random(223);
+
     Trooper self;
     World world;
     Game game;
@@ -36,6 +38,8 @@ public final class MyStrategy implements Strategy {
     static boolean[][] weCanSee;
     static List<Cell> suspiciousCells = new ArrayList<>();
     static Cell lastSeenEnemyPos;
+    static int prevScore, curScore;
+    static boolean wasRandomShoot;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -84,6 +88,39 @@ public final class MyStrategy implements Strategy {
         if (tryDeblock()) {
             return;
         }
+        if (tryRandomShoot()) {
+            return;
+        }
+    }
+
+    private boolean tryRandomShoot() {
+        wasRandomShoot = false;
+        if (!haveTime(self.getShootCost())) {
+            return false;
+        }
+        if (self.getVisionRange() >= self.getShootingRange()) {
+            return false;
+        }
+        List<Cell> cells = new ArrayList<>();
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (!isFreeCell(i, j)) {
+                    continue;
+                }
+                if (world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(), i, j, STANDING) &&
+                        !world.isVisible(self.getVisionRange(), self.getX(), self.getY(), self.getStance(), i, j, STANDING)) {
+                    cells.add(new Cell(i, j));
+                }
+            }
+        }
+        if (cells.isEmpty()) {
+            return false;
+        }
+        Cell cell = cells.get(rnd2.nextInt(cells.size()));
+        move.setAction(SHOOT);
+        setDirection(cell.x, cell.y);
+        wasRandomShoot = true;
+        return true;
     }
 
     private void printSuspiciousCells() {
@@ -581,6 +618,10 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
+        curScore = getMyScore();
+        if(wasRandomShoot && curScore != prevScore) {
+            log("Random shoot just hit someone!");
+        }
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
         smallMoveIndex++;
@@ -613,10 +654,21 @@ public final class MyStrategy implements Strategy {
         printMap();
     }
 
+    private int getMyScore() {
+        String name = local ? "MyStrategy" : "Hohol";
+        for (Player player : world.getPlayers()) {
+            if (player.getName().equals(name)) {
+                return player.getScore();
+            }
+        }
+        throw new RuntimeException();
+    }
+
     private void finish() {
         if (!enemies.isEmpty()) {
             lastSeenEnemyPos = new Cell(enemies.get(0).getX(), enemies.get(0).getY());
         }
+        prevScore = curScore;
     }
 
     private void updateWeCanSee() {
