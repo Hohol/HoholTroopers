@@ -11,7 +11,6 @@ public final class MyStrategy implements Strategy {
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
     final Random rnd = new Random(3222);
-    Random rnd2 = new Random(223);
 
     Trooper self;
     World world;
@@ -23,7 +22,8 @@ public final class MyStrategy implements Strategy {
     static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
     static boolean[] vision;
 
-    List<Trooper> teammates, enemies;
+    List<Trooper> teammates;
+    List<MutableTrooper> enemies;
     Trooper teammateToFollow;
     static int smallMoveIndex;
     final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
@@ -116,7 +116,7 @@ public final class MyStrategy implements Strategy {
         if (cells.isEmpty()) {
             return false;
         }
-        Cell cell = cells.get(rnd2.nextInt(cells.size()));
+        Cell cell = cells.get(rnd.nextInt(cells.size()));
         move.setAction(SHOOT);
         setDirection(cell.x, cell.y);
         wasRandomShoot = true;
@@ -153,7 +153,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : teammates) {
             map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
         }
-        for (Trooper trooper : enemies) {
+        for (MutableTrooper trooper : enemies) {
             map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
         }
         for (int i = 0; i < world.getWidth(); i++) {
@@ -299,7 +299,7 @@ public final class MyStrategy implements Strategy {
 
     private TrooperStance[][] getStances() {
         TrooperStance[][] stances = new TrooperStance[world.getWidth()][world.getHeight()];
-        for (Trooper trooper : enemies) {
+        for (MutableTrooper trooper : enemies) {
             stances[trooper.getX()][trooper.getY()] = trooper.getStance();
         }
         for (Trooper trooper : teammates) {
@@ -454,7 +454,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : teammates) {
             hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
         }
-        for (Trooper trooper : enemies) {
+        for (MutableTrooper trooper : enemies) {
             hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
         }
         return hp;
@@ -704,7 +704,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : teammates) {
             System.out.println(trooper.getType() + ": " + trooper.getHitpoints() + " hp");
         }
-        for (Trooper trooper : enemies) {
+        for (MutableTrooper trooper : enemies) {
             System.out.println("Enemy " + trooper.getType() + ": " + trooper.getHitpoints() + " hp");
         }
     }
@@ -719,16 +719,16 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private List<Trooper> getEnemies() {
-        List<Trooper> enemies = new ArrayList<>();
+    private List<MutableTrooper> getEnemies() {
+        List<MutableTrooper> enemies = new ArrayList<>();
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
-                enemies.add(trooper);
+                enemies.add(new MutableTrooper(trooper));
             }
         }
-        Collections.sort(enemies, new Comparator<Trooper>() {
+        Collections.sort(enemies, new Comparator<MutableTrooper>() {
             @Override
-            public int compare(Trooper o1, Trooper o2) {
+            public int compare(MutableTrooper o1, MutableTrooper o2) {
                 return Long.compare(o1.getId(), o2.getId());
             }
         });
@@ -756,7 +756,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : teammates) {
             map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
         }
-        for (Trooper trooper : enemies) {
+        for (MutableTrooper trooper : enemies) {
             map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
         }
         return map;
