@@ -1,6 +1,7 @@
 import static model.TrooperStance.*;
 import static model.BonusType.*;
 
+import static model.TrooperType.*;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -8,20 +9,16 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class AttackPlanComputerTest extends AbstractPlanComputerTest {
-
     @Test
     void testEmpty() {
         setMap(
                 "S"
         );
         check(
+                SOLDIER,
                 0,
-                0, 0
-                //empty
-                ,
-                STANDING, false, false);
+                STANDING, false, false, false);
     }
-
     @Test
     void testShoot() {
         setMap(
@@ -30,9 +27,9 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(1, 0, 100, STANDING);
 
         check(
+                SOLDIER,
                 4,
-                0, 0,
-                STANDING, false, false, MyMove.shoot(1, 0)
+                STANDING, false, false, false, MyMove.shoot(1, 0)
         );
 
         //----------------------
@@ -45,9 +42,9 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 2, 50, STANDING);
 
         check(
+                SOLDIER,
                 4,
-                0, 0,
-                STANDING, false, false, MyMove.shoot(3, 0)
+                STANDING, false, false, false, MyMove.shoot(3, 0)
         );
 
         //----------------------
@@ -60,9 +57,9 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 2, 2, STANDING);
 
         check(
+                SOLDIER,
                 4,
-                0, 0,
-                STANDING, false, false, MyMove.shoot(0, 2)
+                STANDING, false, false, false, MyMove.shoot(0, 2)
         );
     }
 
@@ -77,9 +74,9 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 2, 30, STANDING);
 
         check(
+                SOLDIER,
                 4,
-                0, 0,
-                STANDING, false, false, MyMove.shoot(0, 2)
+                STANDING, false, false, false, MyMove.shoot(0, 2)
         );
     }
 
@@ -91,10 +88,10 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(4, 0, 100, STANDING);
 
         check(
+                SOLDIER,
                 4,
-                0, 0,
                 STANDING,
-                false, false);
+                false, false, false);
 
         //----------------------
         setMap(
@@ -110,11 +107,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 4, 15, STANDING);
 
         check(
+                COMMANDER,
                 3,
-                2, 2,
                 STANDING,
 
-                false, false, MyMove.shoot(2, 4)
+                false, false, false, MyMove.shoot(2, 4)
         );
 
         //----------------------
@@ -125,12 +122,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(3, 0, 1, STANDING);
 
         check(
+                SOLDIER,
                 12,
-                0, 0,
                 STANDING,
                 false,
-                false
-        );
+                false,
+                false);
     }
 
     @Test
@@ -149,11 +146,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 4, 16, STANDING);
 
         check(
+                COMMANDER,
                 3,
-                2, 2,
                 STANDING,
 
-                false, false, MyMove.shoot(2, 0)
+                false, false, false, MyMove.shoot(2, 0)
         );
 
         //----------------------
@@ -165,11 +162,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 0, 1, STANDING);
 
         check(
+                COMMANDER,
                 3,
-                0, 2,
                 STANDING,
 
-                false, false, MyMove.shoot(0, 0)
+                false, false, false, MyMove.shoot(0, 0)
         );
 
         //----------------------
@@ -186,11 +183,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 4, 16, STANDING);
 
         check(
+                COMMANDER,
                 6,
-                2, 2,
                 STANDING,
 
-                false, false, MyMove.shoot(2, 0), MyMove.shoot(4, 2)
+                false, false, false, MyMove.shoot(2, 0), MyMove.shoot(4, 2)
         );
     }
 
@@ -202,11 +199,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(6, 0, 1, PRONE);
 
         check(
+                FIELD_MEDIC,
                 2,
-                0, 0,
                 STANDING,
-                false, false
-        );
+                false, false,
+                false);
     }
 
     @Test
@@ -217,10 +214,10 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(6, 0, 1, PRONE);
 
         check(
+                FIELD_MEDIC,
                 4,
-                0, 0,
                 STANDING,
-                false, false, MyMove.MOVE_EAST, MyMove.shoot(6, 0)
+                false, false, false, MyMove.MOVE_EAST, MyMove.shoot(6, 0)
         );
         //-----------
         setMap(
@@ -231,10 +228,10 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 1, 1, PRONE);
 
         check(
+                FIELD_MEDIC,
                 12,
-                0, 1,
                 STANDING,
-                false, false, MyMove.MOVE_NORTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.shoot(2, 1)
+                false, false, false, MyMove.MOVE_NORTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.shoot(2, 1)
         );
 
         //-----------
@@ -246,10 +243,10 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(18, 0, 25, KNEELING);
 
         check(
+                SOLDIER,
                 12,
-                9, 0,
                 STANDING,
-                false, false, MyMove.MOVE_EAST, MyMove.shoot(18, 0)
+                false, false, false, MyMove.MOVE_EAST, MyMove.shoot(18, 0)
         );
 
         //-----------
@@ -261,10 +258,10 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(16, 0, 15, KNEELING);
 
         check(
+                COMMANDER,
                 12,
-                8, 0,
                 STANDING,
-                false, false, MyMove.MOVE_EAST, MyMove.shoot(16, 0), MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.shoot(0, 0)
+                false, false, false, MyMove.MOVE_EAST, MyMove.shoot(16, 0), MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.shoot(0, 0)
         );
 
         //-----------
@@ -280,11 +277,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(1, 1, 100, KNEELING);
 
         check(
+                FIELD_MEDIC,
                 6,
-                0, 1,
                 STANDING,
                 false,
-                false, MyMove.shoot(1, 1), MyMove.shoot(1, 1), MyMove.shoot(1, 1)
+                false, false, MyMove.shoot(1, 1), MyMove.shoot(1, 1), MyMove.shoot(1, 1)
         );
     }
 
@@ -298,11 +295,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(1, 1, 9, KNEELING);
 
         check(
+                FIELD_MEDIC,
                 6,
-                0, 1,
                 STANDING,
                 false,
-                false, MyMove.shoot(1, 1), MyMove.MOVE_EAST, MyMove.shoot(1, 0)
+                false, false, MyMove.shoot(1, 1), MyMove.MOVE_EAST, MyMove.shoot(1, 0)
         );
     }
 
@@ -315,11 +312,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(18, 0, 25, KNEELING);
 
         check(
+                SOLDIER,
                 12,
-                9, 0,
                 STANDING,
                 true,
-                false, MyMove.MOVE_EAST, MyMove.shoot(18, 0), MyMove.EAT_FIELD_RATION, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.shoot(0, 0)
+                false, false, MyMove.MOVE_EAST, MyMove.shoot(18, 0), MyMove.EAT_FIELD_RATION, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.shoot(0, 0)
         );
         //------
 
@@ -332,11 +329,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 0, 9, KNEELING);
 
         check(
+                FIELD_MEDIC,
                 5,
-                0, 2,
                 STANDING,
                 true,
-                false, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
+                false, false, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
         );
     }
 
@@ -348,11 +345,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 0, 9, KNEELING);
 
         check(
+                SOLDIER,
                 12,
-                0, 0,
                 PRONE,
                 false,
-                false, MyMove.RAISE_STANCE, MyMove.shoot(2, 0)
+                false, false, MyMove.RAISE_STANCE, MyMove.shoot(2, 0)
         );
 
         setMap(
@@ -361,11 +358,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 0, 9, KNEELING);
 
         check(
+                SOLDIER,
                 12,
-                0, 0,
                 PRONE,
                 false,
-                false, MyMove.RAISE_STANCE, MyMove.shoot(2, 0)
+                false, false, MyMove.RAISE_STANCE, MyMove.shoot(2, 0)
         );
     }
 
@@ -377,11 +374,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(1, 0, 120, KNEELING);
 
         check(
+                FIELD_MEDIC,
                 12,
-                0, 0,
                 STANDING,
                 true,
-                false, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.shoot(1, 0), MyMove.EAT_FIELD_RATION, MyMove.shoot(1, 0), MyMove.shoot(1, 0), MyMove.shoot(1, 0), MyMove.shoot(1, 0)
+                false, false, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.shoot(1, 0), MyMove.EAT_FIELD_RATION, MyMove.shoot(1, 0), MyMove.shoot(1, 0), MyMove.shoot(1, 0), MyMove.shoot(1, 0)
         );
     }
 
@@ -394,11 +391,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(5, 0, 25, STANDING);
 
         check(
+                SOLDIER,
                 6,
-                2, 0,
                 KNEELING,
                 false,
-                false, MyMove.LOWER_STANCE, MyMove.shoot(0, 0)
+                false, false, MyMove.LOWER_STANCE, MyMove.shoot(0, 0)
         );
 
         //----------
@@ -410,11 +407,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(5, 0, 25, STANDING);
 
         check(
+                SOLDIER,
                 6,
-                2, 0,
                 KNEELING,
                 false,
-                false, MyMove.RAISE_STANCE, MyMove.shoot(5, 0)
+                false, false, MyMove.RAISE_STANCE, MyMove.shoot(5, 0)
         );
 
         //---------
@@ -426,11 +423,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(5, 0, 25, STANDING);
 
         check(
+                SOLDIER,
                 12,
-                2, 0,
                 KNEELING,
                 true,
-                false, MyMove.shoot(0, 0), MyMove.shoot(0, 0), MyMove.EAT_FIELD_RATION, MyMove.RAISE_STANCE, MyMove.shoot(5, 0)
+                false, false, MyMove.shoot(0, 0), MyMove.shoot(0, 0), MyMove.EAT_FIELD_RATION, MyMove.RAISE_STANCE, MyMove.shoot(5, 0)
         );
     }
 
@@ -441,11 +438,11 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
 
         check(
+                SOLDIER,
                 2,
-                0, 0,
                 KNEELING,
                 true,
-                false);
+                false, false);
     }
 
     @Test
@@ -455,12 +452,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(4, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 KNEELING,
                 false,
                 true,
-                MyMove.grenade(4, 0)
+                false, MyMove.grenade(4, 0)
         );
 
         //------
@@ -469,12 +466,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(1, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 KNEELING,
                 false,
                 true,
-                MyMove.shoot(1, 0), MyMove.shoot(1, 0)
+                false, MyMove.shoot(1, 0), MyMove.shoot(1, 0)
         );
 
         //------
@@ -483,12 +480,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(2, 0, 80, STANDING);
         check(
+                SOLDIER,
                 10,
-                1, 0,
                 STANDING,
                 false,
                 true,
-                MyMove.MOVE_WEST, MyMove.grenade(2, 0)
+                false, MyMove.MOVE_WEST, MyMove.grenade(2, 0)
         );
 
         //------
@@ -497,12 +494,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(2, 0, 70, STANDING);
         check(
+                SOLDIER,
                 10,
-                0, 0,
                 PRONE,
                 false,
                 true,
-                MyMove.shoot(2, 0), MyMove.shoot(2, 0)
+                false, MyMove.shoot(2, 0), MyMove.shoot(2, 0)
         );
     }
 
@@ -514,12 +511,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(2, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 STANDING,
                 false,
                 true,
-                MyMove.shoot(2, 0), MyMove.shoot(2, 0)
+                false, MyMove.shoot(2, 0), MyMove.shoot(2, 0)
         );
         //---------
         setMap(
@@ -528,12 +525,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(2, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 STANDING,
                 false,
                 true,
-                MyMove.grenade(2, 1)
+                false, MyMove.grenade(2, 1)
         );
 
         //---------
@@ -542,12 +539,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(6, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 STANDING,
                 false,
-                true
-        );
+                true,
+                false);
 
         //---------
         setMap(
@@ -555,12 +552,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(6, 0, 80, STANDING);
         check(
+                SOLDIER,
                 8,
-                0, 0,
                 STANDING,
                 false,
                 true,
-                MyMove.grenade(5, 0)
+                false, MyMove.grenade(5, 0)
         );
     }
 
@@ -576,12 +573,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(4, 0, 100, STANDING);
         addTrooper(5, 1, 100, STANDING);
         check(
+                FIELD_MEDIC,
                 8,
-                0, 1,
                 STANDING,
                 true,
                 true,
-                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(5, 0)
+                false, MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(5, 0)
         );
     }
 
@@ -596,12 +593,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(4, 0, 100, STANDING);
         addTrooper(0, 2, 120, STANDING);
         check(
+                COMMANDER,
                 5,
-                2, 1,
                 STANDING,
                 false,
                 false,
-                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
+                false, MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
         );
 
 
@@ -613,12 +610,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(4, 0, 100, STANDING);
         addTrooper(0, 2, 120, STANDING);
         check(
+                COMMANDER,
                 5,
-                2, 1,
                 STANDING,
                 false,
                 false,
-                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
+                false, MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
         );
 
         //---------------
@@ -629,12 +626,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 0, 100, STANDING);
         addTrooper(1, 0, 120, STANDING);
         check(
+                SOLDIER,
                 4,
-                7, 0,
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(0, 0)
+                false, MyMove.shoot(0, 0)
         );
 
         //--------------
@@ -644,12 +641,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 0, 100, STANDING);
         addTrooper(1, 0, 120, STANDING);
         check(
+                SOLDIER,
                 4,
-                7, 0,
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(1, 0)
+                false, MyMove.shoot(1, 0)
         );
 
         //--------------
@@ -659,12 +656,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(0, 0, 100, STANDING);
         addTrooper(1, 0, 120, STANDING);
         check(
+                SOLDIER,
                 4,
-                8, 0,
                 STANDING,
                 false,
                 false,
-                MyMove.shoot(1, 0)
+                false, MyMove.shoot(1, 0)
         );
     }
 
@@ -675,12 +672,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(4, 0, 80, STANDING);
         check(
+                SOLDIER,
                 7,
-                0, 0,
                 STANDING,
                 false,
                 true,
-                MyMove.MOVE_EAST, MyMove.EAT_FIELD_RATION, MyMove.grenade(4, 0)
+                false, MyMove.MOVE_EAST, MyMove.EAT_FIELD_RATION, MyMove.grenade(4, 0)
         );
         //--------------
 
@@ -690,12 +687,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(3, 0, 79, STANDING);
         check(
+                SOLDIER,
                 7,
-                0, 1,
                 STANDING,
                 false,
                 true,
-                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
+                false, MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
         );
         //--------------
 
@@ -705,12 +702,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         );
         addTrooper(3, 0, 79, STANDING);
         check(
+                SOLDIER,
                 7,
-                0, 1,
                 STANDING,
                 false,
                 true,
-                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
+                false, MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(3, 0)
         );
     }
 
@@ -722,12 +719,12 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(3, 0, 80, STANDING);
         addBonus(0, 0, GRENADE);
         check(
+                FIELD_MEDIC,
                 8,
-                0, 0,
                 STANDING,
                 false,
                 false,
-                MyMove.grenade(3, 0)
+                false, MyMove.grenade(3, 0)
         );
     }
 
@@ -737,13 +734,13 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addTrooper(2, 0, 1000, STANDING);
         addBonus(0, 0, FIELD_RATION);
         check(
+                FIELD_MEDIC,
                 12,
-                0, 0,
                 PRONE,
                 true, // FIELD_RATION
                 false,
 
-                MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0),
+                false, MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0),
                 MyMove.EAT_FIELD_RATION, MyMove.shoot(2, 0),
                 MyMove.EAT_FIELD_RATION, MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.shoot(2, 0)
                 // OMG STAHP!1
@@ -765,13 +762,14 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
         addBonus(4, 3, FIELD_RATION);
 
         check(
+                SOLDIER,
                 12,
-                4, 3,
                 STANDING,
                 true,
                 true,
 
-                MyMove.grenade(1, 1), MyMove.EAT_FIELD_RATION, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.grenade(1, 1)
+                false, MyMove.grenade(1, 1), MyMove.EAT_FIELD_RATION, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.grenade(1, 1)
         );
     }
+    /**/
 }

@@ -1,5 +1,6 @@
 import model.BonusType;
 import model.TrooperStance;
+import model.TrooperType;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -118,32 +119,40 @@ public class AbstractPlanComputerTest {
     }
 
     protected void check(
+            TrooperType selfType,
             int actionPoints,
-            int x,
-            int y,
             TrooperStance stance,
             boolean holdingFieldRation,
             boolean holdingGrenade,
+            boolean holdingMedikit,
             MyMove... expectedAr
     ) {
-        if (!Utils.isTeammateChar(map[x][y])) {
-            throw new RuntimeException("No allied trooper in cell (" + x + ", " + y + ")");
-        }
+        int x = -1, y = -1;
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                if(Utils.isLetter(map[i][j]) && hp[i][j] == 0) {
+                if (Utils.isLetter(map[i][j]) && hp[i][j] == 0) {
                     hp[i][j] = Utils.INITIAL_TROOPER_HP;
                     stances[i][j] = STANDING;
+                    if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
+                        x = i;
+                        y = j;
+                    }
                 }
             }
         }
 
+        if (x == -1) {
+            throw new RuntimeException("No allied " + selfType + " on the map");
+        }
+
         List<MyMove> actual = new PlanComputer(
-                map, Utils.HARDCODED_UTILS, hp, bonuses, stances, getVisibilities(),
-                        new State(actionPoints, holdingFieldRation, x, y, stance, Utils.INITIAL_TROOPER_HP, false, holdingGrenade)
-
-
-
+                map,
+                Utils.HARDCODED_UTILS,
+                hp,
+                bonuses,
+                stances,
+                getVisibilities(),
+                new State(actionPoints, holdingFieldRation, x, y, stance, Utils.INITIAL_TROOPER_HP, holdingMedikit, holdingGrenade)
         ).getPlan().actions;
 
         List<MyMove> expected = Arrays.asList(expectedAr);
