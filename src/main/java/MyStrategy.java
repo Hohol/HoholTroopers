@@ -28,10 +28,13 @@ public final class MyStrategy implements Strategy {
 
     static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
 
-    static EnumMap<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
+    static Map<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
 
     Trooper medic, sniper, soldier, commander, scout;
     private BonusType[][] bonuses;
+    static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
+    static boolean[][] weCanSee;
+    static List<Cell> suspiciousCells = new ArrayList<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -54,11 +57,18 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        detectInvisibleShooters();
+        printSuspiciousCells();
+
         if (tryEverything()) {
             return;
         }
 
         if (tryMoveToBonus()) {
+            return;
+        }
+
+        if (tryDealWithInvisibleShooters()) {
             return;
         }
 
@@ -73,21 +83,147 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
+    private void printSuspiciousCells() {
+        if (!local) {
+            return;
+        }
+        if (suspiciousCells.isEmpty()) {
+            log("No suspiciousCells");
+            return;
+        }
+        char[][] map = getMapForPrinting();
+        for (Cell cell : suspiciousCells) {
+            map[cell.x][cell.y] = '!';
+        }
+        print("Suspicious cells", map);
+    }
+
+    private char[][] getMapForPrinting() {
+        char[][] map = new char[world.getWidth()][world.getHeight()];
+        for (char[] row : map) {
+            Arrays.fill(row, '?');
+        }
+        for (int i = 0; i < weCanSee.length; i++) {
+            for (int j = 0; j < weCanSee[i].length; j++) {
+                if (weCanSee[i][j]) {
+                    map[i][j] = '.';
+                }
+            }
+        }
+        for (Trooper trooper : teammates) {
+            map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
+        }
+        for (Trooper trooper : enemies) {
+            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
+        }
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (cells[i][j] != CellType.FREE) {
+                    map[i][j] = '#';
+                }
+            }
+        }
+        return map;
+    }
+
+    private boolean tryDealWithInvisibleShooters() {
+        if (suspiciousCells.isEmpty()) {
+            return false;
+        }
+        if (self.getStance() != STANDING) {
+            if (!haveTime(game.getStanceChangeCost())) {
+                return false;
+            }
+            move.setAction(RAISE_STANCE);
+            return true;
+        }
+        Cell cell = null;
+        for (Cell c : suspiciousCells) {
+            if (!tooCurvedPathTo(c.x, c.y, false)) {
+                cell = c;
+                break;
+            }
+        }
+        if (cell == null) {
+            return false;
+        }
+        if (!haveTime(game.getStandingMoveCost())) {
+            return false;
+        }
+        return moveTo(cell.x, cell.y, true);
+    }
+
+    private void detectInvisibleShooters() {
+        if (seeSomeEnemy()) {
+            suspiciousCells.clear();
+            return;
+        }
+
+        removeVisibleCellsFromSuspicious();
+
+        if (!suspiciousCells.isEmpty()) {
+            return;
+        }
+
+        for (Trooper trooper : world.getTroopers()) { // world.getTroopers() to include me
+            if (!trooper.isTeammate()) {
+                continue;
+            }
+            List<Integer> history = hpHistory.get(trooper.getType());
+            if (history.size() < 2) {
+                continue;
+            }
+            if (trooper.getHitpoints() < history.get(history.size() - 2)) { //todo newHp != odlHp + previousMoveHealValue
+                findSuspiciousCells(trooper);
+                if (suspiciousCells.isEmpty()) { //todo dafuk? kiting?
+                    continue;
+                }
+                return;
+            }
+        }
+    }
+
+    private void removeVisibleCellsFromSuspicious() {
+        for (int i = suspiciousCells.size() - 1; i >= 0; i--) {
+            Cell c = suspiciousCells.get(i);
+            if (weCanSee[c.x][c.y]) {
+                suspiciousCells.remove(i);
+            }
+        }
+    }
+
+    private void findSuspiciousCells(Trooper trooper) {
+        suspiciousCells.clear();
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (!isFreeCell(i, j)) {
+                    continue;
+                }
+                if (world.isVisible(utils.getShootRange(SOLDIER), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
+                        !weCanSee[i][j]) {
+                    suspiciousCells.add(new Cell(i, j));
+                }
+            }
+        }
+    }
+
+    boolean seeSomeEnemy() {
+        return enemies.size() > 0;
+    }
+
     private boolean tryEverything() {
 
-        boolean seeSomeEnemy = enemies.size() > 0;
-
-        if (!shouldTrySomething(seeSomeEnemy)) {
+        if (!shouldTrySomething()) {
             return false;
         }
 
-        List<MyMove> actions = getPlan(seeSomeEnemy).actions;
+        List<MyMove> actions = getPlan().actions;
         moveByPlan(actions);
         return true;
     }
 
-    private boolean shouldTrySomething(boolean seeSomeEnemy) {
-        if (seeSomeEnemy) {
+    private boolean shouldTrySomething() {
+        if (seeSomeEnemy()) {
             return true;
         }
         return self.getType() == FIELD_MEDIC && !allTeammatesFullHp();
@@ -248,10 +384,10 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private State getPlan(boolean seeSomeEnemy) {
-        boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
-        boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
-        boolean holdingAndShouldUseGrenade = self.isHoldingGrenade() && seeSomeEnemy;
+    private State getPlan() {
+        boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy();
+        boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy();
+        boolean holdingAndShouldUseGrenade = self.isHoldingGrenade() && seeSomeEnemy();
 
         return new PlanComputer(
                 createCharMap(),
@@ -461,11 +597,39 @@ public final class MyStrategy implements Strategy {
         if (vision == null) {
             vision = world.getCellVisibilities();
         }
+        updateWeCanSee();
+        updateHpHistory();
         updateLastSeen();
         updatePositionHistory();
         verifyDamage();
         printHp();
         printMap();
+    }
+
+    private void updateWeCanSee() {
+        if (weCanSee == null) {
+            weCanSee = new boolean[world.getWidth()][world.getHeight()];
+        }
+        for (Trooper trooper : teammates) {
+            for (int i = 0; i < world.getWidth(); i++) {
+                for (int j = 0; j < world.getHeight(); j++) {
+                    if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(), i, j, PRONE)) {
+                        weCanSee[i][j] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    private void updateHpHistory() {
+        if (hpHistory.isEmpty()) {
+            for (TrooperType trooperType : TrooperType.values()) {
+                hpHistory.put(trooperType, new ArrayList<Integer>());
+            }
+        }
+        for (Trooper trooper : teammates) {
+            hpHistory.get(trooper.getType()).add(trooper.getHitpoints());
+        }
     }
 
     private void printHp() {
@@ -538,39 +702,8 @@ public final class MyStrategy implements Strategy {
         if (!local) {
             return;
         }
-        char[][] map = new char[world.getWidth()][world.getHeight()];
-        for (char[] row : map) {
-            Arrays.fill(row, '?');
-        }
-        for (Trooper trooper : teammates) {
-            for (int i = 0; i < world.getWidth(); i++) {
-                for (int j = 0; j < world.getHeight(); j++) {
-                    if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(),
-                            i, j, STANDING)) {
-                        map[i][j] = '.';
-                    }
-                }
-            }
-        }
-        for (Trooper trooper : teammates) {
-            map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
-        }
-        for (Trooper trooper : enemies) {
-            map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
-        }
-        for (int i = 0; i < world.getWidth(); i++) {
-            for (int j = 0; j < world.getHeight(); j++) {
-                if (cells[i][j] != CellType.FREE) {
-                    map[i][j] = '#';
-                }
-            }
-        }
-        for (int j = 0; j < map[0].length; j++) {
-            for (char[] aMap : map) {
-                System.out.print(aMap[j]);
-            }
-            System.out.println();
-        }
+        char[][] map = getMapForPrinting();
+        print("Map ", map);
         System.out.println();
     }
 
