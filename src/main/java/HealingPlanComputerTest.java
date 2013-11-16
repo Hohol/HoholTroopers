@@ -708,7 +708,7 @@ public class HealingPlanComputerTest {
                 new BonusType[cmap.length][cmap[0].length],
                 null,
                 null,
-                new State(actionPoints, holdingFieldRation, x, y, TrooperStance.STANDING, hp1d[FIELD_MEDIC.ordinal()], holdingMedikit, false)
+                new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();
         /*State plan = new HealingPlanComputer(
                 actionPoints,

@@ -17,5 +17,4 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false);
     }
-
 }

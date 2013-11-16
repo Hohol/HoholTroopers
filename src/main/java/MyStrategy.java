@@ -52,11 +52,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryActAsCoolMedic()) {
-            return;
-        }
-
-        if (tryAttack()) {
+        if (tryEverything()) {
             return;
         }
 
@@ -79,17 +75,28 @@ public final class MyStrategy implements Strategy {
         move.setAction(END_TURN);
     }
 
-    private boolean tryAttack() {
-        if (enemies.size() == 0) {
+    private boolean tryEverything() {
+
+        boolean seeSomeEnemy = enemies.size() > 0;
+
+        if (!shouldTrySomething(seeSomeEnemy)) {
             return false;
         }
-        List<MyMove> actions = getAttackPlan().actions;
+
+        List<MyMove> actions = getPlan(seeSomeEnemy).actions;
 
         if (actions.isEmpty()) {
             return false;
         }
         moveByPlan(actions);
         return true;
+    }
+
+    private boolean shouldTrySomething(boolean seeSomeEnemy) {
+        if (seeSomeEnemy) {
+            return true;
+        }
+        return self.getType() == FIELD_MEDIC && !allTeammatesFullHp();
     }
 
     private void moveByPlan(List<MyMove> actions) {
@@ -120,15 +127,10 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : enemies) {
             stances[trooper.getX()][trooper.getY()] = trooper.getStance();
         }
-        return stances;
-    }
-
-    private int[][] getEnemyHp() {
-        int[][] r = createIntMap(Integer.MAX_VALUE);
-        for (Trooper trooper : enemies) {
-            r[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
+        for (Trooper trooper : teammates) {
+            stances[trooper.getX()][trooper.getY()] = trooper.getStance();
         }
-        return r;
+        return stances;
     }
 
     //m s c
@@ -330,83 +332,31 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-
-    //todo ща вроде будут проблемы, если медик не стоит
-    private boolean tryActAsCoolMedic() { //todo rename
-        if (self.getType() != FIELD_MEDIC) {
-            return oldTryHeal();
-        }
-
-        if (teammates.size() == 1) {
-            return false;
-        }
-
-        boolean seeSomeEnemy = enemies.size() > 0;
-        if (allTeammatesFullHp() && !seeSomeEnemy) {
-            return false;
-        }
-
-        State attackPlan = getAttackPlan();
-        if (attackPlan.killedCnt > 0 || attackPlan.damageSum >= 80) {
-            moveByPlan(attackPlan.actions);
-            return true;
-        }
-
-        //todo refactor
-
-        char[][] map = createSimpleMapForHealing();
-        //print("Simple map for healing", map);
-
+    private State getPlan(boolean seeSomeEnemy) {
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
+        boolean holdingAndShouldUseGrenade = self.isHoldingGrenade() && seeSomeEnemy;
 
-        List<MyMove> actions = getAttackPlan().actions;
-
-        if (actions.isEmpty()) {
-            move.setAction(END_TURN);
-            return true;
-        }
-        Move bestMove = actions.get(0).getMove();
-
-        if (bestMove.getAction() == MOVE && !haveTime(getMoveCost(self))) { // todo so wrong
-            return false;
-        }
-
-        move.setAction(bestMove.getAction());
-        move.setDirection(bestMove.getDirection());
-        move.setX(bestMove.getX());
-        move.setY(bestMove.getY());
-        return true;
-    }
-
-    private int[][] createHp2d() {
-        throw new RuntimeException("Not supported yet");
-    }
-
-    private State getAttackPlan() {
         return new PlanComputer(
-                createSimpleMapForShooting(),
+                createCharMap(),
                 utils,
-                createHp2d(),
+                getHpArray(),
                 bonuses,
                 getStances(),
                 vision,
-                new State(self.getActionPoints(), self.isHoldingFieldRation(), self.getX(), self.getY(), self.getStance(), self.getHitpoints(), self.isHoldingMedikit(), self.isHoldingGrenade())
+                new State(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), holdingAndShouldUseFieldRation, holdingAndShouldUseGrenade, holdingAndShouldUseMedikit)
         ).getPlan();
-        /*return new AttackPlanComputer(
-                self.getActionPoints(),
-                self.getX(),
-                self.getY(),
-                createSimpleMapForShooting(),
-                getEnemyHp(),
-                self.isHoldingFieldRation(),
-                self.isHoldingGrenade(),
-                self.getStance(),
-                vision,
-                getStances(),
-                bonuses,
-                utils
-        ).getPlan();/**/
+    }
+
+    private int[][] getHpArray() {
+        int[][] hp = new int[world.getWidth()][world.getHeight()];
+        for (Trooper trooper : teammates) {
+            hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
+        }
+        for (Trooper trooper : enemies) {
+            hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
+        }
+        return hp;
     }
 
     private BonusType[][] getBonuses() {
@@ -635,7 +585,7 @@ public final class MyStrategy implements Strategy {
         System.out.println(o);
     }
 
-    char[][] createSimpleMapForHealing() {
+    char[][] createCharMap() {
         char[][] map = new char[world.getWidth()][world.getHeight()];
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
@@ -649,11 +599,6 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : teammates) {
             map[trooper.getX()][trooper.getY()] = Utils.getCharForTrooperType(trooper.getType());
         }
-        return map;
-    }
-
-    char[][] createSimpleMapForShooting() { //наверно ее и для лечения можно, но надо потестить - мало ли
-        char[][] map = createSimpleMapForHealing();
         for (Trooper trooper : enemies) {
             map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
         }

@@ -27,13 +27,8 @@ class State {
 
     protected State(
             int actionPoints,
-            boolean holdingFieldRation,
-            int x,
-            int y,
-            TrooperStance stance,
-            int hp,
-            boolean holdingMedikit,
-            boolean holdingGrenade
+            int hp, int x, int y, TrooperStance stance, boolean holdingFieldRation,
+            boolean holdingGrenade, boolean holdingMedikit
     ) {
         this.actions = new ArrayList<>();
         this.actionPoints = actionPoints;
@@ -47,7 +42,7 @@ class State {
     }
 
     protected State(State cur) {
-        this(cur.actionPoints, cur.holdingFieldRation, cur.x, cur.y, cur.stance, cur.selfHp, cur.holdingMedikit, cur.holdingGrenade);
+        this(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
         this.actions = new ArrayList<>(cur.actions);
         this.killedCnt = cur.killedCnt;
         this.damageSum = cur.damageSum;

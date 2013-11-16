@@ -1,7 +1,6 @@
 import model.BonusType;
 import model.TrooperStance;
 import model.TrooperType;
-import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -152,7 +151,7 @@ public class AbstractPlanComputerTest {
                 bonuses,
                 stances,
                 getVisibilities(),
-                new State(actionPoints, holdingFieldRation, x, y, stance, Utils.INITIAL_TROOPER_HP, holdingMedikit, holdingGrenade)
+                new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
         ).getPlan().actions;
 
         List<MyMove> expected = Arrays.asList(expectedAr);
