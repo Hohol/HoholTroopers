@@ -1,22 +1,13 @@
 import static model.TrooperStance.*;
 import static model.BonusType.*;
 
-import model.BonusType;
-import model.TrooperStance;
 import org.testng.annotations.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 @Test
-public class AttackPlanComputerTest {
-    char[][] map;
-    int[][] hp;
-    TrooperStance[][] stances;
-    private BonusType[][] bonuses;
+public class AttackPlanComputerTest extends AbstractPlanComputerTest {
 
     @Test
     void testEmpty() {
@@ -36,7 +27,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "Ss"
         );
-        addEnemy(1, 0, 100, STANDING);
+        addTrooper(1, 0, 100, STANDING);
 
         check(
                 4,
@@ -50,8 +41,8 @@ public class AttackPlanComputerTest {
                 "....",
                 "c..."
         );
-        addEnemy(3, 0, 1, STANDING);
-        addEnemy(0, 2, 50, STANDING);
+        addTrooper(3, 0, 1, STANDING);
+        addTrooper(0, 2, 50, STANDING);
 
         check(
                 4,
@@ -65,8 +56,8 @@ public class AttackPlanComputerTest {
                 "....",
                 "c..."
         );
-        addEnemy(3, 0, 1, STANDING);
-        addEnemy(0, 2, 2, STANDING);
+        addTrooper(3, 0, 1, STANDING);
+        addTrooper(0, 2, 2, STANDING);
 
         check(
                 4,
@@ -82,8 +73,8 @@ public class AttackPlanComputerTest {
                 "....",
                 "s..."
         );
-        addEnemy(3, 0, 100, STANDING);
-        addEnemy(0, 2, 30, STANDING);
+        addTrooper(3, 0, 100, STANDING);
+        addTrooper(0, 2, 30, STANDING);
 
         check(
                 4,
@@ -97,7 +88,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S.3.s"
         );
-        addEnemy(4, 0, 100, STANDING);
+        addTrooper(4, 0, 100, STANDING);
 
         check(
                 4,
@@ -113,10 +104,10 @@ public class AttackPlanComputerTest {
                 ".....",
                 "..c.."
         );
-        addEnemy(2, 0, 1, STANDING);
-        addEnemy(4, 2, 1, STANDING);
-        addEnemy(0, 2, 16, STANDING);
-        addEnemy(2, 4, 15, STANDING);
+        addTrooper(2, 0, 1, STANDING);
+        addTrooper(4, 2, 1, STANDING);
+        addTrooper(0, 2, 16, STANDING);
+        addTrooper(2, 4, 15, STANDING);
 
         check(
                 3,
@@ -131,7 +122,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S3.s"
         );
-        addEnemy(3, 0, 1, STANDING);
+        addTrooper(3, 0, 1, STANDING);
 
         check(
                 12,
@@ -152,10 +143,10 @@ public class AttackPlanComputerTest {
                 ".....",
                 "..c.."
         );
-        addEnemy(2, 0, 1, STANDING);
-        addEnemy(4, 2, 1, STANDING);
-        addEnemy(0, 2, 16, STANDING);
-        addEnemy(2, 4, 16, STANDING);
+        addTrooper(2, 0, 1, STANDING);
+        addTrooper(4, 2, 1, STANDING);
+        addTrooper(0, 2, 16, STANDING);
+        addTrooper(2, 4, 16, STANDING);
 
         check(
                 3,
@@ -171,7 +162,7 @@ public class AttackPlanComputerTest {
                 "2",
                 "C"
         );
-        addEnemy(0, 0, 1, STANDING);
+        addTrooper(0, 0, 1, STANDING);
 
         check(
                 3,
@@ -189,10 +180,10 @@ public class AttackPlanComputerTest {
                 ".....",
                 "..c.."
         );
-        addEnemy(2, 0, 1, STANDING);
-        addEnemy(4, 2, 1, KNEELING);
-        addEnemy(0, 2, 16, STANDING);
-        addEnemy(2, 4, 16, STANDING);
+        addTrooper(2, 0, 1, STANDING);
+        addTrooper(4, 2, 1, KNEELING);
+        addTrooper(0, 2, 16, STANDING);
+        addTrooper(2, 4, 16, STANDING);
 
         check(
                 6,
@@ -208,7 +199,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "F.....s"
         );
-        addEnemy(6, 0, 1, PRONE);
+        addTrooper(6, 0, 1, PRONE);
 
         check(
                 2,
@@ -223,7 +214,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "F.....s"
         );
-        addEnemy(6, 0, 1, PRONE);
+        addTrooper(6, 0, 1, PRONE);
 
         check(
                 4,
@@ -237,7 +228,7 @@ public class AttackPlanComputerTest {
                 "F3c",
                 "..."
         );
-        addEnemy(2, 1, 1, PRONE);
+        addTrooper(2, 1, 1, PRONE);
 
         check(
                 12,
@@ -251,8 +242,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c........S........f"
         );
-        addEnemy(0, 0, 25, PRONE);
-        addEnemy(18, 0, 25, KNEELING);
+        addTrooper(0, 0, 25, PRONE);
+        addTrooper(18, 0, 25, KNEELING);
 
         check(
                 12,
@@ -266,8 +257,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c.......C.......f"
         );
-        addEnemy(0, 0, 15, PRONE);
-        addEnemy(16, 0, 15, KNEELING);
+        addTrooper(0, 0, 15, PRONE);
+        addTrooper(16, 0, 15, KNEELING);
 
         check(
                 12,
@@ -285,8 +276,8 @@ public class AttackPlanComputerTest {
                 "3c",
                 "Fs"
         );
-        addEnemy(1, 0, 1, PRONE);
-        addEnemy(1, 1, 100, KNEELING);
+        addTrooper(1, 0, 1, PRONE);
+        addTrooper(1, 1, 100, KNEELING);
 
         check(
                 6,
@@ -303,8 +294,8 @@ public class AttackPlanComputerTest {
                 "3c",
                 "Fs"
         );
-        addEnemy(1, 0, 1, PRONE);
-        addEnemy(1, 1, 9, KNEELING);
+        addTrooper(1, 0, 1, PRONE);
+        addTrooper(1, 1, 9, KNEELING);
 
         check(
                 6,
@@ -320,8 +311,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c........S........f"
         );
-        addEnemy(0, 0, 25, PRONE);
-        addEnemy(18, 0, 25, KNEELING);
+        addTrooper(0, 0, 25, PRONE);
+        addTrooper(18, 0, 25, KNEELING);
 
         check(
                 12,
@@ -337,8 +328,8 @@ public class AttackPlanComputerTest {
                 ".3.",
                 "F.."
         );
-        addEnemy(0, 0, 9, PRONE);
-        addEnemy(2, 0, 9, KNEELING);
+        addTrooper(0, 0, 9, PRONE);
+        addTrooper(2, 0, 9, KNEELING);
 
         check(
                 5,
@@ -354,7 +345,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S1c"
         );
-        addEnemy(2, 0, 9, KNEELING);
+        addTrooper(2, 0, 9, KNEELING);
 
         check(
                 12,
@@ -367,7 +358,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S1c"
         );
-        addEnemy(2, 0, 9, KNEELING);
+        addTrooper(2, 0, 9, KNEELING);
 
         check(
                 12,
@@ -383,7 +374,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "Fs"
         );
-        addEnemy(1, 0, 120, KNEELING);
+        addTrooper(1, 0, 120, KNEELING);
 
         check(
                 12,
@@ -399,8 +390,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        addEnemy(0, 0, 35, STANDING);
-        addEnemy(5, 0, 25, STANDING);
+        addTrooper(0, 0, 35, STANDING);
+        addTrooper(5, 0, 25, STANDING);
 
         check(
                 6,
@@ -415,8 +406,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        addEnemy(0, 0, 36, STANDING);
-        addEnemy(5, 0, 25, STANDING);
+        addTrooper(0, 0, 36, STANDING);
+        addTrooper(5, 0, 25, STANDING);
 
         check(
                 6,
@@ -431,8 +422,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        addEnemy(0, 0, 35, STANDING);
-        addEnemy(5, 0, 25, STANDING);
+        addTrooper(0, 0, 35, STANDING);
+        addTrooper(5, 0, 25, STANDING);
 
         check(
                 12,
@@ -462,7 +453,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S.3.f"
         );
-        addEnemy(4, 0, 80, STANDING);
+        addTrooper(4, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -476,7 +467,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "Sf"
         );
-        addEnemy(1, 0, 80, STANDING);
+        addTrooper(1, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -490,7 +481,7 @@ public class AttackPlanComputerTest {
         setMap(
                 ".Sf"
         );
-        addEnemy(2, 0, 80, STANDING);
+        addTrooper(2, 0, 80, STANDING);
         check(
                 10,
                 1, 0,
@@ -504,7 +495,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S,f"
         );
-        addEnemy(2, 0, 70, STANDING);
+        addTrooper(2, 0, 70, STANDING);
         check(
                 10,
                 0, 0,
@@ -521,7 +512,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S.fF"
         );
-        addEnemy(2, 0, 80, STANDING);
+        addTrooper(2, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -535,7 +526,7 @@ public class AttackPlanComputerTest {
                 "S.fF",
                 "...."
         );
-        addEnemy(2, 0, 80, STANDING);
+        addTrooper(2, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -549,7 +540,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S3..F.f"
         );
-        addEnemy(6, 0, 80, STANDING);
+        addTrooper(6, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -562,7 +553,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S3.F..f"
         );
-        addEnemy(6, 0, 80, STANDING);
+        addTrooper(6, 0, 80, STANDING);
         check(
                 8,
                 0, 0,
@@ -581,9 +572,9 @@ public class AttackPlanComputerTest {
                 "F....s",
                 "......"
         );
-        addEnemy(5, 0, 100, STANDING);
-        addEnemy(4, 0, 100, STANDING);
-        addEnemy(5, 1, 100, STANDING);
+        addTrooper(5, 0, 100, STANDING);
+        addTrooper(4, 0, 100, STANDING);
+        addTrooper(5, 1, 100, STANDING);
         check(
                 8,
                 0, 1,
@@ -602,8 +593,8 @@ public class AttackPlanComputerTest {
                 "S.C..",
                 "s...."
         );
-        addEnemy(4, 0, 100, STANDING);
-        addEnemy(0, 2, 120, STANDING);
+        addTrooper(4, 0, 100, STANDING);
+        addTrooper(0, 2, 120, STANDING);
         check(
                 5,
                 2, 1,
@@ -619,8 +610,8 @@ public class AttackPlanComputerTest {
                 "S.C..",
                 "s...."
         );
-        addEnemy(4, 0, 100, STANDING);
-        addEnemy(0, 2, 120, STANDING);
+        addTrooper(4, 0, 100, STANDING);
+        addTrooper(0, 2, 120, STANDING);
         check(
                 5,
                 2, 1,
@@ -635,8 +626,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "cs.....S."
         );
-        addEnemy(0, 0, 100, STANDING);
-        addEnemy(1, 0, 120, STANDING);
+        addTrooper(0, 0, 100, STANDING);
+        addTrooper(1, 0, 120, STANDING);
         check(
                 4,
                 7, 0,
@@ -650,8 +641,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "cs.....SC"
         );
-        addEnemy(0, 0, 100, STANDING);
-        addEnemy(1, 0, 120, STANDING);
+        addTrooper(0, 0, 100, STANDING);
+        addTrooper(1, 0, 120, STANDING);
         check(
                 4,
                 7, 0,
@@ -665,8 +656,8 @@ public class AttackPlanComputerTest {
         setMap(
                 "cs......SC"
         );
-        addEnemy(0, 0, 100, STANDING);
-        addEnemy(1, 0, 120, STANDING);
+        addTrooper(0, 0, 100, STANDING);
+        addTrooper(1, 0, 120, STANDING);
         check(
                 4,
                 8, 0,
@@ -682,7 +673,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "S^..s"
         );
-        addEnemy(4, 0, 80, STANDING);
+        addTrooper(4, 0, 80, STANDING);
         check(
                 7,
                 0, 0,
@@ -697,7 +688,7 @@ public class AttackPlanComputerTest {
                 "^..s",
                 "S33."
         );
-        addEnemy(3, 0, 79, STANDING);
+        addTrooper(3, 0, 79, STANDING);
         check(
                 7,
                 0, 1,
@@ -712,7 +703,7 @@ public class AttackPlanComputerTest {
                 "^..s",
                 "S33."
         );
-        addEnemy(3, 0, 79, STANDING);
+        addTrooper(3, 0, 79, STANDING);
         check(
                 7,
                 0, 1,
@@ -728,7 +719,7 @@ public class AttackPlanComputerTest {
         setMap(
                 "F..s"
         );
-        addEnemy(3, 0, 80, STANDING);
+        addTrooper(3, 0, 80, STANDING);
         addBonus(0, 0, GRENADE);
         check(
                 8,
@@ -743,7 +734,7 @@ public class AttackPlanComputerTest {
     @Test
     void testBerserkMedic() {
         setMap("F.s");
-        addEnemy(2, 0, 1000, STANDING);
+        addTrooper(2, 0, 1000, STANDING);
         addBonus(0, 0, FIELD_RATION);
         check(
                 12,
@@ -767,9 +758,10 @@ public class AttackPlanComputerTest {
                 ".f..*...",
                 "....S..."
         );
-        addEnemy(1, 1, 120, STANDING);
-        addEnemy(2, 1, 100, STANDING);
-        addEnemy(1, 2, 100, STANDING);
+        addTrooper(1, 1, 120, STANDING);
+        addTrooper(2, 1, 100, STANDING);
+        addTrooper(1, 2, 100, STANDING);
+
         addBonus(4, 3, FIELD_RATION);
 
         check(
@@ -780,159 +772,6 @@ public class AttackPlanComputerTest {
                 true,
 
                 MyMove.grenade(1, 1), MyMove.EAT_FIELD_RATION, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.grenade(1, 1)
-        );
-    }
-
-    private void addBonus(int x, int y, BonusType bonus) {
-        if (!Utils.isLetter(map[x][y])) {
-            throw new RuntimeException("No trooper at cell(" + x + ", " + y + ")");
-        }
-        bonuses[x][y] = bonus;
-    }
-
-
-    private void addEnemy(int x, int y, int newHp, TrooperStance stance) {
-        char ch = map[x][y];
-        if (ch < 'a' || ch > 'z') {
-            throw new RuntimeException("No enemy trooper in cell (" + x + ", " + y + ")");
-        }
-        hp[x][y] = newHp;
-        stances[x][y] = stance;
-    }
-
-    private void setMap(String... map) {
-        this.map = Utils.toCharAndTranspose(map);
-        hp = new int[this.map.length][this.map[0].length];
-        stances = new TrooperStance[this.map.length][this.map[0].length];
-        bonuses = new BonusType[this.map.length][this.map[0].length];
-        addBonuses();
-    }
-
-    private void addBonuses() {
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                bonuses[i][j] = Utils.getBonusTypeByChar(map[i][j]);
-                if (bonuses[i][j] != null) {
-                    map[i][j] = '.';
-                }
-            }
-        }
-    }
-
-    private boolean[] getVisibilities() {
-        int width = map.length;
-        int height = map[0].length;
-        int stanceCount = Utils.NUMBER_OF_STANCES;
-        boolean[] r = new boolean[width * height * width * height * stanceCount];
-        for (int viewerX = 0; viewerX < width; viewerX++) {
-            for (int viewerY = 0; viewerY < height; viewerY++) {
-                for (int objectX = 0; objectX < width; objectX++) {
-                    for (int objectY = 0; objectY < height; objectY++) {
-                        for (int stance = 0; stance < stanceCount; stance++) {
-                            r[viewerX * height * width * height * stanceCount
-                                    + viewerY * width * height * stanceCount
-                                    + objectX * height * stanceCount
-                                    + objectY * stanceCount
-                                    + stance] = visible(viewerX, viewerY, objectX, objectY, stance);
-                        }
-                    }
-                }
-            }
-        }
-        return r;
-    }
-
-    private boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
-        if (viewerX == objectX) {
-            return visibleVert(viewerX, viewerY, objectY, stance);
-        }
-        if (viewerY == objectY) {
-            return visibleHor(viewerY, viewerX, objectX, stance);
-        }
-        return false;
-    }
-
-    private boolean visibleHor(int y, int x1, int x2, int stance) {
-        if (x1 > x2) {
-            int tmp = x1;
-            x1 = x2;
-            x2 = tmp;
-        }
-        for (int x = x1; x <= x2; x++) {
-            if (height(map[x][y]) > stance) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean visibleVert(int x, int y1, int y2, int stance) {
-        if (y1 > y2) {
-            int tmp = y1;
-            y1 = y2;
-            y2 = tmp;
-        }
-        for (int y = y1; y <= y2; y++) {
-            if (height(map[x][y]) > stance) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private int height(char ch) {
-        if (!Character.isDigit(ch)) {
-            return 0;
-        }
-        return ch - '0';
-    }
-
-    private void check(
-            int actionPoints,
-            int x,
-            int y,
-            TrooperStance stance,
-            boolean holdingFieldRation,
-            boolean holdingGrenade, MyMove... expectedAr
-    ) {
-        if (!Utils.isTeammateChar(map[x][y])) {
-            throw new RuntimeException("No allied trooper in cell (" + x + ", " + y + ")");
-        }
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                if(Utils.isTeammateChar(map[i][j])) {
-                    hp[i][j] = Utils.INITIAL_TROOPER_HP;
-                }
-            }
-        }
-
-        List<MyMove> actual = new PlanComputer(
-                map, Utils.HARDCODED_UTILS, hp, bonuses, stances, getVisibilities(),
-                        new State(actionPoints, holdingFieldRation, x, y, stance, Utils.INITIAL_TROOPER_HP, false, holdingGrenade)
-
-
-
-        ).getPlan().actions;
-
-       /* List<MyMove> actual = new AttackPlanComputer(
-                actionPoints,
-                x,
-                y,
-                map,
-                hp,
-                holdingFieldRation,
-                holdingGrenade,
-                stance,
-                getVisibilities(),
-                stances,
-                bonuses,
-                Utils.HARDCODED_UTILS
-        ).getPlan().actions;/**/
-        List<MyMove> expected = Arrays.asList(expectedAr);
-        assertEquals(
-                actual,
-                expected,
-                String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
         );
     }
 }
