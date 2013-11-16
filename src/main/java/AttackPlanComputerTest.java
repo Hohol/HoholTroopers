@@ -905,7 +905,16 @@ public class AttackPlanComputerTest {
                 }
             }
         }
-        List<MyMove> actual = new AttackPlanComputer(
+
+        List<MyMove> actual = new PlanComputer(
+                map, Utils.HARDCODED_UTILS, hp, bonuses, stances, getVisibilities(),
+                        new State(actionPoints, holdingFieldRation, x, y, stance, Utils.INITIAL_TROOPER_HP, false, holdingGrenade)
+
+
+
+        ).getPlan().actions;
+
+       /* List<MyMove> actual = new AttackPlanComputer(
                 actionPoints,
                 x,
                 y,
@@ -918,7 +927,7 @@ public class AttackPlanComputerTest {
                 stances,
                 bonuses,
                 Utils.HARDCODED_UTILS
-        ).getPlan().actions;
+        ).getPlan().actions;/**/
         List<MyMove> expected = Arrays.asList(expectedAr);
         assertEquals(
                 actual,

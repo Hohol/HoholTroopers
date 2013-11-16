@@ -2,8 +2,6 @@ MyStrategy.java
 Cell.java
 Utils.java
 TrooperParameters.java
-HealingPlanComputer.java
 MyMove.java
-AttackPlanComputer.java
 PlanComputer.java
 State.java

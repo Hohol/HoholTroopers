@@ -10,7 +10,7 @@ import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
 import static model.TrooperType.FIELD_MEDIC;
 
-public abstract class PlanComputer {
+public class PlanComputer {
     protected final char[][] map;
     protected final Game game;
     protected final Utils utils;
@@ -36,6 +36,7 @@ public abstract class PlanComputer {
         this.cur = state;
         this.hp = hp;
         prepare();
+        rec();
     }
 
     private void prepare() {
@@ -55,9 +56,23 @@ public abstract class PlanComputer {
                 }
             }
         }
+        dist = new ArrayList<>();
+        for (Cell cell : allyPositions) {
+            int[][] curDist = Utils.bfsByMap(map, cell.x, cell.y);
+            dist.add(curDist);
+            for (int i = 0; i < map.length; i++) {
+                for (int j = 0; j < map[i].length; j++) {
+                    if (curDist[i][j] > MyStrategy.MAX_DISTANCE_MEDIC_SHOULD_HEAL) {
+                        curDist[i][j] = Utils.UNREACHABLE;
+                    }
+                }
+            }
+        }
     }
 
     void updateBest() {
+        cur.distSum = getDistToTeammatesSum();
+        cur.minHp = getMinHp();
         cur.focusFireParameter = getFocusFireParameter();
         if (cur.better(best)) {
             best = new State(cur);

@@ -1,3 +1,5 @@
+import model.BonusType;
+import model.TrooperStance;
 import model.TrooperType;
 import org.testng.annotations.Test;
 
@@ -77,7 +79,7 @@ public class HealingPlanComputerTest {
         setHp(SOLDIER, 95);
         check(
                 5,
-                new String[] {
+                new String[]{
                         "FS"
                 },
 
@@ -88,7 +90,7 @@ public class HealingPlanComputerTest {
         setHp(COMMANDER, 90);
         check(
                 1,
-                new String[] {
+                new String[]{
                         "FC"
                 },
 
@@ -282,7 +284,7 @@ public class HealingPlanComputerTest {
         setHp(SOLDIER, 1);
         check(
                 2,
-                new String[] {
+                new String[]{
                         "FC",
                         "S."
                 },
@@ -320,7 +322,7 @@ public class HealingPlanComputerTest {
         setHp(SOLDIER, 19);
         check(
                 5,
-                new String[] {
+                new String[]{
                         "F.S",
                 },
                 false,
@@ -387,7 +389,7 @@ public class HealingPlanComputerTest {
         setHp(COMMANDER, 50);
         checkWithExpectedHealedSum(
                 4,
-                new String[] {
+                new String[]{
                         "FC"
                 },
                 false,
@@ -608,7 +610,7 @@ public class HealingPlanComputerTest {
 
         check(
                 8,
-                new String[] {
+                new String[]{
                         "F....C",
                 },
                 true,
@@ -699,7 +701,16 @@ public class HealingPlanComputerTest {
                 }
             }
         }
-        State plan = new HealingPlanComputer(
+        State plan = new PlanComputer(
+                cmap,
+                Utils.HARDCODED_UTILS,
+                hp2d,
+                new BonusType[cmap.length][cmap[0].length],
+                null,
+                null,
+                new State(actionPoints, holdingFieldRation, x, y, TrooperStance.STANDING, hp1d[FIELD_MEDIC.ordinal()], holdingMedikit, false)
+        ).getPlan();
+        /*State plan = new HealingPlanComputer(
                 actionPoints,
                 cmap,
                 holdingFieldRation,
@@ -709,7 +720,7 @@ public class HealingPlanComputerTest {
                 x,
                 y,
                 hp2d
-        ).getPlan();
+        ).getPlan();/**/
 
         List<MyMove> actual = plan.actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
@@ -721,9 +732,5 @@ public class HealingPlanComputerTest {
         if(expectedHealSum != -1) {
             assertEquals(plan.healedSum, expectedHealSum);
         }
-    }
-
-    private int[][] createHp2d() {
-        throw new RuntimeException("Not supported yet");
     }
 }

@@ -360,16 +360,7 @@ public final class MyStrategy implements Strategy {
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy;
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy;
 
-        List<MyMove> actions = new HealingPlanComputer(
-                self.getActionPoints(),
-                map,  //map may be modified
-                holdingAndShouldUseFieldRation,
-                holdingAndShouldUseMedikit,
-                utils,
-                self.getHitpoints(),
-                self.getX(),self.getY(),
-                createHp2d()
-        ).getPlan().actions;
+        List<MyMove> actions = getAttackPlan().actions;
 
         if (actions.isEmpty()) {
             move.setAction(END_TURN);
@@ -393,7 +384,16 @@ public final class MyStrategy implements Strategy {
     }
 
     private State getAttackPlan() {
-        return new AttackPlanComputer(
+        return new PlanComputer(
+                createSimpleMapForShooting(),
+                utils,
+                createHp2d(),
+                bonuses,
+                getStances(),
+                vision,
+                new State(self.getActionPoints(), self.isHoldingFieldRation(), self.getX(), self.getY(), self.getStance(), self.getHitpoints(), self.isHoldingMedikit(), self.isHoldingGrenade())
+        ).getPlan();
+        /*return new AttackPlanComputer(
                 self.getActionPoints(),
                 self.getX(),
                 self.getY(),
@@ -406,7 +406,7 @@ public final class MyStrategy implements Strategy {
                 getStances(),
                 bonuses,
                 utils
-        ).getPlan();
+        ).getPlan();/**/
     }
 
     private BonusType[][] getBonuses() {
