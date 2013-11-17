@@ -181,7 +181,7 @@ public class Utils {
         return dist;
     }
 
-    public static int[][] bfsForHelp(char[][] map, int[][] isStartCell) { //start from each cell where startMap != 0
+    public static int[][] bfsByMapAndStartingCells(char[][] map, int[][] isStartCell) { //start from each cell where startMap != 0
         return bfsByMap(map, -1, -1, isStartCell);
     }
 

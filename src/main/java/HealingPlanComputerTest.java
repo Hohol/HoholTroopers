@@ -701,12 +701,16 @@ public class HealingPlanComputerTest {
                 }
             }
         }
+        TrooperStance[][] stances = new TrooperStance[cmap.length][cmap[0].length];
+        for (TrooperStance[] a: stances) {
+            Arrays.fill(a, TrooperStance.STANDING);
+        }
         State plan = new PlanComputer(
                 cmap,
                 Utils.HARDCODED_UTILS,
                 hp2d,
                 new BonusType[cmap.length][cmap[0].length],
-                null,
+                stances,
                 null,
                 new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();

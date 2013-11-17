@@ -30,6 +30,7 @@ public class PlanComputer {
     private int[][] helpFactor;
     private int[][] helpDist;
     private int[] numberOfTeammatesWhoCanShoot;
+    private int[][] numberOfTeammatesWhoCanReachEnemy;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
@@ -46,7 +47,7 @@ public class PlanComputer {
     }
 
     private void prepare() {
-        selfType = Utils.getTrooperTypeByChar(map[cur.x][cur.y]);
+        selfType = getType(cur.x, cur.y);
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[map.length][map[0].length];
         for (int i = 0; i < map.length; i++) {
@@ -81,18 +82,22 @@ public class PlanComputer {
             int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
             for (Cell allyPos : allyPositions) {
                 int allyStance = stances[allyPos.x][allyPos.y].ordinal();
-                TrooperType allyType = Utils.getTrooperTypeByChar(map[allyPos.x][allyPos.y]);
+                TrooperType allyType = getType(allyPos.x, allyPos.y);
                 if (canShoot(allyPos.x, allyPos.y, enemyPos.x, enemyPos.y, Math.min(enemyStance, allyStance), allyType)) {
                     numberOfTeammatesWhoCanShoot[i]++;
                 }
             }
+        }
+        numberOfTeammatesWhoCanReachEnemy = new int[map.length][map[0].length];
+        for (int i = 0; i < map.length; i++) {
+            Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
         }
     }
 
     private void prepareHelp() {
         helpFactor = new int[map.length][map[0].length];
         for (Cell cell : allyPositions) {
-            TrooperType type = Utils.getTrooperTypeByChar(map[cell.x][cell.y]);
+            TrooperType type = getType(cell.x, cell.y);
             for (Cell e : enemyPositions) {
                 int stance = stances[cell.x][cell.y].ordinal();
                 if (canShoot(cell.x, cell.y, e.x, e.y, stance, type)) {
@@ -117,7 +122,7 @@ public class PlanComputer {
                 }
             }
         }
-        helpDist = Utils.bfsForHelp(map, helpFactor);
+        helpDist = Utils.bfsByMapAndStartingCells(map, helpFactor);
     }
 
     void updateBest() {
@@ -129,9 +134,60 @@ public class PlanComputer {
         cur.focusFireParameter = getFocusFireParameter();
         cur.helpFactor = helpFactor[cur.x][cur.y];
         cur.helpDist = helpDist[cur.x][cur.y];
+        cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         if (cur.better(best, selfType)) {
             best = new State(cur);
         }
+    }
+
+    private int getNumberOfTeammatesWhoCanReachEnemy() {
+        if (numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] == -1) {
+            char buf = map[cur.x][cur.y];
+            map[cur.x][cur.y] = Utils.getCharForTrooperType(selfType);
+            numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] = 0;
+
+            int cnt = 0;
+            for (Cell ally : allyPositions) {
+                if (getType(ally.x, ally.y) == FIELD_MEDIC) {
+                    continue;
+                }
+                int[][] dist = Utils.bfsByMap(map, ally.x, ally.y);
+                if (canReachSomeEnemy(ally.x, ally.y, dist)) {
+                    numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y]++;
+                }
+            }
+
+            map[cur.x][cur.y] = buf;
+        }
+        return numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y];
+    }
+
+    private boolean canReachSomeEnemy(int startX, int startY, int[][] dist) {
+        int allyStance = stances[startX][startY].ordinal();
+        TrooperType allyType = getType(startX, startY);
+
+        for (int newX = 0; newX < map.length; newX++) {
+            for (int newY = 0; newY < map[newX].length; newY++) {
+                if (!freeCell(newX, newY) && !(newX == startX && newY == startY)) {
+                    continue;
+                }
+                if (dist[newX][newY] >= 7) {
+                    continue;
+                }
+                for (Cell enemyPos : enemyPositions) {
+                    int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
+                    if (canShoot(newX, newY, enemyPos.x, enemyPos.y, Math.min(enemyStance, allyStance), allyType)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private TrooperType getType(int x, int y) {
+        return Utils.getTrooperTypeByChar(map[x][y]);
     }
 
 

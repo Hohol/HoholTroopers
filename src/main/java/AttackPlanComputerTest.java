@@ -652,7 +652,8 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
 
         //--------------
         setMap(
-                "cs......SC"
+                "cs......SC",
+                ".........."
         );
         setTrooper(0, 0, 100, STANDING);
         setTrooper(1, 0, 120, STANDING);
@@ -664,6 +665,7 @@ public class AttackPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false, MyMove.shoot(1, 0)
         );
+        //--------------
     }
 
     @Test

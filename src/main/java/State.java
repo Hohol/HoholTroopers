@@ -28,7 +28,7 @@ class State {
     int healDist;
     int helpFactor;
     int helpDist;
-    int blockFactor;
+    int numberOfTeammatesWhoCanReachEnemy;
 
     protected State(
             int actionPoints,
@@ -58,7 +58,7 @@ class State {
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
-        this.blockFactor = cur.blockFactor;
+        this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -68,6 +68,10 @@ class State {
 
         if (killedCnt != old.killedCnt) {
             return killedCnt > old.killedCnt;
+        }
+
+        if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
+            return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
         }
 
         int hpDiff = damageSum + healedSum;

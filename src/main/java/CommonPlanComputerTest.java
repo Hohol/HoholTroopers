@@ -267,9 +267,10 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void testMedicDistPriority() {
         setMap(
-                "..f..C",
-                "3F3...",
-                "S....."
+                "...f..C",
+                ".3F3...",
+                ".S.....",
+                "......."
         );
 
         check(
@@ -341,6 +342,97 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 true,
                 false,
                 MyMove.grenade(5, 0)
+        );
+    }
+
+    @Test
+    void testDoNotBlockPathForTeammatesSimplest() {
+        setMap(
+                "S3333",
+                "C...s"
+        );
+
+        check(
+                COMMANDER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testDoNotBlockPathForTeammates() {
+        setMap(
+                "S3333",
+                "C...s"
+        );
+
+        check(
+                COMMANDER,
+                5,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST, MyMove.shoot(4, 1)
+        );
+
+        setMap(
+                "cs......SC"
+        );
+        setTrooper(0, 0, 100, STANDING);
+        setTrooper(1, 0, 120, STANDING);
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_WEST
+        );
+
+        //---------------
+
+
+    }
+
+    @Test
+    void testDoNotBlockPathForTeammates2() {
+        setMap(
+                "..f..C",
+                "3F3...",
+                "S....."
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false
+        );
+    }
+
+    @Test
+    void testDoNotBlockPathIgnoreMedic() {
+        setMap(
+                "FS......s",
+                ".C......."
+        );
+
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.shoot(8, 0)
         );
     }
 }
