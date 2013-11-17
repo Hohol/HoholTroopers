@@ -435,4 +435,21 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.shoot(8, 0)
         );
     }
+
+    @Test
+    void testBonusPriority() {
+        setMap(
+                "C.S.s"
+        );
+
+        check(
+                SOLDIER,
+                8,
+                STANDING,
+                true,
+                true,
+                false,
+                MyMove.grenade(4,0)
+        );
+    }
 }

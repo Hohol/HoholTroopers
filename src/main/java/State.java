@@ -81,6 +81,17 @@ class State {
             return hpDiff > oldHpDiff;
         }
 
+        if (holdingMedikit != old.holdingMedikit) {
+            return holdingMedikit;
+        }
+        if (holdingFieldRation != old.holdingFieldRation) {
+            return holdingFieldRation;
+        }
+
+        if (holdingGrenade != old.holdingGrenade) {
+            return holdingGrenade;
+        }
+
         int msb = medicSpecificCompare(old);
         int nmsb = nonMedicSpecificBetter(old);
 
@@ -100,17 +111,6 @@ class State {
             if (msb != 0) {
                 return msb < 0;
             }
-        }
-
-        if (holdingMedikit != old.holdingMedikit) {
-            return holdingMedikit;
-        }
-        if (holdingFieldRation != old.holdingFieldRation) {
-            return holdingFieldRation;
-        }
-
-        if (holdingGrenade != old.holdingGrenade) {
-            return holdingGrenade;
         }
 
         if (focusFireParameter != old.focusFireParameter) {
