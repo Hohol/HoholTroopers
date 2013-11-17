@@ -320,4 +320,27 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_EAST
         );
     }
+
+    @Test
+    void testFocusFireBug() {
+
+        setMap(
+                "S....s",
+                ".#####",
+                ".F....",
+                "..f..."
+        );
+
+        setTrooper(5, 0, 90, STANDING);
+
+        check(
+                FIELD_MEDIC,
+                8,
+                STANDING,
+                false,
+                true,
+                false,
+                MyMove.grenade(5, 0)
+        );
+    }
 }

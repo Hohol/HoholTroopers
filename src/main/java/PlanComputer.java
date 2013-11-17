@@ -29,6 +29,7 @@ public class PlanComputer {
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][] helpFactor;
     private int[][] helpDist;
+    private int[] numberOfTeammatesWhoCanShoot;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
@@ -74,6 +75,18 @@ public class PlanComputer {
             }
         }
         prepareHelp();
+        numberOfTeammatesWhoCanShoot = new int[enemyPositions.size()];
+        for (int i = 0; i < enemyPositions.size(); i++) {
+            Cell enemyPos = enemyPositions.get(i);
+            int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
+            for (Cell allyPos : allyPositions) {
+                int allyStance = stances[allyPos.x][allyPos.y].ordinal();
+                TrooperType allyType = Utils.getTrooperTypeByChar(map[allyPos.x][allyPos.y]);
+                if (canShoot(allyPos.x, allyPos.y, enemyPos.x, enemyPos.y, Math.min(enemyStance, allyStance), allyType)) {
+                    numberOfTeammatesWhoCanShoot[i]++;
+                }
+            }
+        }
     }
 
     private void prepareHelp() {
@@ -505,11 +518,12 @@ public class PlanComputer {
 
     private int getFocusFireParameter() {
         int r = 0;
-        for (Cell enemy : enemyPositions) {
+        for (int i = 0; i < enemyPositions.size(); i++) {
+            Cell enemy = enemyPositions.get(i);
             if (hp[enemy.x][enemy.y] <= 0) {
                 continue;
             }
-            r += (10000 - sqrDistSum[enemy.x][enemy.y]) * (Utils.INITIAL_TROOPER_HP * 2 - hp[enemy.x][enemy.y]);
+            r += (10000 - sqrDistSum[enemy.x][enemy.y] + 10000 * numberOfTeammatesWhoCanShoot[i]) * (Utils.INITIAL_TROOPER_HP * 2 - hp[enemy.x][enemy.y]); // =)
         }
         return r;
     }

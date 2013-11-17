@@ -28,6 +28,7 @@ class State {
     int healDist;
     int helpFactor;
     int helpDist;
+    int blockFactor;
 
     protected State(
             int actionPoints,
@@ -57,6 +58,7 @@ class State {
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
+        this.blockFactor = cur.blockFactor;
     }
 
     boolean better(State old, TrooperType selfType) {
