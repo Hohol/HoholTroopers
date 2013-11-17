@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 class State {
-
     List<MyMove> actions;
     int actionPoints;
     boolean holdingFieldRation;
@@ -29,6 +28,7 @@ class State {
     int helpFactor;
     int helpDist;
     int numberOfTeammatesWhoCanReachEnemy;
+    int numberOfEnemiesWhoCanShootMe;
 
     protected State(
             int actionPoints,
@@ -59,6 +59,7 @@ class State {
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
+        this.numberOfEnemiesWhoCanShootMe = cur.numberOfEnemiesWhoCanShootMe;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -68,6 +69,12 @@ class State {
 
         if (killedCnt != old.killedCnt) {
             return killedCnt > old.killedCnt;
+        }
+
+        if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
+            if (numberOfEnemiesWhoCanShootMe != old.numberOfEnemiesWhoCanShootMe) {
+                return numberOfEnemiesWhoCanShootMe < old.numberOfEnemiesWhoCanShootMe;
+            }
         }
 
         if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {

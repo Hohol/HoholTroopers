@@ -118,7 +118,7 @@ public class Utils {
 
     public static TrooperType getTrooperTypeByChar(char c) {
         for (TrooperType type : TrooperType.values()) {
-            if (getCharForTrooperType(type) == c) {
+            if (getCharForTrooperType(type) == Character.toUpperCase(c)) {
                 return type;
             }
         }

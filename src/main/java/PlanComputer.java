@@ -31,6 +31,7 @@ public class PlanComputer {
     private int[][] helpDist;
     private int[] numberOfTeammatesWhoCanShoot;
     private int[][] numberOfTeammatesWhoCanReachEnemy;
+    private int[][][] numberOfEnemiesWhoCanShoot;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
@@ -48,6 +49,7 @@ public class PlanComputer {
 
     private void prepare() {
         selfType = getType(cur.x, cur.y);
+        cur.selfHp = hp[cur.x][cur.y];
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[map.length][map[0].length];
         for (int i = 0; i < map.length; i++) {
@@ -92,6 +94,23 @@ public class PlanComputer {
         for (int i = 0; i < map.length; i++) {
             Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
         }
+        prepareNumberOfEnemiesWhoCanShoot();
+    }
+
+    private void prepareNumberOfEnemiesWhoCanShoot() {
+        numberOfEnemiesWhoCanShoot = new int[map.length][map[0].length][Utils.NUMBER_OF_STANCES];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                    for (Cell enemyPos : enemyPositions) {
+                        TrooperType type = getType(enemyPos.x, enemyPos.y);
+                        if (canShoot(enemyPos.x, enemyPos.y, i, j, stance, type)) {
+                            numberOfEnemiesWhoCanShoot[i][j][stance]++;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void prepareHelp() {
@@ -135,6 +154,7 @@ public class PlanComputer {
         cur.helpFactor = helpFactor[cur.x][cur.y];
         cur.helpDist = helpDist[cur.x][cur.y];
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
+        cur.numberOfEnemiesWhoCanShootMe = numberOfEnemiesWhoCanShoot[cur.x][cur.y][cur.stance.ordinal()];
         if (cur.better(best, selfType)) {
             best = new State(cur);
         }

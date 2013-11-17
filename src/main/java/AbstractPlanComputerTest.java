@@ -15,6 +15,9 @@ public class AbstractPlanComputerTest {
     char[][] map;
 
     protected int height(char ch) {
+        if(ch == '#') {
+            ch = '3';
+        }
         if (!Character.isDigit(ch)) {
             return 0;
         }
@@ -129,8 +132,10 @@ public class AbstractPlanComputerTest {
         int x = -1, y = -1;
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                if (Utils.isLetter(map[i][j]) && hp[i][j] == 0) {
-                    hp[i][j] = Utils.INITIAL_TROOPER_HP;
+                if (Utils.isLetter(map[i][j])) {
+                    if(hp[i][j] == 0) {
+                        hp[i][j] = Utils.INITIAL_TROOPER_HP;
+                    }
                     stances[i][j] = STANDING;
                     if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
                         x = i;
