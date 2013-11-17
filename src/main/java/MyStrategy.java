@@ -619,7 +619,7 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        return cnt < 20;
+        return cnt < 50;
     }
 
     private boolean haveTime(int actionCost) {
