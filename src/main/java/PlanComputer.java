@@ -12,6 +12,8 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.FIELD_MEDIC;
 
 public class PlanComputer {
+    private static final long MAX_RECURSIVE_CALLS = 5000000;
+    long recursiveCallsCnt;
 
     private final int n, m;
     private final char[][] map;
@@ -36,6 +38,7 @@ public class PlanComputer {
     int[][] enemyIndex;
     private int enemyCnt;
 
+
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
         n = map.length;
@@ -49,7 +52,11 @@ public class PlanComputer {
         this.cur = state;
         this.hp = hp;
         prepare();
+        long start = System.currentTimeMillis();
         rec();
+        long end = System.currentTimeMillis();
+        System.out.println("Calculated in " + (end-start) + " milliseconds");
+        System.out.println("Recursive calls cnt = " + recursiveCallsCnt);
     }
 
     private void prepare() {
@@ -599,6 +606,7 @@ public class PlanComputer {
     }
 
     private void rec() {
+        recursiveCallsCnt++;
         BonusType bonus = bonuses[cur.x][cur.y];
         boolean oldHoldingGrenade = cur.holdingGrenade;
         boolean oldHoldingFieldRation = cur.holdingFieldRation;
@@ -618,6 +626,10 @@ public class PlanComputer {
         }
 
         updateBest();
+        if(recursiveCallsCnt > MAX_RECURSIVE_CALLS) {
+            return;
+        }
+
         tryEatFieldRation();
         tryHealAsMedic();
         tryHealWithMedikit();

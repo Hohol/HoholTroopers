@@ -1062,13 +1062,16 @@ public final class MyStrategy implements Strategy {
         int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
-        int[][] dist = bfs(self.getX(), self.getY(), true);
+        //int[][] dist = bfs(self.getX(), self.getY(), true);
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
+                int newDist = Utils.manhattanDist(i, j, world.getWidth() / 2, world.getHeight() / 2);
                 if (cells[i][j] == CellType.FREE && !isNarrowPathNearBorder(i, j) &&
-                        (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen && dist[i][j] < minDist)) {
+                        (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen &&
+                                 newDist < minDist
+                        )) {
                     minLastSeen = lastSeen[i][j];
-                    minDist = dist[i][j];
+                    minDist = newDist;
                     x = i;
                     y = j;
                 }
