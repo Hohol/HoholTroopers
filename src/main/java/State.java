@@ -71,18 +71,21 @@ class State {
             return killedCnt > old.killedCnt;
         }
 
-        if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
-            if (numberOfEnemiesWhoCanShootMe != old.numberOfEnemiesWhoCanShootMe) {
-                return numberOfEnemiesWhoCanShootMe < old.numberOfEnemiesWhoCanShootMe;
+        int hpDiff = damageSum + healedSum;
+        int oldHpDiff = old.damageSum + old.healedSum;
+
+        if(Math.abs(hpDiff-oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
+        {
+            if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
+                if (numberOfEnemiesWhoCanShootMe != old.numberOfEnemiesWhoCanShootMe) {
+                    return numberOfEnemiesWhoCanShootMe < old.numberOfEnemiesWhoCanShootMe;
+                }
             }
         }
 
         if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
             return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
         }
-
-        int hpDiff = damageSum + healedSum;
-        int oldHpDiff = old.damageSum + old.healedSum;
 
         if (hpDiff != oldHpDiff) {
             return hpDiff > oldHpDiff;

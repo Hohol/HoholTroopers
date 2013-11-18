@@ -90,4 +90,37 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 MyMove.shoot(2, 1)
         );
     }
+
+    @Test
+    void testDoNotBeCoward() {
+        setMap(
+                ".....Sf"
+        );
+        check(
+                SOLDIER,
+                12,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.shoot(6, 0), MyMove.shoot(6, 0), MyMove.shoot(6, 0)
+        );
+    }
+
+    @Test
+    void testDoNotBeCowardMedic() {
+        setMap(
+                ".FS......s"
+        );
+        setTrooper(2, 0, 1, STANDING);
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.USE_MEDIKIT_EAST
+        );
+    }
 }
