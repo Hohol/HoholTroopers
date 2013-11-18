@@ -163,7 +163,7 @@ public class AbstractPlanComputerTest {
         assertEquals(
                 actual,
                 expected,
-                String.format("\n\nActual: %s \nExpected: %s\n\n", actual, expected)
+                String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
         );
     }
 }

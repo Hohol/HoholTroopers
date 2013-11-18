@@ -8,7 +8,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 @Test
-public class AttackPlanComputerTest extends AbstractPlanComputerTest {
+public class AttackTest extends AbstractPlanComputerTest {
     @Test
     void testEmpty() {
         setMap(

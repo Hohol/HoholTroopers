@@ -10,7 +10,7 @@ import static model.TrooperType.*;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class HealingPlanComputerTest {
+public class HealingTest {
     int[] hp1d = new int[TrooperType.values().length];
 
     @Test
@@ -25,7 +25,8 @@ public class HealingPlanComputerTest {
 
                 //empty
                 ,
-                false, false);
+                false, false
+        );
     }
 
     @Test
@@ -714,17 +715,6 @@ public class HealingPlanComputerTest {
                 null,
                 new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();
-        /*State plan = new HealingPlanComputer(
-                actionPoints,
-                cmap,
-                holdingFieldRation,
-                holdingMedikit,
-                Utils.HARDCODED_UTILS,
-                hp1d[FIELD_MEDIC.ordinal()],
-                x,
-                y,
-                hp2d
-        ).getPlan();/**/
 
         List<MyMove> actual = plan.actions;
         List<MyMove> expected = Arrays.asList(expectedAr);
