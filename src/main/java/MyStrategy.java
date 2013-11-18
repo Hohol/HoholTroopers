@@ -268,7 +268,7 @@ public final class MyStrategy implements Strategy {
         }
 
         List<MyMove> actions = getPlan().actions;
-        log(self.getType() + " having " + self.getActionPoints() + " is going to " + actions);
+        log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
         moveByPlan(actions);
         return true;
     }
@@ -1019,7 +1019,7 @@ public final class MyStrategy implements Strategy {
         if (destination == null) {
             return null;
         }
-        List<Direction> dirs = getFirstStepForMovingTo(destination.x, destination.y, false);
+        List<Direction> dirs = getFirstStepForMovingTo(trooper.getX(), trooper.getY(), destination.x, destination.y, false);
         if (dirs.isEmpty()) {
             return null;
         }
@@ -1029,7 +1029,7 @@ public final class MyStrategy implements Strategy {
             return null;
         }
         return r;
-    }
+    }    
 
     private boolean allTeammatesFullHp() {
         for (Trooper trooper : teammates) {
@@ -1131,25 +1131,26 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
-    private List<Direction> getFirstStepForMovingTo(int x, int y, boolean avoidNarrowPathNearBorder) {
-        if (x == self.getX() && y == self.getY()) {
-            throw new RuntimeException();
-        }
-        int[][] dist = bfs(x, y, avoidNarrowPathNearBorder);
+    private List<Direction> getFirstStepForMovingTo(int fromX, int fromY, int destX, int destY, boolean avoidNarrowPathNearBorder) {
+        int[][] dist = bfs(destX, destY, avoidNarrowPathNearBorder);
         List<Direction> availableDirs = new ArrayList<>();
-        if (dist[self.getX()][self.getY()] != Utils.UNREACHABLE) {
+        if (dist[fromX][fromY] != Utils.UNREACHABLE) {
             for (Direction dir : Utils.dirs) {
-                int toX = self.getX() + dir.getOffsetX();
-                int toY = self.getY() + dir.getOffsetY();
+                int toX = fromX + dir.getOffsetX();
+                int toY = fromY + dir.getOffsetY();
                 if (!isFreeCell(toX, toY)) {
                     continue;
                 }
-                if (dist[toX][toY] == dist[self.getX()][self.getY()] - 1) {
+                if (dist[toX][toY] == dist[fromX][fromY] - 1) {
                     availableDirs.add(dir);
                 }
             }
         }
         return availableDirs;
+    }
+
+    private List<Direction> getFirstStepForMovingTo(int toX, int toY, boolean avoidNarrowPathNearBorder) {
+        return getFirstStepForMovingTo(self.getX(), self.getY(), toX, toY, avoidNarrowPathNearBorder);
     }
 
     @SuppressWarnings("unused")
