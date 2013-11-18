@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface TrooperParameters {
     int getShootDamage(TrooperType type, TrooperStance stance);
+
     int getShootCost(TrooperType type);
 
     int getInitialActionPoints(TrooperType type);
@@ -30,7 +31,7 @@ public interface TrooperParameters {
 
         @Override
         public int getInitialActionPoints(TrooperType type) {
-            if(type == TrooperType.SCOUT) {
+            if (type == TrooperType.SCOUT) {
                 return 12;
             } else {
                 return 10;
@@ -50,6 +51,24 @@ public interface TrooperParameters {
                     return 10;
                 case SCOUT:
                     return 6;
+            }
+            throw new RuntimeException();
+        }
+
+        @Override
+        public int getVisionRange(TrooperType type) {
+            switch (type) {
+
+                case COMMANDER:
+                    return 8;
+                case FIELD_MEDIC:
+                    return 7;
+                case SOLDIER:
+                    return 7;
+                case SNIPER:
+                    return 7;
+                case SCOUT:
+                    return 9;
             }
             throw new RuntimeException();
         }
@@ -94,22 +113,26 @@ public interface TrooperParameters {
 
     int getShootRange(TrooperType type);
 
+    int getVisionRange(TrooperType type);
+
     class TrooperParametersImpl implements TrooperParameters {
 
         private int[][] damage = new int[TrooperType.values().length][TrooperStance.values().length];
         private int[] shootCost = new int[TrooperType.values().length];
         private int[] initialActionPoints = new int[TrooperType.values().length];
-        private int[] range = new int[Utils.NUMBER_OF_TROOPER_TYPES];
+        private int[] shootRange = new int[Utils.NUMBER_OF_TROOPER_TYPES];
+        private int[] visionRange = new int[Utils.NUMBER_OF_TROOPER_TYPES];
 
         public TrooperParametersImpl(List<Trooper> troopers) {
-            for(Trooper trooper : troopers) {
+            for (Trooper trooper : troopers) {
                 int typeOrdinal = trooper.getType().ordinal();
-                for(TrooperStance stance : TrooperStance.values()) {
+                for (TrooperStance stance : TrooperStance.values()) {
                     damage[typeOrdinal][stance.ordinal()] = trooper.getDamage(stance);
                 }
                 shootCost[typeOrdinal] = trooper.getShootCost();
                 initialActionPoints[typeOrdinal] = trooper.getInitialActionPoints();
-                range[typeOrdinal] = (int)(trooper.getShootingRange() + 0.5);
+                shootRange[typeOrdinal] = (int) (trooper.getShootingRange() + 0.5);
+                visionRange[typeOrdinal] = (int) (trooper.getVisionRange() + 0.5);
             }
         }
 
@@ -130,7 +153,12 @@ public interface TrooperParameters {
 
         @Override
         public int getShootRange(TrooperType type) {
-            return range[type.ordinal()];
+            return shootRange[type.ordinal()];
+        }
+
+        @Override
+        public int getVisionRange(TrooperType type) {
+            return visionRange[type.ordinal()];
         }
     }
 }

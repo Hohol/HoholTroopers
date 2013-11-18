@@ -221,6 +221,10 @@ public class Utils {
         return trooperParameters.getShootRange(type);
     }
 
+    public int getVisionRange(TrooperType type) {
+        return trooperParameters.getVisionRange(type);
+    }
+
     public int getMoveCost(TrooperStance stance) {
         switch (stance) {
             case PRONE:

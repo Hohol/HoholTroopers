@@ -46,14 +46,15 @@ public class AttackTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                STANDING, false, false, false, MyMove.shoot(3, 0)
+                STANDING, false, false, false,
+                MyMove.shoot(3, 0)
         );
 
         //----------------------
         setMap(
                 "S..s",
                 "....",
-                "c..."
+                "s..."
         );
         setTrooper(3, 0, 1, STANDING);
         setTrooper(0, 2, 2, STANDING);

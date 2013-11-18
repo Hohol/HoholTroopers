@@ -7,7 +7,7 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    public final static int HP_TO_TRY_ESCAPE = 50;
+    public final static int HP_TO_TRY_ESCAPE = 120;
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
@@ -129,6 +129,7 @@ public final class MyStrategy implements Strategy {
         if (!local) {
             return;
         }
+        log(message);
         if (cells.isEmpty()) {
             log("No cells");
             return;
@@ -137,12 +138,11 @@ public final class MyStrategy implements Strategy {
         for (Cell cell : cells) {
             map[cell.x][cell.y] = '!';
         }
-        print(message, map);
+        print(map);
     }
 
     private void printSuspiciousCells() {
         printCells("Suspicious cells", suspiciousCells);
-
     }
 
     private char[][] getMapForPrinting() {
@@ -265,6 +265,7 @@ public final class MyStrategy implements Strategy {
         }
 
         List<MyMove> actions = getPlan().actions;
+        log(self.getType() + " having " + self.getActionPoints() + " is going to " + actions);
         moveByPlan(actions);
         return true;
     }
@@ -501,11 +502,10 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private void print(String msg, char[][] map) {
+    private void print(char[][] map) {
         if (!local) {
             return;
         }
-        System.out.println(msg);
         for (int j = 0; j < map[0].length; j++) {
             for (char[] aMap : map) {
                 System.out.print(aMap[j]);
@@ -819,7 +819,11 @@ public final class MyStrategy implements Strategy {
                 if (cells[i][j] != CellType.FREE) {
                     map[i][j] = '#';
                 } else {
-                    map[i][j] = '.';
+                    if (wasSeenOnCurrentBigMove[i][j]) {
+                        map[i][j] = '.';
+                    } else {
+                        map[i][j] = '?';
+                    }
                 }
             }
         }
@@ -838,8 +842,8 @@ public final class MyStrategy implements Strategy {
             return;
         }
         char[][] map = getMapForPrinting();
-        print("Map ", map);
         System.out.println();
+        print(map);
     }
 
     private void updateLastSeen() {

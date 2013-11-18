@@ -28,7 +28,7 @@ class State {
     int helpFactor;
     int helpDist;
     int numberOfTeammatesWhoCanReachEnemy;
-    int numberOfEnemiesWhoCanShootMe;
+    int sumOfDangerOfEnemiesWhoCanShootMe;
 
     protected State(
             int actionPoints,
@@ -59,7 +59,7 @@ class State {
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
-        this.numberOfEnemiesWhoCanShootMe = cur.numberOfEnemiesWhoCanShootMe;
+        this.sumOfDangerOfEnemiesWhoCanShootMe = cur.sumOfDangerOfEnemiesWhoCanShootMe;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -81,8 +81,8 @@ class State {
         if(Math.abs(hpDiff-oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
         {
             if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
-                if (numberOfEnemiesWhoCanShootMe != old.numberOfEnemiesWhoCanShootMe) {
-                    return numberOfEnemiesWhoCanShootMe < old.numberOfEnemiesWhoCanShootMe;
+                if (sumOfDangerOfEnemiesWhoCanShootMe != old.sumOfDangerOfEnemiesWhoCanShootMe) {
+                    return sumOfDangerOfEnemiesWhoCanShootMe < old.sumOfDangerOfEnemiesWhoCanShootMe;
                 }
             }
         }

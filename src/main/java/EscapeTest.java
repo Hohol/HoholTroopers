@@ -123,4 +123,132 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 MyMove.USE_MEDIKIT_EAST
         );
     }
+
+    @Test
+    void testSoldierShootingRangeIsGreaterThanVisionRange() {
+        setMap(
+                ".S.......s"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.shoot(9,0)
+        );
+    }
+
+    @Test
+    void testOtherTroopersCanGiveVision() {
+        setMap(
+                ".S......fs"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.MOVE_WEST
+        );
+
+        //----------------------------
+
+        setMap(
+                ".S......f.s"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.shoot(8, 0)
+        );
+    }
+
+    @Test
+    void nonVisibleEnemyCanGiveVision() {
+        setMap(
+                ".S......?s"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.MOVE_WEST
+        );
+
+        //-------------------
+
+        setMap(
+                ".S.......s",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                ".?........"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.MOVE_SOUTH
+        );
+
+        //--------------
+
+        setMap(
+                ".S.......s",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                "..........",
+                ".?........"
+        );
+        check(
+                SOLDIER,
+                4,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.shoot(9, 0)
+        );
+    }
+
+    @Test
+    void testDifferentTypesOfEnemiesThreatenDifferently() {
+        setMap(
+                ".f.",
+                "sF.",
+                "..."
+        );
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.MOVE_SOUTH
+        );
+    }
 }

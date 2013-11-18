@@ -9,6 +9,7 @@ import java.util.List;
 
 import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
+import static model.TrooperType.COMMANDER;
 import static model.TrooperType.FIELD_MEDIC;
 
 public class PlanComputer {
@@ -28,7 +29,7 @@ public class PlanComputer {
     private int[][] sqrDistSum;
     BonusType[][] bonuses;
     TrooperStance[][] stances;
-    boolean[][][][] canShoot;
+    boolean[][][][] enemyCanShoot;
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
@@ -37,6 +38,7 @@ public class PlanComputer {
     boolean[] enemyIsAlive;
     int[][] enemyIndex;
     private int enemyCnt;
+    private int[] danger;
 
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
@@ -81,6 +83,11 @@ public class PlanComputer {
             }
         }
         enemyIsAlive = new boolean[enemyCnt];
+        danger = new int[enemyCnt];
+        for (int i = 0; i < enemyCnt; i++) {
+            Cell enemyPos = enemyPositions.get(i);
+            danger[i] = getDanger(Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]));
+        }
         Arrays.fill(enemyIsAlive, true);
 
         bfsDistFromTeammateForHealing = new ArrayList<>();
@@ -115,16 +122,65 @@ public class PlanComputer {
         prepareNumberOfEnemiesWhoCanShoot();
     }
 
+    private int getDanger(TrooperType type) {
+        switch (type) {
+            case COMMANDER:
+                return 2;
+            case FIELD_MEDIC:
+                return 1;
+            case SOLDIER:
+                return 3;
+            case SNIPER:
+                return 4;
+            case SCOUT:
+                return 2;
+        }
+        throw new RuntimeException();
+    }
+
     private void prepareNumberOfEnemiesWhoCanShoot() {
-        canShoot = new boolean[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
+        enemyCanShoot = new boolean[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
+        boolean[][][] enemyCanSee = new boolean[n][m][Utils.NUMBER_OF_STANCES];
+
         for (int eIndex = 0; eIndex < enemyCnt; eIndex++) {
             Cell enemyPos = enemyPositions.get(eIndex);
-            TrooperType type = getType(enemyPos.x, enemyPos.y);
+            TrooperType enemyType = getType(enemyPos.x, enemyPos.y);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < map[i].length; j++) {
                     for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        if (canShoot(enemyPos.x, enemyPos.y, i, j, stance, type)) {
-                            canShoot[eIndex][i][j][stance] = true;
+                        if (canSee(enemyPos.x, enemyPos.y, i, j, stance, enemyType)) {
+                            enemyCanSee[i][j][stance] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int fromX = 0; fromX < n; fromX++) {
+            for (int fromY = 0; fromY < m; fromY++) {
+                if(map[fromX][fromY] != '?') {
+                    continue;
+                }
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < map[i].length; j++) {
+                        for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                            if (canSeeWithMaxAvailableVisionRange(fromX, fromY, i, j, stance)) {
+                                enemyCanSee[i][j][stance] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int eIndex = 0; eIndex < enemyCnt; eIndex++) {
+            Cell enemyPos = enemyPositions.get(eIndex);
+            TrooperType enemyType = getType(enemyPos.x, enemyPos.y);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < map[i].length; j++) {
+                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                        if (canShoot(enemyPos.x, enemyPos.y, i, j, stance, enemyType)) {
+                            enemyCanShoot[eIndex][i][j][stance] = enemyCanSee[i][j][stance];
                         }
                     }
                 }
@@ -137,7 +193,7 @@ public class PlanComputer {
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                if (!freeCell(i, j)) {
+                if (!isFree(i, j)) {
                     continue;
                 }
                 if (distFromMe[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
@@ -177,7 +233,7 @@ public class PlanComputer {
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
-        cur.numberOfEnemiesWhoCanShootMe = getNumberOfEnemiesWhoCanShootMe();
+        cur.sumOfDangerOfEnemiesWhoCanShootMe = getSumOfDangerOfEnemiesWhoCanShootMe();
         if (cur.better(best, selfType)) {
             best = new State(cur);
         }
@@ -205,11 +261,11 @@ public class PlanComputer {
         return r;
     }
 
-    private int getNumberOfEnemiesWhoCanShootMe() {
+    private int getSumOfDangerOfEnemiesWhoCanShootMe() {
         int r = 0;
         for (int i = 0; i < enemyCnt; i++) {
-            if (enemyIsAlive[i] && canShoot[i][cur.x][cur.y][cur.stance.ordinal()]) {
-                r++;
+            if (enemyIsAlive[i] && enemyCanShoot[i][cur.x][cur.y][cur.stance.ordinal()]) {
+                r += danger[i];
             }
         }
         return r;
@@ -242,7 +298,7 @@ public class PlanComputer {
 
         for (int newX = 0; newX < n; newX++) {
             for (int newY = 0; newY < map[newX].length; newY++) {
-                if (!freeCell(newX, newY) && !(newX == startX && newY == startY)) {
+                if (!isFree(newX, newY) && !(newX == startX && newY == startY)) {
                     continue;
                 }
                 if (dist[newX][newY] >= 7) {
@@ -288,7 +344,7 @@ public class PlanComputer {
             if (!inField(toX, toY)) {
                 continue;
             }
-            if (!freeCell(toX, toY)) {
+            if (!isFree(toX, toY)) {
                 continue;
             }
             addAction(movement);
@@ -406,8 +462,8 @@ public class PlanComputer {
         tryHealSelfWithAbility();
     }
 
-    private boolean freeCell(int x, int y) {
-        return map[x][y] == '.' || hp[x][y] <= 0;
+    private boolean isFree(int x, int y) {
+        return map[x][y] == '.' || map[x][y] == '?' || hp[x][y] <= 0;
     }
 
     void dealDamage(int ex, int ey, int damage) {
@@ -474,11 +530,26 @@ public class PlanComputer {
                 + stance];
     }
 
-    private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
-        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(utils.getShootRange(type))) {
+    private boolean canSeeWithMaxAvailableVisionRange(int viewerX, int viewerY, int objectX, int objectY, int stance) {
+        int range = utils.getVisionRange(COMMANDER);
+        return reachable(viewerX, viewerY, objectX, objectY, stance, range);
+    }
+
+    private boolean reachable(int viewerX, int viewerY, int objectX, int objectY, int stance, int range) {
+        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(range)) {
             return false;
         }
         return visible(viewerX, viewerY, objectX, objectY, stance);
+    }
+
+    private boolean canSee(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
+        int range = utils.getVisionRange(type);
+        return reachable(viewerX, viewerY, objectX, objectY, stance, range);
+    }
+
+    private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
+        int shootRange = utils.getShootRange(type);
+        return reachable(viewerX, viewerY, objectX, objectY, stance, shootRange);
     }
 
     private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance) {

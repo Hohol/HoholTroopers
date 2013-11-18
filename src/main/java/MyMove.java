@@ -34,6 +34,7 @@ public class MyMove {
     public static MyMove RAISE_STANCE = MyMove.of(ActionType.RAISE_STANCE);
     public static MyMove LOWER_STANCE = MyMove.of(ActionType.LOWER_STANCE);
 
+    //changing order of elements in this arrays will break many tests
     static final MyMove[] directedHeals = {HEAL_NORTH, HEAL_EAST, HEAL_SOUTH, HEAL_WEST};
     static final MyMove[] directedMedikitUses = {USE_MEDIKIT_NORTH, USE_MEDIKIT_EAST, USE_MEDIKIT_SOUTH, USE_MEDIKIT_WEST};
     static final MyMove[] movements = {MOVE_NORTH, MOVE_EAST, MOVE_SOUTH, MOVE_WEST};
