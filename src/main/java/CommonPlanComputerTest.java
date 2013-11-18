@@ -37,8 +37,8 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void testHelp() {
         setMap(
-                ".C.s",
-                "S..."
+                ".C......f",
+                "S........"
         );
 
         check(
@@ -53,32 +53,12 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void testHelp2() {
-        setMap(
-                "s.",
-                "..",
-                "C.",
-                ".S"
-        );
-
-        check(
-                SOLDIER,
-                2,
-                STANDING,
-                false,
-                false,
-                false,
-                MyMove.MOVE_WEST
-        );
-    }
-
-    @Test
     void testHelp3() {
         setMap(
-                "...f",
-                ".S..",
-                "s..C",
-                "F..."
+                ".........f",
+                ".......S..",
+                "f........C",
+                "F........."
         );
 
         check(
@@ -126,24 +106,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 MyMove.shoot(0, 0)
-        );
-    }
-
-    @Test
-    void testDoNotWasteFieldRation2() {
-        setMap(
-                "f......C.",
-                "s...^..SF"
-        );
-
-        check(
-                SOLDIER,
-                12,
-                STANDING,
-                false,
-                true,
-                false,
-                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.grenade(0, 1)
         );
     }
 
@@ -245,26 +207,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void testHelpBug() {
-        setMap(
-                ".s",
-                ".S",
-                "C3",
-                ".F"
-        );
-
-        check(
-                COMMANDER,
-                4,
-                STANDING,
-                false,
-                true,
-                false,
-                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
-        );
-    }
-
-    @Test
     void testMedicDistPriority() {
         setMap(
                 "...f..C",
@@ -287,9 +229,9 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void testNonMedicDistPriority() {
         setMap(
-                "..f..S",
-                "3C3...",
-                "F....."
+                ".........f..S",
+                "3C3..........",
+                "F............"
         );
 
         check(
@@ -304,9 +246,9 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void testNonMedicDistPriority2() {
+    void testMedicDistPriority2() {
         setMap(
-                "Cf....",
+                "C.f...",
                 "......",
                 "F.S...",
                 "......"
@@ -319,7 +261,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false,
-                MyMove.MOVE_EAST
+                MyMove.MOVE_NORTH
         );
     }
 
@@ -382,10 +324,8 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         );
 
         setMap(
-                "cs......SC"
+                ".s......SC"
         );
-        setTrooper(0, 0, 100, STANDING);
-        setTrooper(1, 0, 120, STANDING);
         check(
                 SOLDIER,
                 4,
@@ -423,7 +363,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     void testDoNotBlockPathIgnoreMedic() {
         setMap(
                 "FS......s",
-                ".C......."
+                ".C......s"
         );
 
         check(

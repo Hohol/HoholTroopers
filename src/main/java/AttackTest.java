@@ -2,6 +2,7 @@ import static model.TrooperStance.*;
 import static model.BonusType.*;
 
 import static model.TrooperType.*;
+
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -19,6 +20,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 0,
                 STANDING, false, false, false);
     }
+
     @Test
     void testShoot() {
         setMap(
@@ -55,23 +57,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         );
         setTrooper(3, 0, 1, STANDING);
         setTrooper(0, 2, 2, STANDING);
-
-        check(
-                SOLDIER,
-                4,
-                STANDING, false, false, false, MyMove.shoot(0, 2)
-        );
-    }
-
-    @Test
-    void testShootBugRightAnswer() {
-        setMap(
-                "S..c",
-                "....",
-                "s..."
-        );
-        setTrooper(3, 0, 100, STANDING);
-        setTrooper(0, 2, 30, STANDING);
 
         check(
                 SOLDIER,
@@ -527,8 +512,8 @@ public class AttackTest extends AbstractPlanComputerTest {
         );
         //---------
         setMap(
-                "S.fF",
-                "...."
+                "..fF",
+                "S..."
         );
         setTrooper(2, 0, 80, STANDING);
         check(
@@ -537,7 +522,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 STANDING,
                 false,
                 true,
-                false, MyMove.grenade(2, 1)
+                false,
+                MyMove.grenade(1, 0)
         );
 
         //---------
@@ -572,9 +558,8 @@ public class AttackTest extends AbstractPlanComputerTest {
     void testGrenadeForMassiveDamage() {
         //---------
         setMap(
-                "....fc",
-                "F....s",
-                "......"
+                ".#..fc",
+                "F#...s"
         );
         setTrooper(5, 0, 100, STANDING);
         setTrooper(4, 0, 100, STANDING);
@@ -585,7 +570,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 STANDING,
                 true,
                 true,
-                false, MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(5, 0)
+                false,
+                MyMove.MOVE_NORTH, MyMove.EAT_FIELD_RATION, MyMove.grenade(5, 0)
         );
     }
 
@@ -593,42 +579,24 @@ public class AttackTest extends AbstractPlanComputerTest {
     @Test
     void testFocusFire() {
         setMap(
-                "....c",
-                "S.C..",
-                "s...."
+                "........c",
+                "S.....C..",
+                "f........"
         );
-        setTrooper(4, 0, 100, STANDING);
-        setTrooper(0, 2, 120, STANDING);
         check(
                 COMMANDER,
                 5,
                 STANDING,
                 false,
                 false,
-                false, MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
-        );
-
-
-        setMap(
-                "....c",
-                "S.C..",
-                "s...."
-        );
-        setTrooper(4, 0, 100, STANDING);
-        setTrooper(0, 2, 120, STANDING);
-        check(
-                COMMANDER,
-                5,
-                STANDING,
                 false,
-                false,
-                false, MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
+                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
         );
 
         //---------------
 
         setMap(
-                "cs.....S."
+                "fs.....SC"
         );
         setTrooper(0, 0, 100, STANDING);
         setTrooper(1, 0, 120, STANDING);
@@ -638,7 +606,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 STANDING,
                 false,
                 false,
-                false, MyMove.shoot(0, 0)
+                false,
+                MyMove.shoot(1, 0)
         );
 
         //--------------
@@ -655,23 +624,6 @@ public class AttackTest extends AbstractPlanComputerTest {
                 false,
                 false, MyMove.shoot(1, 0)
         );
-
-        //--------------
-        setMap(
-                "cs......SC",
-                ".........."
-        );
-        setTrooper(0, 0, 100, STANDING);
-        setTrooper(1, 0, 120, STANDING);
-        check(
-                SOLDIER,
-                4,
-                STANDING,
-                false,
-                false,
-                false, MyMove.shoot(1, 0)
-        );
-        //--------------
     }
 
     @Test
