@@ -7,7 +7,7 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    public final static int HP_TO_TRY_ESCAPE = 50;
+    public final static int HP_TO_TRY_ESCAPE = 120;
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
