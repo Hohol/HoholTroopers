@@ -71,6 +71,10 @@ class State {
             return killedCnt > old.killedCnt;
         }
 
+        if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
+            return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
+        }
+
         int hpDiff = damageSum + healedSum;
         int oldHpDiff = old.damageSum + old.healedSum;
 
@@ -81,10 +85,6 @@ class State {
                     return numberOfEnemiesWhoCanShootMe < old.numberOfEnemiesWhoCanShootMe;
                 }
             }
-        }
-
-        if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
-            return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
         }
 
         if (hpDiff != oldHpDiff) {
