@@ -450,7 +450,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 true,
                 true,
                 false,
-                MyMove.grenade(4,0)
+                MyMove.grenade(4, 0)
         );
     }
 
@@ -483,7 +483,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false,
-                MyMove.LOWER_STANCE, MyMove.shoot(2,0), MyMove.shoot(2,0), MyMove.LOWER_STANCE
+                MyMove.LOWER_STANCE, MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.LOWER_STANCE
         );
         //----------
         setMap(
@@ -498,7 +498,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false,
-                MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.shoot(2,0), MyMove.MOVE_WEST
+                MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.shoot(2, 0), MyMove.MOVE_WEST
         );
     }
 
@@ -517,6 +517,25 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false
+        );
+    }
+
+    @Test
+    void testDoNotFearDeadEnemy() {
+        setMap(
+                "...",
+                "S.s"
+        );
+        setTrooper(0, 1, 1, STANDING);
+        setTrooper(2, 1, 1, STANDING);
+        check(
+                SOLDIER,
+                6,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.shoot(2, 1)
         );
     }
 }
