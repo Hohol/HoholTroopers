@@ -1,5 +1,7 @@
 import model.*;
 
+import javax.print.attribute.standard.Destination;
+
 import static model.ActionType.*;
 import static model.TrooperStance.*;
 import static model.TrooperType.*;
@@ -11,7 +13,7 @@ public final class MyStrategy implements Strategy {
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
-    final Random rnd = new Random(3222);
+    final Random rnd = new Random(322);
 
     Trooper self;
     World world;
@@ -49,6 +51,7 @@ public final class MyStrategy implements Strategy {
     }
 
     Utils utils;
+    private static Cell destination;
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
@@ -894,10 +897,12 @@ public final class MyStrategy implements Strategy {
                 return false;
             }
             if (lastSeenEnemyPos != null) {
-                return cautiouslyMoveTo(lastSeenEnemyPos.x, lastSeenEnemyPos.y);
+                destination = lastSeenEnemyPos;
+                return cautiouslyMoveTo(lastSeenEnemyPos);
             }
             Cell r = getNearestLongAgoSeenCell();
-            return cautiouslyMoveTo(r.x, r.y);
+            destination = r;
+            return cautiouslyMoveTo(r);
         } else {
             Trooper toFollow = teammateToFollow;
 
@@ -1011,18 +1016,19 @@ public final class MyStrategy implements Strategy {
     }
 
     private Cell getBehindPosition(Trooper trooper) {
-        List<Cell> history = positionHistory.get(trooper.getType());
-        if (history.isEmpty()) {
+        if (destination == null) {
             return null;
         }
-        Cell lastPosition = new Cell(trooper.getX(), trooper.getY());
-        for (int i = history.size() - 1; i >= 0; i--) {
-            Cell pos = history.get(i);
-            if (!pos.equals(lastPosition)) {
-                return pos;
-            }
+        List<Direction> dirs = getFirstStepForMovingTo(destination.x, destination.y, false);
+        if (dirs.isEmpty()) {
+            return null;
         }
-        return null;
+        Direction dir = dirs.get(0);
+        Cell r = new Cell(trooper.getX() - dir.getOffsetX(), trooper.getY() - dir.getOffsetY());
+        if (!isFreeCell(r.x, r.y)) {
+            return null;
+        }
+        return r;
     }
 
     private boolean allTeammatesFullHp() {
@@ -1072,7 +1078,7 @@ public final class MyStrategy implements Strategy {
                 int newDist = Utils.manhattanDist(i, j, world.getWidth() / 2, world.getHeight() / 2);
                 if (cells[i][j] == CellType.FREE && !isNarrowPathNearBorder(i, j) &&
                         (lastSeen[i][j] < minLastSeen || lastSeen[i][j] == minLastSeen &&
-                                 newDist < minDist
+                                newDist < minDist
                         )) {
                     minLastSeen = lastSeen[i][j];
                     minDist = newDist;
@@ -1084,7 +1090,8 @@ public final class MyStrategy implements Strategy {
         return new Cell(x, y);
     }
 
-    private boolean cautiouslyMoveTo(int x, int y) {
+    private boolean cautiouslyMoveTo(Cell c) {
+        int x = c.x, y = c.y;
         List<Direction> availableDirs = getFirstStepForMovingTo(x, y, true);
         Direction bestDir = null;
         int minDist = Integer.MAX_VALUE;

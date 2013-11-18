@@ -206,31 +206,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 true,
-                MyMove.MOVE_SOUTH
-        );
-
-        //--------------
-
-        setMap(
-                ".S.......s",
-                "..........",
-                "..........",
-                "..........",
-                "..........",
-                "..........",
-                "..........",
-                "..........",
-                "..........",
-                ".?........"
-        );
-        check(
-                SOLDIER,
-                4,
-                STANDING,
-                false,
-                false,
-                true,
-                MyMove.shoot(9, 0)
+                MyMove.shoot(9,0)
         );
     }
 

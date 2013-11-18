@@ -57,7 +57,7 @@ public class PlanComputer {
         long start = System.currentTimeMillis();
         rec();
         long end = System.currentTimeMillis();
-        System.out.println("Calculated in " + (end-start) + " milliseconds");
+        System.out.println("Calculated in " + (end - start) + " milliseconds");
         System.out.println("Recursive calls cnt = " + recursiveCallsCnt);
     }
 
@@ -158,7 +158,10 @@ public class PlanComputer {
 
         for (int fromX = 0; fromX < n; fromX++) {
             for (int fromY = 0; fromY < m; fromY++) {
-                if(map[fromX][fromY] != '?') {
+                if (!existsVisibleEnemyNear(fromX, fromY)) {
+                    continue;
+                }
+                if (map[fromX][fromY] != '?') {
                     continue;
                 }
                 for (int i = 0; i < n; i++) {
@@ -186,6 +189,22 @@ public class PlanComputer {
                 }
             }
         }
+    }
+
+    private boolean existsVisibleEnemyNear(int x, int y) {
+        final int a = 3;
+        for (int dx = -a; dx <= a; dx++) {
+            for (int dy = -a; dy <= a; dy++) {
+                int toX = x + dx, toY = y + dy;
+                if (!inField(toX, toY)) {
+                    continue;
+                }
+                if (Utils.isEnemyChar(map[toX][toY])) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void prepareHelp() {
@@ -697,7 +716,7 @@ public class PlanComputer {
         }
 
         updateBest();
-        if(recursiveCallsCnt > MAX_RECURSIVE_CALLS) {
+        if (recursiveCallsCnt > MAX_RECURSIVE_CALLS) {
             return;
         }
 
