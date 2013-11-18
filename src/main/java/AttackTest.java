@@ -202,8 +202,11 @@ public class AttackTest extends AbstractPlanComputerTest {
                 FIELD_MEDIC,
                 2,
                 STANDING,
-                false, false,
-                false);
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
+        );
     }
 
     @Test
@@ -246,7 +249,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 SOLDIER,
                 12,
                 STANDING,
-                false, false, false, MyMove.MOVE_EAST, MyMove.shoot(18, 0)
+                false, false, false,
+                MyMove.MOVE_EAST, MyMove.shoot(18, 0), MyMove.MOVE_WEST, MyMove.MOVE_WEST
         );
 
         //-----------
@@ -334,7 +338,9 @@ public class AttackTest extends AbstractPlanComputerTest {
                 5,
                 STANDING,
                 true,
-                false, false, MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
+                false,
+                false,
+                MyMove.EAT_FIELD_RATION, MyMove.MOVE_NORTH, MyMove.shoot(0, 0), MyMove.MOVE_NORTH, MyMove.shoot(2, 0)
         );
     }
 

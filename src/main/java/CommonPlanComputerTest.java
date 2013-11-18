@@ -453,4 +453,40 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.grenade(4, 0)
         );
     }
+
+    @Test
+    void testBug() {
+        setMap(
+                "cs......#C",
+                "........S."
+        );
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_WEST
+        );
+    }
+
+    @Test
+    void testBug2() {
+        setMap(
+                "..f",
+                "...",
+                "S1s"
+        );
+        setTrooper(2, 2, 1, STANDING);
+        check(
+                SOLDIER,
+                6,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.shoot(2,2), MyMove.MOVE_NORTH
+        );
+    }
 }

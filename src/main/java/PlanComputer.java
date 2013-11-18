@@ -28,8 +28,8 @@ public class PlanComputer {
     TrooperStance[][] stances;
     boolean[][][][] canShoot;
     List<int[][]> bfsDistFromTeammateForHealing;
-    private int[][] helpFactor;
-    private int[][] helpDist;
+    private int[][][] helpFactor;
+    private int[][][] helpDist;
     private int[] numberOfTeammatesWhoCanShoot;
     private int[][] numberOfTeammatesWhoCanReachEnemy;
     boolean[] enemyIsAlive;
@@ -126,34 +126,38 @@ public class PlanComputer {
     }
 
     private void prepareHelp() {
-        helpFactor = new int[n][m];
-        for (Cell cell : allyPositions) {
-            TrooperType type = getType(cell.x, cell.y);
-            for (Cell e : enemyPositions) {
-                int stance = stances[cell.x][cell.y].ordinal();
-                if (canShoot(cell.x, cell.y, e.x, e.y, stance, type)) {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < map[i].length; j++) {
-                            if (!freeCell(i, j)) {
-                                continue;
-                            }
-                            if (canShoot(i, j, e.x, e.y, stances[e.x][e.y].ordinal(), selfType)) {
-                                helpFactor[i][j]++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        helpFactor = new int[enemyCnt][n][m];
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
+                if (!freeCell(i, j)) {
+                    continue;
+                }
                 if (distFromMe[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
-                    helpFactor[i][j] = 0;
+                    continue;
+                }
+                for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+                    Cell enemyPos = enemyPositions.get(enemyIndex);
+                    if (!canShoot(i, j, enemyPos.x, enemyPos.y, stances[enemyPos.x][enemyPos.y].ordinal(), selfType)) {
+                        continue;
+                    }
+                    int d = 1;
+                    for (Cell allyPos : allyPositions) {
+                        TrooperType allyType = getType(allyPos.x, allyPos.y);
+                        int allyStance = stances[allyPos.x][allyPos.y].ordinal();
+                        if (canShoot(allyPos.x, allyPos.y, enemyPos.x, enemyPos.y, allyStance, allyType)) {
+                            d++;
+                        }
+                    }
+                    helpFactor[enemyIndex][i][j] += d;
                 }
             }
         }
-        helpDist = Utils.bfsByMapAndStartingCells(map, helpFactor);
+
+        helpDist = new int[enemyCnt][][];
+        for (int i = 0; i < enemyCnt; i++) {
+            helpDist[i] = Utils.bfsByMapAndStartingCells(map, helpFactor[i]);
+        }
     }
 
     void updateBest() {
@@ -163,13 +167,35 @@ public class PlanComputer {
         cur.healDist = getDistToTeammatesSum();
         cur.minHp = getMinHp();
         cur.focusFireParameter = getFocusFireParameter();
-        cur.helpFactor = helpFactor[cur.x][cur.y];
-        cur.helpDist = helpDist[cur.x][cur.y];
+        cur.helpFactor = getHelpFactor();
+        cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.numberOfEnemiesWhoCanShootMe = getNumberOfEnemiesWhoCanShootMe();
         if (cur.better(best, selfType)) {
             best = new State(cur);
         }
+    }
+
+    private int getHelpDist() {
+        int r = Integer.MAX_VALUE;
+        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            if (!enemyIsAlive[enemyIndex]) {
+                continue;
+            }
+            r = Math.min(r, helpDist[enemyIndex][cur.x][cur.y]);
+        }
+        return r;
+    }
+
+    private int getHelpFactor() {
+        int r = 0;
+        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            if (!enemyIsAlive[enemyIndex]) {
+                continue;
+            }
+            r += helpFactor[enemyIndex][cur.x][cur.y];
+        }
+        return r;
     }
 
     private int getNumberOfEnemiesWhoCanShootMe() {
