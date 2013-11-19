@@ -135,8 +135,8 @@ public class AbstractPlanComputerTest {
                 if (Utils.isLetter(map[i][j])) {
                     if(hp[i][j] == 0) {
                         hp[i][j] = Utils.INITIAL_TROOPER_HP;
+                        stances[i][j] = STANDING;
                     }
-                    stances[i][j] = STANDING;
                     if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
                         x = i;
                         y = j;

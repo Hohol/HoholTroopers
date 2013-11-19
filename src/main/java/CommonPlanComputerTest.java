@@ -409,7 +409,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false,
-                MyMove.shoot(2,2)
+                MyMove.shoot(2, 2)
         );
     }
 }

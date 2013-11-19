@@ -222,7 +222,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 ".#........",
                 "S........s"
         );
-        setTrooper(0,1,1,STANDING);
+        setTrooper(0, 1, 1, STANDING);
         check(
                 SOLDIER,
                 2,
@@ -268,6 +268,27 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testEnemyShouldChangeStance() {
+        setMap(
+                "F....",
+                ".####",
+                "....s"
+        );
+
+        setTrooper(4, 2, 100, KNEELING);
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_SOUTH
         );
     }
 

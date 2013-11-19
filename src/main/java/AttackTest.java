@@ -226,22 +226,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         //-----------
 
         setMap(
-                "c........S...........f"
-        );
-        setTrooper(0, 0, 25, PRONE);
-        setTrooper(21, 0, 25, KNEELING);
-
-        check(
-                SOLDIER,
-                12,
-                STANDING,
-                false, false, false,
-                MyMove.MOVE_WEST, MyMove.shoot(0, 0), MyMove.MOVE_EAST, MyMove.MOVE_EAST
-        );
-
-        //-----------
-
-        setMap(
                 "c.......C.......f"
         );
         setTrooper(0, 0, 15, PRONE);
