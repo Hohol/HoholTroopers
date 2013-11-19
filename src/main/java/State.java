@@ -27,9 +27,10 @@ class State {
     int healDist;
     int helpFactor;
     int helpDist;
+
+    int maxDamageEnemyCanDeal;
+
     int numberOfTeammatesWhoCanReachEnemy;
-    int sumOfDangerOfEnemiesWhoCanShootMe;
-    int numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
 
     protected State(
             int actionPoints,
@@ -59,9 +60,10 @@ class State {
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
         this.fieldRationsUsed = cur.fieldRationsUsed;
+
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
-        this.sumOfDangerOfEnemiesWhoCanShootMe = cur.sumOfDangerOfEnemiesWhoCanShootMe;
-        this.numberOfStepsEnemyShouldMakeToBeAbleToShootMe = cur.numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
+
+        this.maxDamageEnemyCanDeal = cur.maxDamageEnemyCanDeal;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -69,25 +71,33 @@ class State {
             return true;
         }
 
-        if (killedCnt != old.killedCnt) {
-            return killedCnt > old.killedCnt;
+        int killCnt = killedCnt;
+        if (maxDamageEnemyCanDeal >= selfHp) {
+            killCnt--;
+        }
+        int oldKillCnt = old.killedCnt;
+        if (old.maxDamageEnemyCanDeal >= old.selfHp) {
+            oldKillCnt--;
+        }
+        if (killCnt != oldKillCnt) {
+            return killCnt > oldKillCnt;
         }
 
         if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
             return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
         }
 
-        int hpDiff = damageSum + healedSum;
-        int oldHpDiff = old.damageSum + old.healedSum;
+        int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal;
+        int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal;
 
-        if (Math.abs(hpDiff - oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
+        /*if (Math.abs(hpDiff - oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
         {
             if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
                 if (sumOfDangerOfEnemiesWhoCanShootMe != old.sumOfDangerOfEnemiesWhoCanShootMe) {
                     return sumOfDangerOfEnemiesWhoCanShootMe < old.sumOfDangerOfEnemiesWhoCanShootMe;
                 }
             }
-        }
+        }/**/
 
         if (hpDiff != oldHpDiff) {
             return hpDiff > oldHpDiff;
@@ -123,10 +133,6 @@ class State {
             if (msb != 0) {
                 return msb < 0;
             }
-        }
-
-        if (numberOfStepsEnemyShouldMakeToBeAbleToShootMe != old.numberOfStepsEnemyShouldMakeToBeAbleToShootMe) {
-            return numberOfStepsEnemyShouldMakeToBeAbleToShootMe > old.numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
         }
 
         if (focusFireParameter != old.focusFireParameter) {

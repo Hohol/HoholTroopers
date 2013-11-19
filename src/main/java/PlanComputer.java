@@ -29,8 +29,6 @@ public class PlanComputer {
     private int[][] sqrDistSum;
     BonusType[][] bonuses;
     TrooperStance[][] stances;
-    boolean[][][][] enemyCanShoot;
-    int[][][][] numberOfStepsEnemyShouldMakeToShoot;
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
@@ -39,8 +37,8 @@ public class PlanComputer {
     boolean[] enemyIsAlive;
     int[][] enemyIndex;
     private int enemyCnt;
-    private int[] danger;
 
+    int[][][][] maxDamageEnemyCanDeal;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
         this.map = map;
@@ -84,11 +82,6 @@ public class PlanComputer {
             }
         }
         enemyIsAlive = new boolean[enemyCnt];
-        danger = new int[enemyCnt];
-        for (int i = 0; i < enemyCnt; i++) {
-            Cell enemyPos = enemyPositions.get(i);
-            danger[i] = getDanger(Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]));
-        }
         Arrays.fill(enemyIsAlive, true);
 
         bfsDistFromTeammateForHealing = new ArrayList<>();
@@ -120,37 +113,27 @@ public class PlanComputer {
         for (int i = 0; i < n; i++) {
             Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
         }
-        prepareNumberOfEnemiesWhoCanShoot();
-        prepareNumberOfStepsEnemyShouldMakeToShoot();
+        prepareMaxDamageEnemyCanDeal();
     }
 
-    private void prepareNumberOfStepsEnemyShouldMakeToShoot() {
-        numberOfStepsEnemyShouldMakeToShoot = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
-        for (int i = 0; i < numberOfStepsEnemyShouldMakeToShoot.length; i++) {
-            for (int j = 0; j < numberOfStepsEnemyShouldMakeToShoot[i].length; j++) {
-                for (int k = 0; k < numberOfStepsEnemyShouldMakeToShoot[i][j].length; k++) {
-                    Arrays.fill(numberOfStepsEnemyShouldMakeToShoot[i][j][k], Utils.UNREACHABLE);
-                }
-            }
-        }
+    private void prepareMaxDamageEnemyCanDeal() {
+        maxDamageEnemyCanDeal = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
             Cell enemyPos = enemyPositions.get(enemyIndex);
             TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]);
             int[][] dist = Utils.bfsByMap(map, enemyPos.x, enemyPos.y);
             for (int targetX = 0; targetX < n; targetX++) {
                 for (int targetY = 0; targetY < m; targetY++) {
-                    if (!isFree(targetX, targetY)) {
-                        continue;
-                    }
                     for (int shooterX = 0; shooterX < n; shooterX++) {
                         for (int shooterY = 0; shooterY < m; shooterY++) {
-                            if (!isFree(shooterX, shooterY)) {
+                            if (!isFree(shooterX, shooterY) && (shooterX != enemyPos.x || shooterY != enemyPos.y)) {
                                 continue;
                             }
-                            for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                                if (canShoot(shooterX, shooterY, targetX, targetY, stance, enemyType)) {
-                                    numberOfStepsEnemyShouldMakeToShoot[enemyIndex][targetX][targetY][stance] =
-                                            Math.min(numberOfStepsEnemyShouldMakeToShoot[enemyIndex][targetX][targetY][stance], dist[shooterX][shooterY]);
+                            for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
+                                if (canShoot(shooterX, shooterY, targetX, targetY, targetStance, enemyType)) {
+                                    int actionPoints = utils.getInitialActionPoints(enemyType) - dist[shooterX][shooterY] * game.getStandingMoveCost();
+                                    maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] =
+                                            Math.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], getMaxDamage(enemyType, actionPoints));
                                 }
                             }
                         }
@@ -158,75 +141,11 @@ public class PlanComputer {
                 }
             }
         }
+
     }
 
-    private int getDanger(TrooperType type) {
-        switch (type) {
-            case COMMANDER:
-                return 2;
-            case FIELD_MEDIC:
-                return 1;
-            case SOLDIER:
-                return 3;
-            case SNIPER:
-                return 4;
-            case SCOUT:
-                return 2;
-        }
-        throw new RuntimeException();
-    }
-
-    private void prepareNumberOfEnemiesWhoCanShoot() {
-        enemyCanShoot = new boolean[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
-        boolean[][][] enemyCanSee = new boolean[n][m][Utils.NUMBER_OF_STANCES];
-
-        for (int eIndex = 0; eIndex < enemyCnt; eIndex++) {
-            Cell enemyPos = enemyPositions.get(eIndex);
-            TrooperType enemyType = getType(enemyPos.x, enemyPos.y);
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < map[i].length; j++) {
-                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        if (canSee(enemyPos.x, enemyPos.y, i, j, stance, enemyType)) {
-                            enemyCanSee[i][j][stance] = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        for (int fromX = 0; fromX < n; fromX++) {
-            for (int fromY = 0; fromY < m; fromY++) {
-                if (!existsVisibleEnemyNear(fromX, fromY)) {
-                    continue;
-                }
-                if (map[fromX][fromY] != '?') {
-                    continue;
-                }
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < map[i].length; j++) {
-                        for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                            if (canSeeWithMaxAvailableVisionRange(fromX, fromY, i, j, stance)) {
-                                enemyCanSee[i][j][stance] = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        for (int eIndex = 0; eIndex < enemyCnt; eIndex++) {
-            Cell enemyPos = enemyPositions.get(eIndex);
-            TrooperType enemyType = getType(enemyPos.x, enemyPos.y);
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < map[i].length; j++) {
-                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        if (canShoot(enemyPos.x, enemyPos.y, i, j, stance, enemyType)) {
-                            enemyCanShoot[eIndex][i][j][stance] = enemyCanSee[i][j][stance];
-                        }
-                    }
-                }
-            }
-        }
+    private int getMaxDamage(TrooperType type, int actionPoints) {
+        return utils.getShootDamage(type, STANDING) * (actionPoints / utils.getShootCost(type));
     }
 
     private boolean existsVisibleEnemyNear(int x, int y) {
@@ -290,22 +209,35 @@ public class PlanComputer {
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
-        cur.sumOfDangerOfEnemiesWhoCanShootMe = getSumOfDangerOfEnemiesWhoCanShootMe();
-        cur.numberOfStepsEnemyShouldMakeToBeAbleToShootMe = getNumberOfStepsEnemyShouldMakeToBeAbleToShoot();
+        cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
         if (cur.better(best, selfType)) {
+            cur.better(best, selfType);
             best = new State(cur);
         }
     }
 
-    private int getNumberOfStepsEnemyShouldMakeToBeAbleToShoot() {
-        int r = Integer.MAX_VALUE;
+    private int getMaxDamageEnemyCanDeal() {
+        int max = 0;
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
-            r = Math.min(r, numberOfStepsEnemyShouldMakeToShoot[enemyIndex][cur.x][cur.y][cur.stance.ordinal()]);
+            max += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
         }
-        return r;
+
+        for (Cell allyPos : allyPositions) {
+            int t = 0;
+            int stance = stances[allyPos.x][allyPos.y].ordinal();
+            for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+                if (!enemyIsAlive[enemyIndex]) {
+                    continue;
+                }
+                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+            }
+            max = Math.max(max, t);
+        }
+
+        return max;
     }
 
     private int getHelpDist() {
@@ -326,16 +258,6 @@ public class PlanComputer {
                 continue;
             }
             r += helpFactor[enemyIndex][cur.x][cur.y];
-        }
-        return r;
-    }
-
-    private int getSumOfDangerOfEnemiesWhoCanShootMe() {
-        int r = 0;
-        for (int i = 0; i < enemyCnt; i++) {
-            if (enemyIsAlive[i] && enemyCanShoot[i][cur.x][cur.y][cur.stance.ordinal()]) {
-                r += danger[i];
-            }
         }
         return r;
     }

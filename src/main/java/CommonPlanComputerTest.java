@@ -38,6 +38,9 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     void testHelp() {
         setMap(
                 ".C......f",
+                ".........",
+                ".........",
+                ".........",
                 "S........"
         );
 
@@ -53,30 +56,10 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void testHelp3() {
-        setMap(
-                ".........f",
-                ".......S..",
-                "f........C",
-                "F........."
-        );
-
-        check(
-                SOLDIER,
-                2,
-                STANDING,
-                false,
-                false,
-                false,
-                MyMove.MOVE_SOUTH
-        );
-    }
-
-    @Test
     void testHelp4() {
         setMap(
                 "....S.",
-                "......",
+                "..#...",
                 "s....C",
                 "......"
         );
@@ -398,7 +381,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
     void testBug() {
         setMap(
                 "cs......#C",
-                "........S."
+                ".....#..S."
         );
         check(
                 SOLDIER,
@@ -426,7 +409,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false,
-                MyMove.shoot(2,2), MyMove.MOVE_NORTH
+                MyMove.shoot(2,2)
         );
     }
 }

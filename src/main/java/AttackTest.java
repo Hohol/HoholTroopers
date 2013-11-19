@@ -226,10 +226,10 @@ public class AttackTest extends AbstractPlanComputerTest {
         //-----------
 
         setMap(
-                "c........S........f"
+                "c........S..........f"
         );
         setTrooper(0, 0, 25, PRONE);
-        setTrooper(18, 0, 25, KNEELING);
+        setTrooper(20, 0, 25, KNEELING);
 
         check(
                 SOLDIER,
@@ -580,23 +580,6 @@ public class AttackTest extends AbstractPlanComputerTest {
     @Test
     void testFocusFire() {
         setMap(
-                "........c",
-                "S.....C..",
-                "f........"
-        );
-        check(
-                COMMANDER,
-                5,
-                STANDING,
-                false,
-                false,
-                false,
-                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
-        );
-
-        //---------------
-
-        setMap(
                 "fs.....SC"
         );
         setTrooper(0, 0, 100, STANDING);
@@ -624,6 +607,24 @@ public class AttackTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false, MyMove.shoot(1, 0)
+        );
+    }
+
+    @Test
+    void testFocusFire2() {
+        setMap(
+                "......c",
+                "S..C..#",
+                "c......"
+        );
+        check(
+                COMMANDER,
+                5,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.shoot(0, 2)
         );
     }
 
