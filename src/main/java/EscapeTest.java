@@ -227,4 +227,21 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_SOUTH
         );
     }
+
+    @Test
+    void testPreferObstaclesForEscape() {
+        setMap(
+                "......f",
+                "S2....s"
+        );
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.LOWER_STANCE
+        );
+    }
 }

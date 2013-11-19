@@ -236,7 +236,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 12,
                 STANDING,
                 false, false, false,
-                MyMove.MOVE_EAST, MyMove.shoot(18, 0), MyMove.MOVE_WEST, MyMove.MOVE_WEST
+                MyMove.MOVE_WEST, MyMove.shoot(0, 0), MyMove.MOVE_EAST, MyMove.MOVE_EAST
         );
 
         //-----------

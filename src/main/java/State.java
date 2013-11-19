@@ -29,6 +29,7 @@ class State {
     int helpDist;
     int numberOfTeammatesWhoCanReachEnemy;
     int sumOfDangerOfEnemiesWhoCanShootMe;
+    int numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
 
     protected State(
             int actionPoints,
@@ -60,6 +61,7 @@ class State {
         this.fieldRationsUsed = cur.fieldRationsUsed;
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
         this.sumOfDangerOfEnemiesWhoCanShootMe = cur.sumOfDangerOfEnemiesWhoCanShootMe;
+        this.numberOfStepsEnemyShouldMakeToBeAbleToShootMe = cur.numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -78,7 +80,7 @@ class State {
         int hpDiff = damageSum + healedSum;
         int oldHpDiff = old.damageSum + old.healedSum;
 
-        if(Math.abs(hpDiff-oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
+        if (Math.abs(hpDiff - oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
         {
             if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
                 if (sumOfDangerOfEnemiesWhoCanShootMe != old.sumOfDangerOfEnemiesWhoCanShootMe) {
@@ -121,6 +123,10 @@ class State {
             if (msb != 0) {
                 return msb < 0;
             }
+        }
+
+        if (numberOfStepsEnemyShouldMakeToBeAbleToShootMe != old.numberOfStepsEnemyShouldMakeToBeAbleToShootMe) {
+            return numberOfStepsEnemyShouldMakeToBeAbleToShootMe > old.numberOfStepsEnemyShouldMakeToBeAbleToShootMe;
         }
 
         if (focusFireParameter != old.focusFireParameter) {

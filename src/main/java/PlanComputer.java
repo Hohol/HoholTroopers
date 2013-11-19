@@ -30,6 +30,7 @@ public class PlanComputer {
     BonusType[][] bonuses;
     TrooperStance[][] stances;
     boolean[][][][] enemyCanShoot;
+    int[][][][] numberOfStepsEnemyShouldMakeToShoot;
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
@@ -120,6 +121,43 @@ public class PlanComputer {
             Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
         }
         prepareNumberOfEnemiesWhoCanShoot();
+        prepareNumberOfStepsEnemyShouldMakeToShoot();
+    }
+
+    private void prepareNumberOfStepsEnemyShouldMakeToShoot() {
+        numberOfStepsEnemyShouldMakeToShoot = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
+        for (int i = 0; i < numberOfStepsEnemyShouldMakeToShoot.length; i++) {
+            for (int j = 0; j < numberOfStepsEnemyShouldMakeToShoot[i].length; j++) {
+                for (int k = 0; k < numberOfStepsEnemyShouldMakeToShoot[i][j].length; k++) {
+                    Arrays.fill(numberOfStepsEnemyShouldMakeToShoot[i][j][k], Utils.UNREACHABLE);
+                }
+            }
+        }
+        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            Cell enemyPos = enemyPositions.get(enemyIndex);
+            TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]);
+            int[][] dist = Utils.bfsByMap(map, enemyPos.x, enemyPos.y);
+            for (int targetX = 0; targetX < n; targetX++) {
+                for (int targetY = 0; targetY < m; targetY++) {
+                    if (!isFree(targetX, targetY)) {
+                        continue;
+                    }
+                    for (int shooterX = 0; shooterX < n; shooterX++) {
+                        for (int shooterY = 0; shooterY < m; shooterY++) {
+                            if (!isFree(shooterX, shooterY)) {
+                                continue;
+                            }
+                            for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                                if (canShoot(shooterX, shooterY, targetX, targetY, stance, enemyType)) {
+                                    numberOfStepsEnemyShouldMakeToShoot[enemyIndex][targetX][targetY][stance] =
+                                            Math.min(numberOfStepsEnemyShouldMakeToShoot[enemyIndex][targetX][targetY][stance], dist[shooterX][shooterY]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private int getDanger(TrooperType type) {
@@ -253,9 +291,21 @@ public class PlanComputer {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.sumOfDangerOfEnemiesWhoCanShootMe = getSumOfDangerOfEnemiesWhoCanShootMe();
+        cur.numberOfStepsEnemyShouldMakeToBeAbleToShootMe = getNumberOfStepsEnemyShouldMakeToBeAbleToShoot();
         if (cur.better(best, selfType)) {
             best = new State(cur);
         }
+    }
+
+    private int getNumberOfStepsEnemyShouldMakeToBeAbleToShoot() {
+        int r = Integer.MAX_VALUE;
+        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            if (!enemyIsAlive[enemyIndex]) {
+                continue;
+            }
+            r = Math.min(r, numberOfStepsEnemyShouldMakeToShoot[enemyIndex][cur.x][cur.y][cur.stance.ordinal()]);
+        }
+        return r;
     }
 
     private int getHelpDist() {
