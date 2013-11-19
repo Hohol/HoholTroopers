@@ -1,7 +1,5 @@
 import model.*;
 
-import javax.print.attribute.standard.Destination;
-
 import static model.ActionType.*;
 import static model.TrooperStance.*;
 import static model.TrooperType.*;
@@ -50,7 +48,7 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    Utils utils;
+    static Utils utils;
     private static Cell destination;
 
     @Override
@@ -893,7 +891,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (self.getActionPoints() <= 4 && world.getMoveIndex() >= 1 || someoneNotFullHpAndMedicCanHealHim()) {
+            if (self.getActionPoints() <= 4 && world.getMoveIndex() >= 1 || shouldWaitForHealing()) {
                 return false;
             }
             if (lastSeenEnemyPos != null) {
@@ -928,8 +926,11 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private boolean someoneNotFullHpAndMedicCanHealHim() {
+    private boolean shouldWaitForHealing() {
         if (medic == null) {
+            return false;
+        }
+        if (teammates.size() == 1) {
             return false;
         }
         int[][] dist = bfs(medic.getX(), medic.getY(), false);
@@ -1029,7 +1030,7 @@ public final class MyStrategy implements Strategy {
             return null;
         }
         return r;
-    }    
+    }
 
     private boolean allTeammatesFullHp() {
         for (Trooper trooper : teammates) {
