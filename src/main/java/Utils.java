@@ -272,4 +272,12 @@ public class Utils {
         }
         throw new RuntimeException();
     }
+
+    public int getInitialActionPointsWithCommanderBonus(TrooperType type) {
+        int r = getInitialActionPoints(type);
+        if (type != TrooperType.COMMANDER && type != TrooperType.SCOUT) {
+            r += game.getCommanderAuraBonusActionPoints();
+        }
+        return r;
+    }
 }

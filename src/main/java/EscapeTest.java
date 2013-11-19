@@ -136,7 +136,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "...f#",
                 ".....",
                 "s..F.",
-                "#...."
+                "##..."
         );
         check(
                 FIELD_MEDIC,
@@ -249,6 +249,25 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testCommanderBonus() {
+        setMap(
+                "F....",
+                ".####",
+                "....s"
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
         );
     }
 

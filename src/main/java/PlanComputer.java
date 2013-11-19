@@ -131,7 +131,7 @@ public class PlanComputer {
                             }
                             for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
                                 if (canShoot(shooterX, shooterY, targetX, targetY, targetStance, enemyType)) {
-                                    int actionPoints = utils.getInitialActionPoints(enemyType) - dist[shooterX][shooterY] * game.getStandingMoveCost();
+                                    int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType) - dist[shooterX][shooterY] * game.getStandingMoveCost();
                                     maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] =
                                             Math.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], getMaxDamage(enemyType, actionPoints));
                                 }
