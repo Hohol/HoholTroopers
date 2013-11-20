@@ -167,7 +167,7 @@ public class AbstractPlanComputerTest {
                 hasGrenade,
                 getVisibilities(),
                 false,
-                new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
+                false, new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
         ).getPlan().actions;
 
         List<MyMove> expected = Arrays.asList(expectedAr);

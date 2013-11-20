@@ -454,9 +454,7 @@ public final class MyStrategy implements Strategy {
 
     private State getPlan() {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
-        boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy();
-        boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy();
-        boolean holdingAndShouldUseGrenade = self.isHoldingGrenade() && seeSomeEnemy();
+        boolean bonusUseForbidden = !seeSomeEnemy();
 
         return new PlanComputer(
                 createCharMap(),
@@ -467,15 +465,16 @@ public final class MyStrategy implements Strategy {
                 getGrenades(),
                 vision,
                 healForbidden,
+                bonusUseForbidden,
                 new State(
                         self.getActionPoints(),
                         self.getHitpoints(),
                         self.getX(),
                         self.getY(),
                         self.getStance(),
-                        holdingAndShouldUseFieldRation,
-                        holdingAndShouldUseGrenade,
-                        holdingAndShouldUseMedikit
+                        self.isHoldingFieldRation(),
+                        self.isHoldingGrenade(),
+                        self.isHoldingMedikit()
                 )
         ).getPlan();
     }

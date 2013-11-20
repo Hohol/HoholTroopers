@@ -715,7 +715,7 @@ public class HealingTest {
                 stances,
                 hasGrenade,
                 null,
-                false, new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
+                false, false, new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();
 
         List<MyMove> actual = plan.actions;
