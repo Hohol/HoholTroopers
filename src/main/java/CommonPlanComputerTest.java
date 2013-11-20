@@ -412,4 +412,22 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.shoot(2, 2)
         );
     }
+
+    @Test
+    void testMoveProne() {
+        setMap(
+                "S........",
+                "........f"
+        );
+        setTrooper(0, 0, 120, PRONE);
+        check(
+                SOLDIER,
+                12,
+                PRONE,
+                true,
+                false,
+                false,
+                MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8,1), MyMove.shoot(8,1)
+        );
+    }
 }

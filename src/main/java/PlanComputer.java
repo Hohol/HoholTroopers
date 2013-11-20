@@ -53,11 +53,11 @@ public class PlanComputer {
         this.cur = state;
         this.hp = hp;
         prepare();
-        long start = System.currentTimeMillis();
+        //long start = System.currentTimeMillis();
         rec();
-        long end = System.currentTimeMillis();
-        System.out.println("Calculated in " + (end - start) + " milliseconds");
-        System.out.println("Recursive calls cnt = " + recursiveCallsCnt);
+        //long end = System.currentTimeMillis();
+        //System.out.println("Calculated in " + (end - start) + " milliseconds");
+        //System.out.println("Recursive calls cnt = " + recursiveCallsCnt);
     }
 
     private void prepare() {
@@ -231,6 +231,11 @@ public class PlanComputer {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
+
+        if(stopOn(MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1))) {
+            int x = 0;
+            x++;
+        }
 
         if (cur.better(best, selfType)) {
             cur.better(best, selfType);
