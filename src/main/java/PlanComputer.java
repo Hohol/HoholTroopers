@@ -13,7 +13,7 @@ import static model.TrooperType.COMMANDER;
 import static model.TrooperType.FIELD_MEDIC;
 
 public class PlanComputer {
-    private static final long MAX_RECURSIVE_CALLS = 5000000;
+    private static final long MAX_RECURSIVE_CALLS = 3000000;
     long recursiveCallsCnt;
 
     private final int n, m;
