@@ -171,7 +171,7 @@ public class Utils {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (map[toX][toY] != '.') {
+                if (map[toX][toY] != '.' && map[toX][toY] != '?') {
                     continue;
                 }
                 qx.add(toX);

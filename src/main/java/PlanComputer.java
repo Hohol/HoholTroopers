@@ -38,10 +38,11 @@ public class PlanComputer {
     int[][] enemyIndex;
     private int enemyCnt;
     private boolean healForbidden;
+    private boolean[][] hasGrenade;
 
     int[][][][] maxDamageEnemyCanDeal;
 
-    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, boolean healForbidden, State state) {
+    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[][] hasGrenade, boolean[] visibilities, boolean healForbidden, State state) {
         this.map = map;
         n = map.length;
         m = map[0].length;
@@ -53,6 +54,7 @@ public class PlanComputer {
         this.visibilities = visibilities;
         this.cur = state;
         this.hp = hp;
+        this.hasGrenade = hasGrenade;
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         prepare();
         //long start = System.currentTimeMillis();
@@ -120,26 +122,45 @@ public class PlanComputer {
 
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
+
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
             Cell enemyPos = enemyPositions.get(enemyIndex);
-            int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
-            TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]);
             int[][] dist = Utils.bfsByMap(map, enemyPos.x, enemyPos.y);
-            for (int targetX = 0; targetX < n; targetX++) {
-                for (int targetY = 0; targetY < m; targetY++) {
-                    for (int shooterX = 0; shooterX < n; shooterX++) {
-                        for (int shooterY = 0; shooterY < m; shooterY++) {
-                            if (!isFree(shooterX, shooterY) && (shooterX != enemyPos.x || shooterY != enemyPos.y)) {
-                                continue;
-                            }
-                            int minShooterStance = -1;
+            int initialEnemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
+            TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]);
+
+            for (int shooterX = 0; shooterX < n; shooterX++) {
+                for (int shooterY = 0; shooterY < m; shooterY++) {
+                    if (dist[shooterX][shooterY] > 6) {
+                        continue;
+                    }
+                    if (!isFree(shooterX, shooterY) && (shooterX != enemyPos.x || shooterY != enemyPos.y)) {
+                        continue;
+                    }
+                    for (int targetX = 0; targetX < n; targetX++) {
+                        for (int targetY = 0; targetY < m; targetY++) {
+                            boolean grenade = hasGrenade[enemyPos.x][enemyPos.y];
+                            boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
+                            boolean canThrowGrenadeCollateral = grenade &&
+                                    (
+                                            canThrowGrenade(shooterX, shooterY, targetX + 1, targetY) ||
+                                                    canThrowGrenade(shooterX, shooterY, targetX - 1, targetY) ||
+                                                    canThrowGrenade(shooterX, shooterY, targetX, targetY + 1) ||
+                                                    canThrowGrenade(shooterX, shooterY, targetX, targetY - 1)
+                                    );
                             for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
-                                if (canShoot(shooterX, shooterY, targetX, targetY, targetStance, enemyType)) {
-                                    if (minShooterStance == -1) {
-                                        minShooterStance = targetStance;
+                                int minShooterStance = -1;
+                                for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
+                                    boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, Math.min(targetStance, shooterStance), enemyType);
+                                    if(targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemyPos.x+2 && shooterY == enemyPos.y+1 ) {
+                                        int x = 0;
+                                        x++;
+                                    }
+                                    if (canShoot && minShooterStance == -1) {
+                                        minShooterStance = shooterStance;
                                     }
                                     int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
-                                    int maxDamage = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], enemyStance, minShooterStance);
+                                    int maxDamage = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
                                     maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] =
                                             Math.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], maxDamage);
                                 }
@@ -149,10 +170,19 @@ public class PlanComputer {
                 }
             }
         }
-
     }
 
-    private int getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance) {
+    private boolean canThrowGrenade(int shooterX, int shooterY, int targetX, int targetY) {
+        if (Utils.sqrDist(shooterX, shooterY, targetX, targetY) > Utils.sqr(game.getGrenadeThrowRange())) {
+            return false;
+        }
+        return true;
+    }
+
+    private int getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance, boolean canShoot, boolean canThrowGrenadeDirect, boolean canThrowGrenadeCollateral) {
+        if (!canShoot && !canThrowGrenadeDirect && !canThrowGrenadeCollateral) {
+            return 0;
+        }
         final int maxStance = Utils.NUMBER_OF_STANCES - 1;
         int maxDamage = 0;
         for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
@@ -162,7 +192,16 @@ public class PlanComputer {
                         - stanceChangeCnt * game.getStanceChangeCost()
                         - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
                 int shootCnt = remainingActionPoints / utils.getShootCost(type);
-                int damage = shootCnt * utils.getShootDamage(type, TrooperStance.values()[shootStance]);
+                int damage = 0;
+                if (canShoot) {
+                    damage = Math.max(damage, shootCnt * utils.getShootDamage(type, TrooperStance.values()[shootStance]));
+                }
+                if (canThrowGrenadeDirect && remainingActionPoints >= game.getGrenadeThrowCost()) {
+                    damage = Math.max(damage, game.getGrenadeDirectDamage());
+                }
+                if (canThrowGrenadeCollateral && remainingActionPoints >= game.getGrenadeThrowCost()) {
+                    damage = Math.max(damage, game.getGrenadeCollateralDamage());
+                }
                 maxDamage = Math.max(maxDamage, damage);
             }
         }
@@ -216,6 +255,7 @@ public class PlanComputer {
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
         cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
+        getMaxDamageEnemyCanDeal();
         if (cur.better(best, selfType)) {
             cur.better(best, selfType);
             best = new State(cur);
@@ -557,11 +597,6 @@ public class PlanComputer {
                 + stance];
     }
 
-    private boolean canSeeWithMaxAvailableVisionRange(int viewerX, int viewerY, int objectX, int objectY, int stance) {
-        int range = utils.getVisionRange(COMMANDER);
-        return reachable(viewerX, viewerY, objectX, objectY, stance, range);
-    }
-
     private boolean reachable(int viewerX, int viewerY, int objectX, int objectY, int stance, int range) {
         if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(range)) {
             return false;
@@ -729,7 +764,7 @@ public class PlanComputer {
         }
 
         tryEatFieldRation();
-        if(!healForbidden) {
+        if (!healForbidden) {
             tryHealAsMedic();
             tryHealWithMedikit();
         }

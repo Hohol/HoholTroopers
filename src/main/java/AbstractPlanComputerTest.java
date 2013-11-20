@@ -13,6 +13,7 @@ public class AbstractPlanComputerTest {
     TrooperStance[][] stances;
     int[][] hp;
     char[][] map;
+    private boolean[][] hasGrenade;
 
     protected int height(char ch) {
         if(ch == '#') {
@@ -101,6 +102,7 @@ public class AbstractPlanComputerTest {
         hp = new int[this.map.length][this.map[0].length];
         stances = new TrooperStance[this.map.length][this.map[0].length];
         bonuses = new BonusType[this.map.length][this.map[0].length];
+        hasGrenade = new boolean[this.map.length][this.map[0].length];
         addBonuses();
     }
 
@@ -118,6 +120,13 @@ public class AbstractPlanComputerTest {
             throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
         }
         bonuses[x][y] = bonus;
+    }
+
+    protected void giveGrenade(int x, int y) {
+        if (!Utils.isLetter(map[x][y])) {
+            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
+        }
+        hasGrenade[x][y] = true;
     }
 
     protected void check(
@@ -155,8 +164,10 @@ public class AbstractPlanComputerTest {
                 hp,
                 bonuses,
                 stances,
+                hasGrenade,
                 getVisibilities(),
-                false, new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
+                false,
+                new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
         ).getPlan().actions;
 
         List<MyMove> expected = Arrays.asList(expectedAr);

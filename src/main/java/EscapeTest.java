@@ -352,6 +352,44 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void testGrenade() {
+        setMap(
+                ".S...#f"
+        );
+
+        giveGrenade(6, 0);
+
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_WEST
+        );
+    }
+
+    @Test
+    void testGrenadeCollateral() {
+        setMap(
+                ".S....#f"
+        );
+
+        giveGrenade(7, 0);
+
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_WEST
+        );
+    }
+
     /*
     @Test
     void testInteresting() {

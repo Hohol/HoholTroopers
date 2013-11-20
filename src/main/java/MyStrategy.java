@@ -464,6 +464,7 @@ public final class MyStrategy implements Strategy {
                 getHpArray(),
                 bonuses,
                 getStances(),
+                getGrenades(),
                 vision,
                 healForbidden,
                 new State(
@@ -477,6 +478,16 @@ public final class MyStrategy implements Strategy {
                         holdingAndShouldUseMedikit
                 )
         ).getPlan();
+    }
+
+    private boolean[][] getGrenades() {
+        boolean[][] hasGrenade = new boolean[world.getWidth()][world.getHeight()];
+        for (MutableTrooper enemy : enemies) {
+            if (enemy.isHoldingGrenade()) {
+                hasGrenade[enemy.getX()][enemy.getY()] = true;
+            }
+        }
+        return hasGrenade;
     }
 
     private int[][] getHpArray() {
@@ -926,7 +937,7 @@ public final class MyStrategy implements Strategy {
         }
 
         if (self.getId() == teammateToFollow.getId()) {
-            if (shouldWaitForHealing()) {
+            if (self.getActionPoints() <= 4 && world.getMoveIndex() > 0 || shouldWaitForHealing()) {
                 return false;
             }
             if (lastSeenEnemyPos != null) {

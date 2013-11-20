@@ -703,6 +703,7 @@ public class HealingTest {
             }
         }
         TrooperStance[][] stances = new TrooperStance[cmap.length][cmap[0].length];
+        boolean[][] hasGrenade = new boolean[cmap.length][cmap[0].length];
         for (TrooperStance[] a: stances) {
             Arrays.fill(a, TrooperStance.STANDING);
         }
@@ -712,6 +713,7 @@ public class HealingTest {
                 hp2d,
                 new BonusType[cmap.length][cmap[0].length],
                 stances,
+                hasGrenade,
                 null,
                 false, new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();
