@@ -231,6 +231,7 @@ public class PlanComputer {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
+        cur.canBeKilled = getCanBeKilled();
 
         if(stopOn(MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1))) {
             int x = 0;
@@ -241,6 +242,17 @@ public class PlanComputer {
             cur.better(best, selfType);
             best = new State(cur);
         }
+    }
+
+    private boolean getCanBeKilled() {
+        int r = 0;
+        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            if (!enemyIsAlive[enemyIndex]) {
+                continue;
+            }
+            r += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+        }
+        return r >= cur.selfHp;
     }
 
     private int getMaxDamageEnemyCanDeal() {
@@ -494,7 +506,7 @@ public class PlanComputer {
 
         if (hp[ex][ey] > 0) {
             if (damage >= hp[ex][ey]) {
-                cur.killedCnt++;
+                cur.killCnt++;
                 enemyIsAlive[enemyIndex[ex][ey]] = false;
             }
             cur.damageSum += Math.min(damage, hp[ex][ey]);
@@ -512,7 +524,7 @@ public class PlanComputer {
 
         if (hp[ex][ey] + damage > 0) {
             if (hp[ex][ey] <= 0) {
-                cur.killedCnt--;
+                cur.killCnt--;
                 enemyIsAlive[enemyIndex[ex][ey]] = true;
             }
             cur.damageSum -= Math.min(damage, hp[ex][ey] + damage);

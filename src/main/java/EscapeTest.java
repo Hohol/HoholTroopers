@@ -292,6 +292,25 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void doNotGoInFightIfCanBeKilled() {
+        setMap(
+                ".C......s",
+                "S#......."
+        );
+
+        setTrooper(0,1,1,STANDING);
+
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false
+        );
+    }
+
     /*
     @Test
     void testInteresting() {

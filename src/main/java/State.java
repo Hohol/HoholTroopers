@@ -18,7 +18,7 @@ class State {
     //----
 
     int healedSum;
-    int killedCnt;
+    int killCnt;
     int damageSum;
     int fieldRationsUsed;
 
@@ -29,8 +29,8 @@ class State {
     int helpDist;
 
     int maxDamageEnemyCanDeal;
-
     int numberOfTeammatesWhoCanReachEnemy;
+    boolean canBeKilled;
 
     protected State(
             int actionPoints,
@@ -51,7 +51,7 @@ class State {
     protected State(State cur) {
         this(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
         this.actions = new ArrayList<>(cur.actions);
-        this.killedCnt = cur.killedCnt;
+        this.killCnt = cur.killCnt;
         this.damageSum = cur.damageSum;
         this.healedSum = cur.healedSum;
         this.focusFireParameter = cur.focusFireParameter;
@@ -64,6 +64,7 @@ class State {
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
 
         this.maxDamageEnemyCanDeal = cur.maxDamageEnemyCanDeal;
+        this.canBeKilled = cur.canBeKilled;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -71,16 +72,18 @@ class State {
             return true;
         }
 
-        int killCnt = killedCnt;
-        if (maxDamageEnemyCanDeal >= selfHp) {
-            killCnt--;
+        int killDiff = killCnt;
+        int oldKillDiff = old.killCnt;
+
+        if(canBeKilled) {
+            killDiff--;
         }
-        int oldKillCnt = old.killedCnt;
-        if (old.maxDamageEnemyCanDeal >= old.selfHp) {
-            oldKillCnt--;
+        if(old.canBeKilled) {
+            oldKillDiff--;
         }
-        if (killCnt != oldKillCnt) {
-            return killCnt > oldKillCnt;
+
+        if (killDiff != oldKillDiff) {
+            return killDiff > oldKillDiff;
         }
 
         if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
@@ -89,15 +92,6 @@ class State {
 
         int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal;
         int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal;
-
-        /*if (Math.abs(hpDiff - oldHpDiff) < 50)  // 50 = medikit heal = two shoots of standing soldier
-        {
-            if (selfHp <= MyStrategy.HP_TO_TRY_ESCAPE && old.selfHp <= MyStrategy.HP_TO_TRY_ESCAPE) {
-                if (sumOfDangerOfEnemiesWhoCanShootMe != old.sumOfDangerOfEnemiesWhoCanShootMe) {
-                    return sumOfDangerOfEnemiesWhoCanShootMe < old.sumOfDangerOfEnemiesWhoCanShootMe;
-                }
-            }
-        }/**/
 
         if (hpDiff != oldHpDiff) {
             return hpDiff > oldHpDiff;
