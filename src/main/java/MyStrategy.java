@@ -693,8 +693,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMyScore() {
-        //String name = local ? "MyStrategy" : "Hohol";
-        String name = "Hohol"; //for repeater
+        String name = local ? "MyStrategy" : "Hohol";
+        //String name = "Hohol"; //for repeater
         for (Player player : world.getPlayers()) {
             if (player.getName().equals(name)) {
                 return player.getScore();
@@ -1154,7 +1154,11 @@ public final class MyStrategy implements Strategy {
                 bestDir = dir;
             }
         }
-        if (minDist >= 5) {
+        int curMaxDist = 0;
+        for (Trooper trooper : teammates) {
+            curMaxDist = Math.max(curMaxDist, Utils.manhattanDist(self.getX(), self.getY(), trooper.getX(), trooper.getY()));
+        }
+        if (minDist > curMaxDist && minDist >= 5) {
             return false;
         }
         if (bestDir == null) {
