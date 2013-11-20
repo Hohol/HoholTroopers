@@ -28,8 +28,9 @@ public final class MutableTrooper extends Unit {
     private final boolean holdingGrenade;
     private final boolean holdingMedikit;
     private final boolean holdingFieldRation;
+    private final int creationTime;
 
-    public MutableTrooper(Trooper t) {
+    public MutableTrooper(Trooper t, int creationTime) {
         super(t.getId(), t.getX(), t.getY());
         this.playerId = t.getPlayerId();
         this.teammateIndex = t.getTeammateIndex();
@@ -50,6 +51,7 @@ public final class MutableTrooper extends Unit {
         this.holdingGrenade = t.isHoldingGrenade();
         this.holdingMedikit = t.isHoldingMedikit();
         this.holdingFieldRation = t.isHoldingFieldRation();
+        this.creationTime = creationTime;
     }
 
     /**
@@ -215,5 +217,9 @@ public final class MutableTrooper extends Unit {
     @Override
     public int hashCode() {
         return Long.valueOf(getId()).hashCode();
+    }
+
+    public int getCreationTime() {
+        return creationTime;
     }
 }

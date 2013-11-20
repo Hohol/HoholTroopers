@@ -7,7 +7,6 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    public final static int HP_TO_TRY_ESCAPE = 120;
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
@@ -27,6 +26,7 @@ public final class MyStrategy implements Strategy {
     static Set<MutableTrooper> enemies = new HashSet<>();
     Trooper teammateToFollow;
     static int smallMoveIndex;
+    static int mediumMoveIndex;
     final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
 
     static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
@@ -52,6 +52,7 @@ public final class MyStrategy implements Strategy {
     static Utils utils;
     private static Cell destination;
     boolean phantoms;
+    private static int initialTeamSize = -1;
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
@@ -652,6 +653,9 @@ public final class MyStrategy implements Strategy {
         log("SmallStepNumber = " + smallMoveIndex);
         cells = world.getCells();
         teammates = getTeammates();
+        if (initialTeamSize == -1) {
+            initialTeamSize = teammates.size() + 1;
+        }
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
@@ -697,6 +701,7 @@ public final class MyStrategy implements Strategy {
         prevScore = getMyScore();
         if (lastSubMove()) {
             //enemies.clear();
+            mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
         }
         dealDamageToEnemies();
@@ -817,19 +822,23 @@ public final class MyStrategy implements Strategy {
         Iterator<MutableTrooper> it = enemies.iterator();
         while (it.hasNext()) {
             MutableTrooper mt = it.next();
-            if (canSeeRightNow[mt.getX()][mt.getY()]) {
+            if (canSeeRightNow[mt.getX()][mt.getY()] || expired(mt)) {
                 it.remove();
             }
         }
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
-                MutableTrooper mt = new MutableTrooper(trooper);
+                MutableTrooper mt = new MutableTrooper(trooper, mediumMoveIndex);
                 if (enemies.contains(mt)) {
                     enemies.remove(mt);
                 }
-                enemies.add(new MutableTrooper(trooper));
+                enemies.add(new MutableTrooper(trooper, mediumMoveIndex));
             }
         }
+    }
+
+    private boolean expired(MutableTrooper mt) {
+        return mediumMoveIndex - mt.getCreationTime() > 3 * initialTeamSize;
     }
 
     private static void log(Object o) {
