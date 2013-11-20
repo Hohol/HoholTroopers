@@ -30,7 +30,7 @@ class State {
 
     int maxDamageEnemyCanDeal;
     int numberOfTeammatesWhoCanReachEnemy;
-    boolean canBeKilled;
+    boolean someOfTeammatesCanBeKilled;
 
     protected State(
             int actionPoints,
@@ -64,7 +64,7 @@ class State {
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
 
         this.maxDamageEnemyCanDeal = cur.maxDamageEnemyCanDeal;
-        this.canBeKilled = cur.canBeKilled;
+        this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
     }
 
     boolean better(State old, TrooperType selfType) {
@@ -75,10 +75,10 @@ class State {
         int killDiff = killCnt;
         int oldKillDiff = old.killCnt;
 
-        if(canBeKilled) {
+        if(someOfTeammatesCanBeKilled) {
             killDiff--;
         }
-        if(old.canBeKilled) {
+        if(old.someOfTeammatesCanBeKilled) {
             oldKillDiff--;
         }
 

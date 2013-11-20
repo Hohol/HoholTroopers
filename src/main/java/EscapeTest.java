@@ -293,13 +293,13 @@ public class EscapeTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void doNotGoInFightIfCanBeKilled() {
+    void testDoNotGoInFightIfCanBeKilled() {
         setMap(
                 ".C......s",
                 "S#......."
         );
 
-        setTrooper(0,1,1,STANDING);
+        setTrooper(0, 1, 1, STANDING);
 
         check(
                 SOLDIER,
@@ -308,6 +308,27 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 false,
                 false,
                 false
+        );
+    }
+
+    @Test
+    void testGoToFightIfTeammateCanBeKilled() {
+        setMap(
+                ".C......s",
+                "S#......."
+        );
+
+        setTrooper(0, 1, 1, STANDING);
+        setTrooper(1, 0, 1, STANDING);
+
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_NORTH
         );
     }
 

@@ -231,9 +231,9 @@ public class PlanComputer {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
-        cur.canBeKilled = getCanBeKilled();
+        cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
 
-        if(stopOn(MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1))) {
+        if (stopOn(MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1))) {
             int x = 0;
             x++;
         }
@@ -244,18 +244,37 @@ public class PlanComputer {
         }
     }
 
-    private boolean getCanBeKilled() {
-        int r = 0;
+    private boolean someOfTeammatesCanBeKilled() {
+        int max = 0;
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
-            r += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+            max += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
         }
-        return r >= cur.selfHp;
+
+        if (max >= cur.selfHp) {
+            return true;
+        }
+
+        for (Cell allyPos : allyPositions) {
+            int t = 0;
+            int stance = stances[allyPos.x][allyPos.y].ordinal();
+            for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+                if (!enemyIsAlive[enemyIndex]) {
+                    continue;
+                }
+                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+            }
+            if (t > hp[allyPos.x][allyPos.y]) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private int getMaxDamageEnemyCanDeal() {
+    private int getMaxDamageEnemyCanDeal() { //todo maximize minimal hp
         int max = 0;
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
