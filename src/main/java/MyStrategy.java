@@ -693,8 +693,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMyScore() {
-        String name = local ? "MyStrategy" : "Hohol";
-        //String name = "Hohol"; //for repeater
+        //String name = local ? "MyStrategy" : "Hohol";
+        String name = "Hohol"; //for repeater
         for (Player player : world.getPlayers()) {
             if (player.getName().equals(name)) {
                 return player.getScore();

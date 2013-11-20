@@ -86,12 +86,14 @@ class State {
             return killDiff > oldKillDiff;
         }
 
-        if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
-            return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
-        }
-
         int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal;
         int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal;
+
+        if(Math.abs(hpDiff-oldHpDiff) < 50) {
+            if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
+                return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
+            }
+        }
 
         if (hpDiff != oldHpDiff) {
             return hpDiff > oldHpDiff;

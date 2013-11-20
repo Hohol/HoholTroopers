@@ -154,7 +154,7 @@ public class PlanComputer {
                                 int minShooterStance = -1;
                                 for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
                                     boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, Math.min(targetStance, shooterStance), enemyType);
-                                    if(targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemyPos.x+2 && shooterY == enemyPos.y+1 ) {
+                                    if (targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemyPos.x + 2 && shooterY == enemyPos.y + 1) {
                                         int x = 0;
                                         x++;
                                     }
@@ -257,12 +257,14 @@ public class PlanComputer {
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
         cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
-        getMaxDamageEnemyCanDeal();
+        //getMaxDamageEnemyCanDeal();
         if (cur.better(best, selfType)) {
-            cur.better(best, selfType);
+            //cur.better(best, selfType);
             best = new State(cur);
         }
     }
+
+    double magic = 0.9;
 
     private boolean someOfTeammatesCanBeKilled() {
         int max = 0;
@@ -284,7 +286,7 @@ public class PlanComputer {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+                t += (int) (0.5 + magic * maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance]);
             }
             if (t >= hp[allyPos.x][allyPos.y]) {
                 return true;
@@ -310,7 +312,7 @@ public class PlanComputer {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+                t += (int) (0.5 + magic * maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance]);
             }
             max = Math.max(max, t);
         }
@@ -765,12 +767,12 @@ public class PlanComputer {
             return;
         }
 
-        if (!bonusUseForbidden){
+        if (!bonusUseForbidden) {
             tryEatFieldRation();
         }
         if (!healForbidden) {
             tryHealAsMedic();
-            if(!bonusUseForbidden) {
+            if (!bonusUseForbidden) {
                 tryHealWithMedikit();
             }
         }
