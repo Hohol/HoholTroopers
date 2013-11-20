@@ -61,7 +61,7 @@ public final class MyStrategy implements Strategy {
         this.move = move;
 
         phantoms = false;
-        if(enemies != null && enemies.size() > stupidEnemyCnt()) {
+        if (enemies != null && enemies.size() > stupidEnemyCnt()) {
             phantoms = true;
         }
 
@@ -183,7 +183,7 @@ public final class MyStrategy implements Strategy {
     int stupidEnemyCnt() {
         int r = 0;
         for (Trooper trooper : world.getTroopers()) {
-            if(!trooper.isTeammate()) {
+            if (!trooper.isTeammate()) {
                 r++;
             }
         }
@@ -280,7 +280,6 @@ public final class MyStrategy implements Strategy {
         if (!shouldTrySomething()) {
             return false;
         }
-
         List<MyMove> actions = getPlan().actions;
         log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
         moveByPlan(actions);
@@ -453,6 +452,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private State getPlan() {
+        boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean holdingAndShouldUseFieldRation = self.isHoldingFieldRation() && seeSomeEnemy();
         boolean holdingAndShouldUseMedikit = self.isHoldingMedikit() && seeSomeEnemy();
         boolean holdingAndShouldUseGrenade = self.isHoldingGrenade() && seeSomeEnemy();
@@ -464,6 +464,7 @@ public final class MyStrategy implements Strategy {
                 bonuses,
                 getStances(),
                 vision,
+                healForbidden,
                 new State(
                         self.getActionPoints(),
                         self.getHitpoints(),
@@ -809,14 +810,14 @@ public final class MyStrategy implements Strategy {
     }
 
     private void updateEnemies() {
-        if(scoreMustChange && prevScore == getMyScore()) {
+        if (scoreMustChange && prevScore == getMyScore()) {
             log("Wrong assumption. Clear phantom enemy list.");
             enemies.clear();
         }
         Iterator<MutableTrooper> it = enemies.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             MutableTrooper mt = it.next();
-            if(canSeeRightNow[mt.getX()][mt.getY()]) {
+            if (canSeeRightNow[mt.getX()][mt.getY()]) {
                 it.remove();
             }
         }

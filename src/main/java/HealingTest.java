@@ -713,7 +713,7 @@ public class HealingTest {
                 new BonusType[cmap.length][cmap[0].length],
                 stances,
                 null,
-                new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
+                false, new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
         ).getPlan();
 
         List<MyMove> actual = plan.actions;

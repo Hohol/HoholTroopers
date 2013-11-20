@@ -37,10 +37,11 @@ public class PlanComputer {
     boolean[] enemyIsAlive;
     int[][] enemyIndex;
     private int enemyCnt;
+    private boolean healForbidden;
 
     int[][][][] maxDamageEnemyCanDeal;
 
-    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, State state) {
+    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[] visibilities, boolean healForbidden, State state) {
         this.map = map;
         n = map.length;
         m = map[0].length;
@@ -52,6 +53,7 @@ public class PlanComputer {
         this.visibilities = visibilities;
         this.cur = state;
         this.hp = hp;
+        this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         prepare();
         //long start = System.currentTimeMillis();
         rec();
@@ -727,8 +729,10 @@ public class PlanComputer {
         }
 
         tryEatFieldRation();
-        tryHealAsMedic();
-        tryHealWithMedikit();
+        if(!healForbidden) {
+            tryHealAsMedic();
+            tryHealWithMedikit();
+        }
         tryMove();
         tryThrowGrenade();
         tryShoot();
