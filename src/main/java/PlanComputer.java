@@ -153,36 +153,18 @@ public class PlanComputer {
     private int getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance) {
         final int maxStance = Utils.NUMBER_OF_STANCES - 1;
         int maxDamage = 0;
-        for (int raiseCnt = 0; raiseCnt <= (maxStance - curStance); raiseCnt++) {
-            for (int lowerCnt = 0; lowerCnt <= maxStance - minStance; lowerCnt++) {
-                int resStanceIndex = curStance + raiseCnt - lowerCnt;
-                if (resStanceIndex < 0) {
-                    continue;
-                }
-                TrooperStance resStance = TrooperStance.values()[resStanceIndex];
-                int remainingActionPoints = actionPoints - (raiseCnt + lowerCnt) * game.getStanceChangeCost() - dist * utils.getMoveCost(resStance);
+        for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
+            for (int walkStance = Math.max(curStance, shootStance); walkStance <= maxStance; walkStance++) {
+                int stanceChangeCnt = walkStance - curStance + walkStance - shootStance;
+                int remainingActionPoints = actionPoints
+                        - stanceChangeCnt * game.getStanceChangeCost()
+                        - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
                 int shootCnt = remainingActionPoints / utils.getShootCost(type);
-                int damage = shootCnt * utils.getShootDamage(type, resStance);
+                int damage = shootCnt * utils.getShootDamage(type, TrooperStance.values()[shootStance]);
                 maxDamage = Math.max(maxDamage, damage);
             }
         }
         return maxDamage;
-    }
-
-    private boolean existsVisibleEnemyNear(int x, int y) {
-        final int a = 3;
-        for (int dx = -a; dx <= a; dx++) {
-            for (int dy = -a; dy <= a; dy++) {
-                int toX = x + dx, toY = y + dy;
-                if (!inField(toX, toY)) {
-                    continue;
-                }
-                if (Utils.isEnemyChar(map[toX][toY])) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private void prepareHelp() {
@@ -232,12 +214,6 @@ public class PlanComputer {
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
         cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
-
-        if (stopOn(MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1))) {
-            int x = 0;
-            x++;
-        }
-
         if (cur.better(best, selfType)) {
             cur.better(best, selfType);
             best = new State(cur);
@@ -266,7 +242,7 @@ public class PlanComputer {
                 }
                 t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
             }
-            if (t > hp[allyPos.x][allyPos.y]) {
+            if (t >= hp[allyPos.x][allyPos.y]) {
                 return true;
             }
         }

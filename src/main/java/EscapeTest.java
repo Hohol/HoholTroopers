@@ -332,6 +332,26 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void testBugWithEnemyStance() {
+        setMap(
+                ".......",
+                "s.S.1.F"
+        );
+
+        setTrooper(0, 1, 100, PRONE);
+
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_NORTH
+        );
+    }
+
     /*
     @Test
     void testInteresting() {
