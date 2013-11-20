@@ -838,17 +838,17 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
-                MutableTrooper mt = new MutableTrooper(trooper, mediumMoveIndex);
+                MutableTrooper mt = new MutableTrooper(trooper, world.getMoveIndex());
                 if (enemies.contains(mt)) {
                     enemies.remove(mt);
                 }
-                enemies.add(new MutableTrooper(trooper, mediumMoveIndex));
+                enemies.add(mt);
             }
         }
     }
 
     private boolean expired(MutableTrooper mt) {
-        return mediumMoveIndex - mt.getCreationTime() > 3 * initialTeamSize;
+        return world.getMoveIndex() - mt.getCreationTime() > 3 * initialTeamSize;
     }
 
     private static void log(Object o) {
