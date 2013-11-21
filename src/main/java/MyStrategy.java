@@ -40,12 +40,14 @@ public final class MyStrategy implements Strategy {
     private BonusType[][] bonuses;
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
     static boolean[][][] wasSeenOnCurrentBigMove;
-    boolean[][][] canSeeRightNow;
+    static boolean[][][] damagedArea;
+    boolean[][][] canSeeRightNow;  //todo it seems this array is not needed at all
     static List<Cell> suspiciousCells = new ArrayList<>();
     static Cell lastSeenEnemyPos;
     static int prevScore;
     static boolean scoreMustChange;
     static List<MutableTrooper> damageWasDealt = new ArrayList<>();
+    static int expectedScoreChange;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -293,7 +295,7 @@ public final class MyStrategy implements Strategy {
 
     @SuppressWarnings("unused")
     boolean stopOn(int moveIndex, TrooperType type) { //for debug only
-        return world.getMoveIndex() == 6 && self.getType() == type;
+        return world.getMoveIndex() >= moveIndex && self.getType() == type;
     }
 
     private boolean shouldTrySomething() {
@@ -726,36 +728,65 @@ public final class MyStrategy implements Strategy {
             mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
         }
-        dealDamageToEnemies();
+        dealDamage();
     }
 
-    private void dealDamageToEnemies() {
+    private void dealDamage() {
+        updateDamagedArea();
         Iterator<MutableTrooper> it = enemies.iterator();
         scoreMustChange = false;
         damageWasDealt.clear();
+        expectedScoreChange = 0;
         while (it.hasNext()) {
             MutableTrooper trooper = it.next();
             int oldHp = trooper.getHitpoints();
+            int d = Utils.manhattanDist(trooper.getX(), trooper.getY(), move.getX(), move.getY());
             if (move.getAction() == THROW_GRENADE) {
-                int d = Utils.manhattanDist(trooper.getX(), trooper.getY(), move.getX(), move.getY());
                 if (d == 0) {
                     trooper.decHp(game.getGrenadeDirectDamage());
                 } else if (d == 1) {
                     trooper.decHp(game.getGrenadeCollateralDamage());
                 }
-            } else if (move.getAction() == SHOOT) {
-                trooper.decHp(utils.getShootDamage(self.getType(), self.getStance()));
+            } else if (move.getAction() == SHOOT && d == 0) {
+                trooper.decHp(Math.min(utils.getShootDamage(self.getType(), self.getStance()), trooper.getHitpoints()));
             }
-            if (trooper.getHitpoints() != oldHp) {
-                scoreMustChange = true;
-                damageWasDealt.add(trooper);
-            }
+            expectedScoreChange += (oldHp - trooper.getHitpoints()) * game.getTrooperDamageScoreFactor();
             if (trooper.getHitpoints() <= 0) {
+                expectedScoreChange += game.getTrooperEliminationScore();
                 it.remove();
-            } else if(isLastSubMove()) {
-                trooper.setHp(Math.min(trooper.getHitpoints() + 50, Utils.INITIAL_TROOPER_HP));
+            } else {
+                if (trooper.getHitpoints() != oldHp) {
+                    scoreMustChange = true;
+                    damageWasDealt.add(trooper);
+                }
+                if (isLastSubMove()) {
+                    trooper.setHp(Math.min(trooper.getHitpoints() + 50, Utils.INITIAL_TROOPER_HP));
+                }
             }
         }
+    }
+
+    void updateDamagedArea() {
+        damagedArea = new boolean[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
+        for (int stance = 0; stance < 3; stance++) {
+            if (move.getAction() == THROW_GRENADE) {
+                if (inField(move.getX(), move.getY())) {
+                    damagedArea[move.getX()][move.getY()][stance] = true;
+                }
+                for (Direction dir : Utils.dirs) {
+                    int toX = move.getX() + dir.getOffsetX();
+                    int toY = move.getY() + dir.getOffsetY();
+                    if (inField(toX, toY)) {
+                        damagedArea[toX][toY][stance] = true;
+                    }
+                }
+            } else if (move.getAction() == SHOOT) {
+                if (world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(), move.getX(), move.getY(), TrooperStance.values()[stance])) {
+                    damagedArea[move.getX()][move.getY()][stance] = true;
+                }
+            }
+        }
+
     }
 
     private boolean isLastSubMove() {
@@ -844,22 +875,36 @@ public final class MyStrategy implements Strategy {
     }
 
     private void updateEnemies() {
-        /*if (scoreMustChange && prevScore == getMyScore()) {
-            log("Wrong assumption. Clear phantom enemy list.");
-            enemies.clear();
-        }/**/
+
         for (MutableTrooper mt : damageWasDealt) {
             if (prevScore == getMyScore()) {
-                enemies.remove(mt);
+                if (!movePhantomEnemy(mt, true)) {
+                    enemies.remove(mt);
+                }
             } else {
-                mt.updateLastSeenTime(world.getMoveIndex());
+                if (getMyScore() - prevScore > expectedScoreChange) {
+                    enemies.remove(mt);
+                } else {
+                    mt.updateLastSeenTime(world.getMoveIndex());
+                }
             }
         }
-        Iterator<MutableTrooper> it = enemies.iterator();
+        Set<Long> seeRightNowIds = new HashSet<>();
+        for (Trooper trooper : world.getTroopers()) {
+            seeRightNowIds.add(trooper.getId());
+        }
+        Iterator<MutableTrooper> it = damageWasDealt.iterator();
+        it = enemies.iterator();
         while (it.hasNext()) {
             MutableTrooper mt = it.next();
-            if (canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()] || expired(mt)) {
+            if (expired(mt)) {
                 it.remove();
+                continue;
+            }
+            if (!seeRightNowIds.contains(mt.getId()) && canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()]) {
+                if (!movePhantomEnemy(mt, false)) {
+                    it.remove();
+                }
             }
         }
         for (Trooper trooper : world.getTroopers()) {
@@ -873,8 +918,45 @@ public final class MyStrategy implements Strategy {
         }
     }
 
+    private boolean movePhantomEnemy(MutableTrooper mt, boolean reasonIsDamage) {
+        int minD = Integer.MAX_VALUE;
+        TrooperStance bestStance = null;
+        int bestX = -1, bestY = -1;
+        for (TrooperStance newStance : TrooperStance.values()) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int newX = mt.getX() + dx;
+                    int newY = mt.getY() + dy;
+                    if (!inField(newX, newY) || cells[newX][newY] != CellType.FREE) {
+                        continue;
+                    }
+                    if (canSeeRightNow[newX][newY][newStance.ordinal()]) {
+                        continue;
+                    }
+                    if (reasonIsDamage && damagedArea[newX][newY][newStance.ordinal()]) {
+                        continue;
+                    }
+                    int d = Utils.manhattanDist(newX, newY, mt.getX(), mt.getY()) + Math.abs(newStance.ordinal() - mt.getStance().ordinal());
+                    if (d < minD) {
+                        minD = d;
+                        bestStance = newStance;
+                        bestX = newX;
+                        bestY = newY;
+                    }
+                }
+            }
+        }
+        if (bestStance != null) {
+            mt.setStance(bestStance);
+            mt.setX(bestX);
+            mt.setY(bestY);
+            return true;
+        }
+        return false;
+    }
+
     private boolean expired(MutableTrooper mt) {
-        return world.getMoveIndex() - mt.getLastSeenTime() > 3;
+        return world.getMoveIndex() - mt.getLastSeenTime() > 2;
     }
 
     private static void log(Object o) {
@@ -1225,7 +1307,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (!isFreeCell(toX, toY) && !ignoredCells.contains(new Cell(toX,toY))) {
+                if (!isFreeCell(toX, toY) && !ignoredCells.contains(new Cell(toX, toY))) {
                     continue;
                 }
                 qx.add(toX);

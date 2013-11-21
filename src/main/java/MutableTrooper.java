@@ -3,13 +3,17 @@ import model.*;
 /**
  * Класс, определяющий бойца. Содержит также все свойства юнита.
  */
-public final class MutableTrooper extends Unit {
+public final class MutableTrooper {
+    private final long id;
+    private int x;
+    private int y;
+
     private final long playerId;
     private final int teammateIndex;
     private final boolean teammate;
 
     private final TrooperType type;
-    private final TrooperStance stance;
+    private TrooperStance stance;
 
     private int hitpoints;
     private final int maximalHitpoints;
@@ -32,7 +36,9 @@ public final class MutableTrooper extends Unit {
     private int lastSeenTime;
 
     public MutableTrooper(Trooper t, int lastSeenTime) {
-        super(t.getId(), t.getX(), t.getY());
+        this.id = t.getId();
+        this.x = t.getX();
+        this.y = t.getY();
         this.playerId = t.getPlayerId();
         this.teammateIndex = t.getTeammateIndex();
         this.teammate = t.isTeammate();
@@ -230,5 +236,35 @@ public final class MutableTrooper extends Unit {
 
     public void setHp(int hp) {
         hitpoints = hp;
+    }
+
+    public void setStance(TrooperStance stance) {
+        this.stance = stance;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public final long getId() {
+        return id;
+    }
+
+    /**
+     * @return Возвращает X-координату центра объекта. Ось абсцисс направлена слева направо.
+     */
+    public int getX() {
+        return x;
+    }
+
+    /**
+     * @return Возвращает Y-координату центра объекта. Ось ординат направлена свеху вниз.
+     */
+    public int getY() {
+        return y;
     }
 }
