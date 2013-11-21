@@ -1146,8 +1146,9 @@ public final class MyStrategy implements Strategy {
             int toY = self.getY() + dir.getOffsetY();
             int maxDist = 0;
             for (Trooper trooper : teammates) {
-                int dist = Utils.manhattanDist(toX, toY, trooper.getX(), trooper.getY());
-                maxDist = Math.max(maxDist, dist);
+                int[][] dist = bfsIgnoreMe(trooper.getX(), trooper.getY());   //todo rework
+                int d = dist[toX][toY];
+                maxDist = Math.max(maxDist, d);
             }
             if (maxDist < minDist) {
                 minDist = maxDist;
@@ -1156,7 +1157,12 @@ public final class MyStrategy implements Strategy {
         }
         int curMaxDist = 0;
         for (Trooper trooper : teammates) {
-            curMaxDist = Math.max(curMaxDist, Utils.manhattanDist(self.getX(), self.getY(), trooper.getX(), trooper.getY()));
+            if(trooper.getId() == self.getId()) {
+                continue;
+            }
+            int[][] dist = bfs(trooper.getX(), trooper.getY(), false);  //todo rework
+            int d = dist[self.getX()][self.getY()];
+            curMaxDist = Math.max(curMaxDist, d);
         }
         if (minDist > curMaxDist && minDist >= 5) {
             return false;
@@ -1166,6 +1172,37 @@ public final class MyStrategy implements Strategy {
         }
         moveTo(bestDir);
         return true;
+    }
+
+    private int[][] bfsIgnoreMe(int startX, int startY) { //todo rework, get rid of it, ugly kostyl
+        int[][] dist;
+        Queue<Integer> qx = new ArrayDeque<>();
+        Queue<Integer> qy = new ArrayDeque<>();
+        dist = createIntMap(Utils.UNREACHABLE);
+        qx.add(startX);
+        qy.add(startY);
+        dist[startX][startY] = 0;
+        while (!qx.isEmpty()) {
+            int x = qx.poll();
+            int y = qy.poll();
+            for (Direction dir : Utils.dirs) {
+                int toX = x + dir.getOffsetX();
+                int toY = y + dir.getOffsetY();
+                if (!inField(toX, toY)) {
+                    continue;
+                }
+                if (dist[toX][toY] != Utils.UNREACHABLE) {
+                    continue;
+                }
+                dist[toX][toY] = dist[x][y] + 1;
+                if (!isFreeCell(toX, toY) && !(toX == self.getX() && toY == self.getY())) {
+                    continue;
+                }
+                qx.add(toX);
+                qy.add(toY);
+            }
+        }
+        return dist;
     }
 
     private boolean moveTo(Unit target, boolean avoidNarrowPathNearBorder) {
