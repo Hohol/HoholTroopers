@@ -1172,7 +1172,7 @@ public final class MyStrategy implements Strategy {
             int toY = self.getY() + dir.getOffsetY();
             int maxDist = 0;
             for (Trooper trooper : teammates) {
-                int[][] dist = bfsIgnoreMe(trooper.getX(), trooper.getY());   //todo rework
+                int[][] dist = bfsIgnoreTeammates(trooper.getX(), trooper.getY());   //todo rework
                 int d = dist[toX][toY];
                 maxDist = Math.max(maxDist, d);
             }
@@ -1186,7 +1186,7 @@ public final class MyStrategy implements Strategy {
             if (trooper.getId() == self.getId()) {
                 continue;
             }
-            int[][] dist = bfs(trooper.getX(), trooper.getY(), false);  //todo rework
+            int[][] dist = bfsIgnoreTeammates(trooper.getX(), trooper.getY());  //todo rework
             int d = dist[self.getX()][self.getY()];
             curMaxDist = Math.max(curMaxDist, d);
         }
@@ -1200,7 +1200,7 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
-    private int[][] bfsIgnoreMe(int startX, int startY) { //todo rework, get rid of it, ugly kostyl
+    private int[][] bfsIgnoreTeammates(int startX, int startY) { //todo rework, get rid of it, ugly kostyl
         int[][] dist;
         Queue<Integer> qx = new ArrayDeque<>();
         Queue<Integer> qy = new ArrayDeque<>();
@@ -1208,6 +1208,10 @@ public final class MyStrategy implements Strategy {
         qx.add(startX);
         qy.add(startY);
         dist[startX][startY] = 0;
+        Set<Cell> ignoredCells = new HashSet<>();
+        for (Trooper trooper : teammates) {
+            ignoredCells.add(new Cell(trooper.getX(), trooper.getY()));
+        }
         while (!qx.isEmpty()) {
             int x = qx.poll();
             int y = qy.poll();
@@ -1221,7 +1225,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 dist[toX][toY] = dist[x][y] + 1;
-                if (!isFreeCell(toX, toY) && !(toX == self.getX() && toY == self.getY())) {
+                if (!isFreeCell(toX, toY) && !ignoredCells.contains(new Cell(toX,toY))) {
                     continue;
                 }
                 qx.add(toX);

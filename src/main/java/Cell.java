@@ -8,7 +8,7 @@ public class Cell {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) return false;
+        if (!(o instanceof Cell)) return false;
 
         Cell cell = (Cell) o;
 
