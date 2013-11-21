@@ -185,6 +185,9 @@ public class PlanComputer {
         if (!canShoot && !canThrowGrenadeDirect && !canThrowGrenadeCollateral) {
             return 0;
         }
+        boolean canThrowGrenade = canThrowGrenadeDirect || canThrowGrenadeCollateral;
+        int grenadeDamage = canThrowGrenadeDirect ? game.getGrenadeDirectDamage() :
+                canThrowGrenadeCollateral ? game.getGrenadeCollateralDamage() : 0;
         final int maxStance = Utils.NUMBER_OF_STANCES - 1;
         int maxDamage = 0;
         for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
@@ -193,21 +196,27 @@ public class PlanComputer {
                 int remainingActionPoints = actionPoints
                         - stanceChangeCnt * game.getStanceChangeCost()
                         - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
-                int shootCnt = remainingActionPoints / utils.getShootCost(type);
-                int damage = 0;
-                if (canShoot) {
-                    damage = Math.max(damage, shootCnt * utils.getShootDamage(type, TrooperStance.values()[shootStance]));
-                }
-                if (canThrowGrenadeDirect && remainingActionPoints >= game.getGrenadeThrowCost()) {
-                    damage = Math.max(damage, game.getGrenadeDirectDamage());
-                }
-                if (canThrowGrenadeCollateral && remainingActionPoints >= game.getGrenadeThrowCost()) {
-                    damage = Math.max(damage, game.getGrenadeCollateralDamage());
-                }
+                int oneShotDamage = canShoot ? utils.getShootDamage(type, TrooperStance.values()[shootStance]) : 0;
+                int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, utils.getShootCost(type), canThrowGrenade, grenadeDamage);
                 maxDamage = Math.max(maxDamage, damage);
             }
         }
         return maxDamage;
+    }
+
+    private int getMaxDamage(int remainingActionPoints, boolean canShoot, int shootDamage, int shootCost, boolean canThrowGrenade, int grenadeDamage) {
+        int r = 0;
+        if (canThrowGrenade && remainingActionPoints >= game.getGrenadeThrowCost()) {
+            int damage = grenadeDamage;
+            if (canShoot) {
+                damage += (remainingActionPoints - game.getGrenadeThrowCost()) / shootCost * shootDamage;
+            }
+            r = damage;
+        }
+        if (canShoot) {
+            r = Math.max(r, remainingActionPoints / shootCost * shootDamage);
+        }
+        return r;
     }
 
     private void prepareHelp() {

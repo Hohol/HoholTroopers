@@ -7,6 +7,9 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
+    static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+    public static String MyName;
+
     public static final int MAX_DISTANCE_MEDIC_SHOULD_HEAL = 6;
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
@@ -19,7 +22,7 @@ public final class MyStrategy implements Strategy {
     CellType[][] cells;
     boolean[][] occupiedByTrooper;
     static int[][] lastSeen;
-    static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+
     static boolean[] vision;
 
     List<Trooper> teammates;
@@ -286,6 +289,11 @@ public final class MyStrategy implements Strategy {
         log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
         moveByPlan(actions);
         return true;
+    }
+
+    @SuppressWarnings("unused")
+    boolean stopOn(int moveIndex, TrooperType type) { //for debug only
+        return world.getMoveIndex() == 6 && self.getType() == type;
     }
 
     private boolean shouldTrySomething() {
@@ -698,8 +706,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMyScore() {
-        //String name = local ? "MyStrategy" : "Hohol";
-        String name = "Hohol"; //for repeater
+        String name = local ? MyName : "Hohol";
         for (Player player : world.getPlayers()) {
             if (player.getName().equals(name)) {
                 return player.getScore();

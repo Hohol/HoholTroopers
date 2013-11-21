@@ -427,7 +427,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 true,
                 false,
                 false,
-                MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8,1), MyMove.shoot(8,1)
+                MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1)
         );
     }
 
@@ -447,6 +447,55 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 false,
                 true,
                 MyMove.USE_MEDIKIT_SELF
+        );
+    }
+
+    @Test
+    void testEnemyCanUseGrenadeAndShoot() {
+        setMap(
+                "s....+S"
+        );
+        giveGrenade(0, 0);
+        check(
+                SOLDIER,
+                10,
+                STANDING,
+                false,
+                true,
+                false,
+                MyMove.LOWER_STANCE, MyMove.shoot(0, 0), MyMove.shoot(0, 0)
+        );
+
+        setMap(
+                "s....+S."
+        );
+        giveGrenade(0, 0);
+        setTrooper(6, 0, 85, STANDING);
+        check(
+                SOLDIER,
+                8,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.shoot(0, 0)
+        );
+    }
+
+    @Test
+    void testUseMedikitIfItCanSaveYou() {
+        setMap(
+                "s+....S"
+        );
+        setTrooper(6, 0, 75, STANDING);
+        check(
+                SOLDIER,
+                12,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.USE_MEDIKIT_SELF
         );
     }
 }
