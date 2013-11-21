@@ -874,7 +874,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean expired(MutableTrooper mt) {
-        return world.getMoveIndex() - mt.getLastSeenTime() > 3 * initialTeamSize;
+        return world.getMoveIndex() - mt.getLastSeenTime() > 3;
     }
 
     private static void log(Object o) {
