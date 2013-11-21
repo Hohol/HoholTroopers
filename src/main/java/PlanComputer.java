@@ -264,8 +264,6 @@ public class PlanComputer {
         }
     }
 
-    double magic = 0.9;
-
     private boolean someOfTeammatesCanBeKilled() {
         int max = 0;
         for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
@@ -286,7 +284,7 @@ public class PlanComputer {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += (int) (0.5 + magic * maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance]);
+                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
             }
             if (t >= hp[allyPos.x][allyPos.y]) {
                 return true;
@@ -312,7 +310,7 @@ public class PlanComputer {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += (int) (0.5 + magic * maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance]);
+                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
             }
             max = Math.max(max, t);
         }
