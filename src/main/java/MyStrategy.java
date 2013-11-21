@@ -641,6 +641,10 @@ public final class MyStrategy implements Strategy {
 
     private boolean isBlocked(Trooper trooper) {
         int[][] dist = bfs(trooper.getX(), trooper.getY(), true);
+        if (trooper.getId() == teammateToFollow.getId() && destination != null &&
+                dist[destination.x][destination.y] == Utils.UNREACHABLE) {
+            return true;
+        }
         int cnt = 0;
         for (int i = 0; i < dist.length; i++) {
             for (int j = 0; j < dist[i].length; j++) {
@@ -1159,7 +1163,7 @@ public final class MyStrategy implements Strategy {
         }
         int curMaxDist = 0;
         for (Trooper trooper : teammates) {
-            if(trooper.getId() == self.getId()) {
+            if (trooper.getId() == self.getId()) {
                 continue;
             }
             int[][] dist = bfs(trooper.getX(), trooper.getY(), false);  //todo rework
