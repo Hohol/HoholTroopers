@@ -36,8 +36,8 @@ public final class MyStrategy implements Strategy {
     Trooper medic, sniper, soldier, commander, scout;
     private BonusType[][] bonuses;
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
-    static boolean[][] wasSeenOnCurrentBigMove;
-    boolean[][] canSeeRightNow;
+    static boolean[][][] wasSeenOnCurrentBigMove;
+    boolean[][][] canSeeRightNow;
     static List<Cell> suspiciousCells = new ArrayList<>();
     static Cell lastSeenEnemyPos;
     static int prevScore;
@@ -117,7 +117,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 if (world.isVisible(self.getShootingRange(), self.getX(), self.getY(), self.getStance(), i, j, STANDING) &&
-                        !wasSeenOnCurrentBigMove[i][j]) {
+                        !wasSeenOnCurrentBigMove[i][j][self.getStance().ordinal()]) {
                     cells.add(new Cell(i, j));
                 }
             }
@@ -160,7 +160,7 @@ public final class MyStrategy implements Strategy {
         }
         for (int i = 0; i < wasSeenOnCurrentBigMove.length; i++) {
             for (int j = 0; j < wasSeenOnCurrentBigMove[i].length; j++) {
-                if (wasSeenOnCurrentBigMove[i][j]) {
+                if (wasSeenOnCurrentBigMove[i][j][PRONE.ordinal()]) {
                     map[i][j] = '.';
                 }
             }
@@ -251,7 +251,7 @@ public final class MyStrategy implements Strategy {
     private void removeVisibleCellsFromSuspicious() {
         for (int i = suspiciousCells.size() - 1; i >= 0; i--) {
             Cell c = suspiciousCells.get(i);
-            if (wasSeenOnCurrentBigMove[c.x][c.y]) {
+            if (wasSeenOnCurrentBigMove[c.x][c.y][PRONE.ordinal()]) {
                 suspiciousCells.remove(i);
             }
         }
@@ -265,7 +265,7 @@ public final class MyStrategy implements Strategy {
                     continue;
                 }
                 if (world.isVisible(utils.getShootRange(SOLDIER), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
-                        !wasSeenOnCurrentBigMove[i][j]) {
+                        !wasSeenOnCurrentBigMove[i][j][PRONE.ordinal()]) {
                     suspiciousCells.add(new Cell(i, j));
                 }
             }
@@ -681,7 +681,7 @@ public final class MyStrategy implements Strategy {
         }
         updateVisibility();
         updateEnemies();
-        if (lastSeenEnemyPos != null && wasSeenOnCurrentBigMove[lastSeenEnemyPos.x][lastSeenEnemyPos.y] && Utils.manhattanDist(self.getX(), self.getY(), lastSeenEnemyPos.x, lastSeenEnemyPos.y) <= 2) {
+        if (lastSeenEnemyPos != null && wasSeenOnCurrentBigMove[lastSeenEnemyPos.x][lastSeenEnemyPos.y][PRONE.ordinal()] && Utils.manhattanDist(self.getX(), self.getY(), lastSeenEnemyPos.x, lastSeenEnemyPos.y) <= 2) {
             lastSeenEnemyPos = null;
         }
         updateHpHistory();
@@ -776,15 +776,17 @@ public final class MyStrategy implements Strategy {
 
     private void updateVisibility() {
         if (wasSeenOnCurrentBigMove == null) {
-            wasSeenOnCurrentBigMove = new boolean[world.getWidth()][world.getHeight()];
+            wasSeenOnCurrentBigMove = new boolean[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
         }
-        canSeeRightNow = new boolean[world.getWidth()][world.getHeight()];
+        canSeeRightNow = new boolean[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
         for (Trooper trooper : teammates) {
             for (int i = 0; i < world.getWidth(); i++) {
                 for (int j = 0; j < world.getHeight(); j++) {
-                    if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(), i, j, PRONE)) {
-                        canSeeRightNow[i][j] = true;
-                        wasSeenOnCurrentBigMove[i][j] = true;
+                    for (TrooperStance targetStance : TrooperStance.values()) {
+                        if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(), i, j, targetStance)) {
+                            canSeeRightNow[i][j][targetStance.ordinal()] = true;
+                            wasSeenOnCurrentBigMove[i][j][targetStance.ordinal()] = true;
+                        }
                     }
                 }
             }
@@ -832,7 +834,7 @@ public final class MyStrategy implements Strategy {
         Iterator<MutableTrooper> it = enemies.iterator();
         while (it.hasNext()) {
             MutableTrooper mt = it.next();
-            if (canSeeRightNow[mt.getX()][mt.getY()] || expired(mt)) {
+            if (canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()] || expired(mt)) {
                 it.remove();
             }
         }
@@ -865,7 +867,7 @@ public final class MyStrategy implements Strategy {
                 if (cells[i][j] != CellType.FREE) {
                     map[i][j] = '#';
                 } else {
-                    if (wasSeenOnCurrentBigMove[i][j]) {
+                    if (wasSeenOnCurrentBigMove[i][j][PRONE.ordinal()]) {
                         map[i][j] = '.';
                     } else {
                         map[i][j] = '?';
