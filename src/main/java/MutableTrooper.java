@@ -227,4 +227,8 @@ public final class MutableTrooper extends Unit {
     public void updateLastSeenTime(int moveIndex) {
         lastSeenTime = moveIndex;
     }
+
+    public void setHp(int hp) {
+        hitpoints = hp;
+    }
 }

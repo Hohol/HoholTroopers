@@ -698,8 +698,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMyScore() {
-        String name = local ? "MyStrategy" : "Hohol";
-        //String name = "Hohol"; //for repeater
+        //String name = local ? "MyStrategy" : "Hohol";
+        String name = "Hohol"; //for repeater
         for (Player player : world.getPlayers()) {
             if (player.getName().equals(name)) {
                 return player.getScore();
@@ -714,7 +714,7 @@ public final class MyStrategy implements Strategy {
             lastSeenEnemyPos = new Cell(t.getX(), t.getY());
         }
         prevScore = getMyScore();
-        if (lastSubMove()) {
+        if (isLastSubMove()) {
             //enemies.clear();
             mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
@@ -739,17 +739,19 @@ public final class MyStrategy implements Strategy {
             } else if (move.getAction() == SHOOT) {
                 trooper.decHp(utils.getShootDamage(self.getType(), self.getStance()));
             }
-            if(trooper.getHitpoints() != oldHp) {
+            if (trooper.getHitpoints() != oldHp) {
                 scoreMustChange = true;
                 damageWasDealt.add(trooper);
             }
             if (trooper.getHitpoints() <= 0) {
                 it.remove();
+            } else if(isLastSubMove()) {
+                trooper.setHp(Math.min(trooper.getHitpoints() + 50, Utils.INITIAL_TROOPER_HP));
             }
         }
     }
 
-    private boolean lastSubMove() {
+    private boolean isLastSubMove() {
         int actionCost = 0;
         switch (move.getAction()) {
             case END_TURN:
@@ -839,8 +841,8 @@ public final class MyStrategy implements Strategy {
             log("Wrong assumption. Clear phantom enemy list.");
             enemies.clear();
         }/**/
-        for (MutableTrooper mt: damageWasDealt) {
-            if(prevScore == getMyScore()) {
+        for (MutableTrooper mt : damageWasDealt) {
+            if (prevScore == getMyScore()) {
                 enemies.remove(mt);
             } else {
                 mt.updateLastSeenTime(world.getMoveIndex());
