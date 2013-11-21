@@ -42,6 +42,7 @@ public final class MyStrategy implements Strategy {
     static Cell lastSeenEnemyPos;
     static int prevScore;
     static boolean scoreMustChange;
+    static List<MutableTrooper> damageWasDealt = new ArrayList<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -724,20 +725,23 @@ public final class MyStrategy implements Strategy {
     private void dealDamageToEnemies() {
         Iterator<MutableTrooper> it = enemies.iterator();
         scoreMustChange = false;
+        damageWasDealt.clear();
         while (it.hasNext()) {
             MutableTrooper trooper = it.next();
+            int oldHp = trooper.getHitpoints();
             if (move.getAction() == THROW_GRENADE) {
                 int d = Utils.manhattanDist(trooper.getX(), trooper.getY(), move.getX(), move.getY());
                 if (d == 0) {
                     trooper.decHp(game.getGrenadeDirectDamage());
-                    scoreMustChange = true;
                 } else if (d == 1) {
                     trooper.decHp(game.getGrenadeCollateralDamage());
-                    scoreMustChange = true;
                 }
             } else if (move.getAction() == SHOOT) {
                 trooper.decHp(utils.getShootDamage(self.getType(), self.getStance()));
+            }
+            if(trooper.getHitpoints() != oldHp) {
                 scoreMustChange = true;
+                damageWasDealt.add(trooper);
             }
             if (trooper.getHitpoints() <= 0) {
                 it.remove();
@@ -831,9 +835,16 @@ public final class MyStrategy implements Strategy {
     }
 
     private void updateEnemies() {
-        if (scoreMustChange && prevScore == getMyScore()) {
+        /*if (scoreMustChange && prevScore == getMyScore()) {
             log("Wrong assumption. Clear phantom enemy list.");
             enemies.clear();
+        }/**/
+        for (MutableTrooper mt: damageWasDealt) {
+            if(prevScore == getMyScore()) {
+                enemies.remove(mt);
+            } else {
+                mt.updateLastSeenTime(world.getMoveIndex());
+            }
         }
         Iterator<MutableTrooper> it = enemies.iterator();
         while (it.hasNext()) {
@@ -854,7 +865,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean expired(MutableTrooper mt) {
-        return world.getMoveIndex() - mt.getCreationTime() > 3 * initialTeamSize;
+        return world.getMoveIndex() - mt.getLastSeenTime() > 3 * initialTeamSize;
     }
 
     private static void log(Object o) {

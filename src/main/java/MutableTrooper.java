@@ -1,4 +1,5 @@
 import model.*;
+
 /**
  * Класс, определяющий бойца. Содержит также все свойства юнита.
  */
@@ -28,9 +29,9 @@ public final class MutableTrooper extends Unit {
     private final boolean holdingGrenade;
     private final boolean holdingMedikit;
     private final boolean holdingFieldRation;
-    private final int creationTime;
+    private int lastSeenTime;
 
-    public MutableTrooper(Trooper t, int creationTime) {
+    public MutableTrooper(Trooper t, int lastSeenTime) {
         super(t.getId(), t.getX(), t.getY());
         this.playerId = t.getPlayerId();
         this.teammateIndex = t.getTeammateIndex();
@@ -51,7 +52,7 @@ public final class MutableTrooper extends Unit {
         this.holdingGrenade = t.isHoldingGrenade();
         this.holdingMedikit = t.isHoldingMedikit();
         this.holdingFieldRation = t.isHoldingFieldRation();
-        this.creationTime = creationTime;
+        this.lastSeenTime = lastSeenTime;
     }
 
     /**
@@ -210,7 +211,7 @@ public final class MutableTrooper extends Unit {
 
     @Override
     public boolean equals(Object o) {
-        MutableTrooper t = (MutableTrooper)o;
+        MutableTrooper t = (MutableTrooper) o;
         return getId() == t.getId();
     }
 
@@ -219,7 +220,11 @@ public final class MutableTrooper extends Unit {
         return Long.valueOf(getId()).hashCode();
     }
 
-    public int getCreationTime() {
-        return creationTime;
+    public int getLastSeenTime() {
+        return lastSeenTime;
+    }
+
+    public void updateLastSeenTime(int moveIndex) {
+        lastSeenTime = moveIndex;
     }
 }
