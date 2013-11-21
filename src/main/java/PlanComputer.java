@@ -448,7 +448,7 @@ public class PlanComputer {
         return best;
     }
 
-    private void newTryHeal(int healValue, int healCost, MyMove healAction, boolean avoidOverheal, Cell c) {
+    private void newTryHeal(int healValue, int healCost, MyMove healAction, Cell c) {
         if (cur.actionPoints < healCost) {
             return;
         }
@@ -459,9 +459,6 @@ public class PlanComputer {
         }
         int newHp = Math.min(Utils.INITIAL_TROOPER_HP, oldHp + healValue);
         int diffHp = newHp - oldHp;
-        if (avoidOverheal && diffHp < healValue) {
-            return;
-        }
 
         addAction(healAction);
 
@@ -491,11 +488,11 @@ public class PlanComputer {
         }
         int healValue = game.getMedikitHealSelfBonusHitpoints();
         cur.holdingMedikit = false;
-        newTryHeal(healValue, game.getMedikitUseCost(), MyMove.USE_MEDIKIT_SELF, true, null);
+        newTryHeal(healValue, game.getMedikitUseCost(), MyMove.USE_MEDIKIT_SELF, null);
         cur.holdingMedikit = true;
     }
 
-    private void tryHealTeammates(MyMove[] heals, int healValue, int healCost, boolean avoidOverheal) {
+    private void tryHealTeammates(MyMove[] heals, int healValue, int healCost) {
         for (MyMove heal : heals) {
             int toX = cur.x + heal.getDx();
             int toY = cur.y + heal.getDy();
@@ -506,28 +503,28 @@ public class PlanComputer {
             if (!Utils.isTeammateChar(targetChar)) {
                 continue;
             }
-            newTryHeal(healValue, healCost, heal, avoidOverheal, new Cell(toX, toY));
+            newTryHeal(healValue, healCost, heal, new Cell(toX, toY));
         }
     }
 
     private void tryHealWithMedikit() {
         if (cur.holdingMedikit) {
             cur.holdingMedikit = false;
-            tryHealTeammates(MyMove.directedMedikitUses, game.getMedikitBonusHitpoints(), game.getMedikitUseCost(), true);
+            tryHealTeammates(MyMove.directedMedikitUses, game.getMedikitBonusHitpoints(), game.getMedikitUseCost());
             cur.holdingMedikit = true;
         }
         tryHealSelfWithMedikit();
     }
 
     private void tryHealSelfWithAbility() {
-        newTryHeal(game.getFieldMedicHealSelfBonusHitpoints(), game.getFieldMedicHealCost(), MyMove.HEAL_SELF, false, null);
+        newTryHeal(game.getFieldMedicHealSelfBonusHitpoints(), game.getFieldMedicHealCost(), MyMove.HEAL_SELF, null);
     }
 
     private void tryHealAsMedic() {
         if (selfType != FIELD_MEDIC) {
             return;
         }
-        tryHealTeammates(MyMove.directedHeals, game.getFieldMedicHealBonusHitpoints(), game.getFieldMedicHealCost(), false);
+        tryHealTeammates(MyMove.directedHeals, game.getFieldMedicHealBonusHitpoints(), game.getFieldMedicHealCost());
         tryHealSelfWithAbility();
     }
 

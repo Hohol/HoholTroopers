@@ -401,20 +401,6 @@ public class HealingTest {
     }
 
     @Test
-    void avoidOverHealWithMedikit() {
-        setHp(FIELD_MEDIC, 80);
-        check(
-                2,
-                new String[] {
-                        "F"
-                },
-                false,
-                true,
-                MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
-    }
-
-    @Test
     void testMinimizeSumOfDistance() {
         setHp(SOLDIER, 1);
         setHp(FIELD_MEDIC, 100);

@@ -430,4 +430,23 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8,1), MyMove.shoot(8,1)
         );
     }
+
+    @Test
+    void testEatMedikitIfItCanSaveYou() {
+        setMap(
+                "S#s",
+                "..."
+        );
+        setTrooper(0, 0, 80, STANDING);
+        giveGrenade(2, 0);
+        check(
+                SOLDIER,
+                2,
+                STANDING,
+                false,
+                false,
+                true,
+                MyMove.USE_MEDIKIT_SELF
+        );
+    }
 }
