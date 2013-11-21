@@ -90,13 +90,24 @@ public class PlanComputer {
         enemyIsAlive = new boolean[enemyCnt];
         Arrays.fill(enemyIsAlive, true);
 
+        char[][] mapWithoutTeammates = new char[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                mapWithoutTeammates[i][j] = map[i][j];
+                if (Utils.isTeammateChar(map[i][j])) {
+                    mapWithoutTeammates[i][j] = '.';
+                }
+            }
+        }
+
         bfsDistFromTeammateForHealing = new ArrayList<>();
         for (Cell cell : allyPositions) {
             int[][] curDist = Utils.bfsByMap(map, cell.x, cell.y);
+            int[][] curDistWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, cell.x, cell.y);
             bfsDistFromTeammateForHealing.add(curDist);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < map[i].length; j++) {
-                    if (curDist[i][j] > MyStrategy.MAX_DISTANCE_MEDIC_SHOULD_HEAL) {
+                    if (curDist[i][j] - curDistWithoutTeammates[i][j] > 7) {
                         curDist[i][j] = Utils.UNREACHABLE;
                     }
                 }

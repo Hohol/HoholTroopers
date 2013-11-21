@@ -498,4 +498,40 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.USE_MEDIKIT_SELF
         );
     }
+
+    @Test
+    void testMedicShouldHeal() {
+        setMap(
+                "F....................................S"
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testMedicShouldHeal2() {
+        setMap(
+                "F..............",
+                "##############.",
+                "S.............."
+        );
+
+        check(
+                FIELD_MEDIC,
+                2,
+                STANDING,
+                false,
+                false,
+                false,
+                MyMove.MOVE_EAST
+        );
+    }
 }
