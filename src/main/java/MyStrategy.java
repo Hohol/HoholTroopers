@@ -464,7 +464,8 @@ public final class MyStrategy implements Strategy {
     }
 
     private State getPlan() {
-        boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
+        return null;
+        /*boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy();
 
         return new PlanComputer(
@@ -487,7 +488,7 @@ public final class MyStrategy implements Strategy {
                         self.isHoldingGrenade(),
                         self.isHoldingMedikit()
                 )
-        ).getPlan();
+        ).getPlan();/**/
     }
 
     private boolean[][] getGrenades() {

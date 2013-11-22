@@ -67,6 +67,10 @@ class State {
         this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
     }
 
+    public State(MutableTrooper self) {
+        this(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), self.isHoldingFieldRation(), self.isHoldingGrenade(), self.isHoldingMedikit());
+    }
+
     boolean better(State old, TrooperType selfType) {
         if (old == null) {
             return true;
@@ -75,10 +79,10 @@ class State {
         int killDiff = killCnt;
         int oldKillDiff = old.killCnt;
 
-        if(someOfTeammatesCanBeKilled) {
+        if (someOfTeammatesCanBeKilled) {
             killDiff--;
         }
-        if(old.someOfTeammatesCanBeKilled) {
+        if (old.someOfTeammatesCanBeKilled) {
             oldKillDiff--;
         }
 
@@ -89,7 +93,7 @@ class State {
         int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal;
         int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal;
 
-        if(Math.abs(hpDiff-oldHpDiff) < 50) {
+        if (Math.abs(hpDiff - oldHpDiff) < 50) {
             if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
                 return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
             }

@@ -2,6 +2,7 @@ import model.BonusType;
 import model.TrooperStance;
 import model.TrooperType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,13 +11,199 @@ import static org.testng.Assert.assertEquals;
 
 public class AbstractPlanComputerTest {
     protected BonusType[][] bonuses;
-    TrooperStance[][] stances;
-    int[][] hp;
     char[][] map;
-    private boolean[][] hasGrenade;
+    int n, m;
+
+    protected void setMap(String... smap) {
+        map = Utils.toCharAndTranspose(smap);
+        n = this.map.length;
+        m = this.map[0].length;
+        bonuses = new BonusType[this.map.length][this.map[0].length];
+        n = this.map.length;
+        m = this.map[0].length;
+        initBuilders();
+        addBonuses();
+    }
+
+    private void initBuilders() {
+        builders = new MTBuilder[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isLetter(map[i][j])) {
+                    builders[i][j] = new MTBuilder()
+                            .x(i)
+                            .y(j);
+                    if (Utils.isTeammateChar(map[i][j])) {
+                        builders[i][j].teammate();
+                    }
+                }
+            }
+        }
+    }
+
+    protected void addBonuses() {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                bonuses[i][j] = Utils.getBonusTypeByChar(map[i][j]);
+                if (bonuses[i][j] != null) {
+                    map[i][j] = '.';
+                }
+            }
+        }
+    }
+
+    protected void setTrooper(int x, int y, int newHp, TrooperStance stance) {
+        char ch = map[x][y];
+        if (!Utils.isLetter(ch)) {
+            throw new RuntimeException("No trooper in cell (" + x + ", " + y + ")");
+        }
+        builders[x][y].hp(newHp).stance(stance).x(x).y(y);
+    }
+
+    protected void giveGrenade(int x, int y) {
+        if (!Utils.isLetter(map[x][y])) {
+            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
+        }
+        builders[x][y].grenade();
+    }
+
+    protected void addBonus(int x, int y, BonusType bonus) {
+        if (!Utils.isLetter(map[x][y])) {
+            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
+        }
+        bonuses[x][y] = bonus;
+    }
+
+    protected MTBuilder addAlly(TrooperType type) {
+        int x = -1, y = -1;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isTeammateChar(map[i][j]) && map[i][j] == Utils.getCharForTrooperType(type)) {
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        if (x == -1) {
+            throw new RuntimeException("No allied " + type + " on the map");
+        }
+        return builders[x][y];
+    }
+
+    protected MTBuilder addEnemy(TrooperType type) {
+        int x = -1, y = -1;
+        int cnt = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isEnemyChar(map[i][j]) && map[i][j] == Utils.getCharForTrooperType(type)) {
+                    x = i;
+                    y = j;
+                    cnt++;
+                }
+            }
+        }
+        if (x == -1) {
+            throw new RuntimeException("No enemy " + type + " on the map");
+        }
+        if (cnt > 1) {
+            throw new RuntimeException("Multiple enemy " + type + " on the map");
+        }
+
+        return builders[x][y];
+    }
+
+    private MTBuilder addEnemy(int x, int y) {
+        if (!Utils.isEnemyChar(map[x][y])) {
+            throw new RuntimeException("No enemy in cell (" + x + ", " + y + ")");
+        }
+        return builders[x][y];
+    }
+
+    private MTBuilder addAlly(int x, int y) {
+        if (!Utils.isTeammateChar(map[x][y])) {
+            throw new RuntimeException("No ally in cell (" + x + ", " + y + ")");
+        }
+        return builders[x][y];
+    }
+
+    protected void check(
+            TrooperType selfType,
+            int actionPoints,
+            TrooperStance stance,
+            boolean holdingFieldRation,
+            boolean holdingGrenade,
+            boolean holdingMedikit,
+            MyMove... expectedAr
+    ) {
+        MTBuilder selfBuilder = addAlly(selfType)
+                .actionPoints(actionPoints)
+                .stance(stance);
+
+        if (holdingFieldRation) {
+            selfBuilder.holdingFieldRation();
+        }
+        if (holdingGrenade) {
+            selfBuilder.holdingGrenade();
+        }
+        if (holdingMedikit) {
+            selfBuilder.holdingMedikit();
+        }
+
+        MutableTrooper self = selfBuilder.build();
+
+        prepareTroopers(selfType);
+
+        List<MyMove> actual = new PlanComputer(
+                map,
+                Utils.HARDCODED_UTILS,
+                bonuses,
+                getVisibilities(),
+                false,
+                false, troopers, teammates, enemies,
+
+                new State(self)
+        ).getPlan().actions;
+
+        List<MyMove> expected = Arrays.asList(expectedAr);
+        assertEquals(
+                actual,
+                expected,
+                String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
+        );
+    }
+
+    protected MutableTrooper[][] troopers;
+    protected List<MutableTrooper> enemies, teammates;
+    MTBuilder[][] builders;
+
+    protected void prepareTroopers(TrooperType selfType) {
+        troopers = new MutableTrooper[n][m];
+        enemies = new ArrayList<>();
+        teammates = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isLetter(map[i][j])) {
+                    troopers[i][j] = builders[i][j].build();
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
+                    continue;
+                }
+                if (troopers[i][j] != null && troopers[i][j].isTeammate()) {
+                    teammates.add(troopers[i][j]);
+                }
+                if (troopers[i][j] != null && !troopers[i][j].isTeammate()) {
+                    enemies.add(troopers[i][j]);
+                }
+            }
+        }
+    }
 
     protected int height(char ch) {
-        if(ch == '#') {
+        if (ch == '#') {
             ch = '3';
         }
         if (!Character.isDigit(ch)) {
@@ -84,97 +271,5 @@ public class AbstractPlanComputerTest {
             }
         }
         return r;
-    }
-
-    protected void addBonuses() {
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                bonuses[i][j] = Utils.getBonusTypeByChar(map[i][j]);
-                if (bonuses[i][j] != null) {
-                    map[i][j] = '.';
-                }
-            }
-        }
-    }
-
-    protected void setMap(String... map) {
-        this.map = Utils.toCharAndTranspose(map);
-        hp = new int[this.map.length][this.map[0].length];
-        stances = new TrooperStance[this.map.length][this.map[0].length];
-        bonuses = new BonusType[this.map.length][this.map[0].length];
-        hasGrenade = new boolean[this.map.length][this.map[0].length];
-        addBonuses();
-    }
-
-    protected void setTrooper(int x, int y, int newHp, TrooperStance stance) {
-        char ch = map[x][y];
-        if (!Utils.isLetter(ch)) {
-            throw new RuntimeException("No trooper in cell (" + x + ", " + y + ")");
-        }
-        hp[x][y] = newHp;
-        stances[x][y] = stance;
-    }
-
-    protected void addBonus(int x, int y, BonusType bonus) {
-        if (!Utils.isLetter(map[x][y])) {
-            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
-        }
-        bonuses[x][y] = bonus;
-    }
-
-    protected void giveGrenade(int x, int y) {
-        if (!Utils.isLetter(map[x][y])) {
-            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
-        }
-        hasGrenade[x][y] = true;
-    }
-
-    protected void check(
-            TrooperType selfType,
-            int actionPoints,
-            TrooperStance stance,
-            boolean holdingFieldRation,
-            boolean holdingGrenade,
-            boolean holdingMedikit,
-            MyMove... expectedAr
-    ) {
-        int x = -1, y = -1;
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                if (Utils.isLetter(map[i][j])) {
-                    if(hp[i][j] == 0) {
-                        hp[i][j] = Utils.INITIAL_TROOPER_HP;
-                        stances[i][j] = STANDING;
-                    }
-                    if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
-                        x = i;
-                        y = j;
-                    }
-                }
-            }
-        }
-
-        if (x == -1) {
-            throw new RuntimeException("No allied " + selfType + " on the map");
-        }
-
-        List<MyMove> actual = new PlanComputer(
-                map,
-                Utils.HARDCODED_UTILS,
-                hp,
-                bonuses,
-                stances,
-                hasGrenade,
-                getVisibilities(),
-                false,
-                false, new State(actionPoints, Utils.INITIAL_TROOPER_HP, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit)
-        ).getPlan().actions;
-
-        List<MyMove> expected = Arrays.asList(expectedAr);
-        assertEquals(
-                actual,
-                expected,
-                String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
-        );
     }
 }

@@ -1,281 +1,158 @@
-import model.BonusType;
 import model.TrooperStance;
 import model.TrooperType;
 import org.testng.annotations.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static model.TrooperType.*;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class HealingTest {
+public class HealingTest extends AbstractPlanComputerTest {
     int[] hp1d = new int[TrooperType.values().length];
 
     @Test
     void testEmpty() {
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                5,
-                new String[]{
-                        "F"
-                }
-
-                //empty
-                ,
-                false, false
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false);
     }
 
     @Test
     void testTrivial() {
         setHp(FIELD_MEDIC, 97);
-        checkWithExpectedHealedSum(
-                5,
-                new String[]{
-                        "F"
-                },
-                false, false,
-                3,
-                MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF);
 
 
         setHp(FIELD_MEDIC, 87);
-        check(
-                5,
-                new String[]{
-                        "F"
-                },
-
-                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
 
         setHp(FIELD_MEDIC, 88);
-        check(
-                5,
-                new String[]{
-                        "F"
-                },
-
-                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
 
         setHp(FIELD_MEDIC, 89);
-        check(
-                5,
-                new String[]{
-                        "F"
-                },
-
-                false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
     }
 
-    @Test (enabled = true)
+    @Test(enabled = true)
     void testHealTeammate() {
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
-        check(
-                5,
-                new String[]{
-                        "FS"
-                },
-
-                false, false, MyMove.HEAL_EAST
-        );
+        setMap("FS");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_EAST);
 
         setHp(FIELD_MEDIC, 90);
         setHp(COMMANDER, 90);
-        check(
-                1,
-                new String[]{
-                        "FC"
-                },
-
-                false, false, MyMove.HEAL_EAST
-        );
+        setMap("FC");
+        setHp2();
+        check(FIELD_MEDIC, 1, TrooperStance.STANDING, false, false, false, MyMove.HEAL_EAST);
 
         setHp(FIELD_MEDIC, 90);
         setHp(COMMANDER, 90);
-        check(
-                1,
-                new String[] {
-                        "F",
-                        "C"
-                },
-
-                false, false, MyMove.HEAL_SOUTH
-        );
+        setMap("F",
+                "C");
+        setHp2();
+        check(FIELD_MEDIC, 1, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SOUTH);
 
         setHp(FIELD_MEDIC, 98);
         setHp(COMMANDER, 99);
-        check(
-                1,
-                new String[] {
-                        "F",
-                        "C"
-                },
-                false,
-
-                false, MyMove.HEAL_SELF
-        );
+        setMap("F",
+                "C");
+        setHp2();
+        check(FIELD_MEDIC, 1, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF);
 
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 85);
         setHp(SOLDIER, 90);
-        check(
-                6,
-                new String[] {
-                        ".C",
-                        "SF"
-                },
-
-                false, false, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST
-        );
+        setMap(".C",
+                "SF");
+        setHp2();
+        check(FIELD_MEDIC, 6, TrooperStance.STANDING, false, false, false, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST);
     }
 
     @Test
     void testFieldRation() {
         setHp(FIELD_MEDIC, 10);
-        check(
-                2,
-                new String[] {
-                        "F"
-                },
-                true,
-
-                false, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, true, false, false, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
 
         setHp(FIELD_MEDIC, 100);
-        check(
-                2,
-                new String[] {
-                        "F"
-                },
-                true
-
-                //empty
-                ,
-                false);
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, true, false, false);
 
         setHp(FIELD_MEDIC, 90);
         setHp(COMMANDER, 90);
         setHp(SOLDIER, 90);
 
-        check(
-                2,
-                new String[] {
-                        ".C",
-                        "SF"
-                },
-                true,
-
-                false,
-
-                MyMove.EAT_FIELD_RATION, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_SELF
-        );
+        setMap(".C",
+                "SF");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, true, false, false, MyMove.EAT_FIELD_RATION, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_SELF);
     }
 
     @Test
     void testMove() {
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
-        check(
-                2,
-                new String[] {
-                        "F.S"
-                },
-                false,
-                false,
-                MyMove.MOVE_EAST
-        );
+        setMap("F.S");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
-        check(
-                3,
-                new String[] {
-                        "F.S"
-                },
-                false,
-
-                false, MyMove.MOVE_EAST, MyMove.HEAL_EAST
-        );
+        setMap("F.S");
+        setHp2();
+        check(FIELD_MEDIC, 3, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST, MyMove.HEAL_EAST);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
         setHp(COMMANDER, 95);
-        check(
-                4,
-                new String[] {
-                        ".C.",
-                        "S.F"
-                },
-                false,
-
-                false, MyMove.MOVE_WEST, MyMove.HEAL_NORTH, MyMove.HEAL_WEST
-        );
+        setMap(".C.",
+                "S.F");
+        setHp2();
+        check(FIELD_MEDIC, 4, TrooperStance.STANDING, false, false, false, MyMove.MOVE_WEST, MyMove.HEAL_NORTH, MyMove.HEAL_WEST);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
-        check(
-                10,
-                new String[] {
-                        "...",
-                        "S#F"
-                },
-                false,
-
-                false, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.HEAL_SOUTH
-        );
+        setMap("...",
+                "S#F");
+        setHp2();
+        check(FIELD_MEDIC, 10, TrooperStance.STANDING, false, false, false, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.HEAL_SOUTH);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
-        check(
-                10,
-                new String[] {
-                        ".#.",
-                        "S#F"
-                },
-                false
-
-                //empty
-                ,
-                false);
+        setMap(".#.",
+                "S#F");
+        setHp2();
+        check(FIELD_MEDIC, 10, TrooperStance.STANDING, false, false, false);
 
         setHp(FIELD_MEDIC, 100);
         setHp(SOLDIER, 95);
         setHp(COMMANDER, 90);
-        check(
-                4,
-                new String[] {
-                        ".C",
-                        "F#",
-                        ".S"
-                },
-                false,
-
-                false, MyMove.MOVE_NORTH, MyMove.HEAL_EAST, MyMove.HEAL_EAST
-        );
+        setMap(".C",
+                "F#",
+                ".S");
+        setHp2();
+        check(FIELD_MEDIC, 4, TrooperStance.STANDING, false, false, false, MyMove.MOVE_NORTH, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
     }
 
     @Test
     void testBugWithSelfHealing() {
         setHp(FIELD_MEDIC, 1);
-        check(
-                6,
-                new String[] {
-                        "F."
-                },
-                false,
-
-                false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-                //not fucking [MOVE_EAST, HEAL_WEST, HEAL_WEST, HEAL_WEST, HEAL_WEST] !
-        );
+        setMap("F.");
+        setHp2();
+        check(FIELD_MEDIC, 6, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
     }
 
     @Test
@@ -283,121 +160,62 @@ public class HealingTest {
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 1);
         setHp(SOLDIER, 1);
-        check(
-                2,
-                new String[]{
-                        "FC",
-                        "S."
-                },
-                false,
-
-                false, MyMove.HEAL_EAST, MyMove.HEAL_SOUTH
-        );
+        setMap("FC",
+                "S.");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.HEAL_EAST, MyMove.HEAL_SOUTH);
 
         setHp(FIELD_MEDIC, 19);
         setHp(SOLDIER, 20);
-        check(
-                5,
-                new String[] {
-                        "F.S",
-                },
-                false,
-
-                false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F.S");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
 
         setHp(FIELD_MEDIC, 20);
         setHp(SOLDIER, 20);
-        check(
-                5,
-                new String[] {
-                        "F.S",
-                },
-                false,
-                false,
-
-                MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
-        );
+        setMap("F.S");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
 
         setHp(FIELD_MEDIC, 20);
         setHp(SOLDIER, 19);
-        check(
-                5,
-                new String[]{
-                        "F.S",
-                },
-                false,
-
-                false, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
-        );
+        setMap("F.S");
+        setHp2();
+        check(FIELD_MEDIC, 5, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
     }
 
     @Test
     void testMedikit() {
         setHp(FIELD_MEDIC, 1);
-        check(
-                2,
-                new String[] {
-                        "F"
-                },
-                false,
-                true,
-                MyMove.USE_MEDIKIT_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, true, MyMove.USE_MEDIKIT_SELF);
 
         setHp(FIELD_MEDIC, 1);
         setHp(SOLDIER, 50);
-        checkWithExpectedHealedSum(
-                2,
-                new String[] {
-                        "FS"
-                },
-                false,
-                true,
-                50,
-                MyMove.USE_MEDIKIT_EAST
-        );
+        setMap("FS");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, true, MyMove.USE_MEDIKIT_EAST);
 
         setHp(FIELD_MEDIC, 1);
-        check(
-                4,
-                new String[] {
-                        "F"
-                },
-                false,
-                true,
-
-                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 4, TrooperStance.STANDING, false, false, true, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_SELF);
 
         setHp(FIELD_MEDIC, 50);
         setHp(COMMANDER, 50);
-        checkWithExpectedHealedSum(
-                7,
-                new String[] {
-                        "F..C"
-                },
-                false,
-                true,
-                53,
-                MyMove.HEAL_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_EAST
-        );
+        setMap("F..C");
+        setHp2();
+        check(FIELD_MEDIC, 7, TrooperStance.STANDING, false, false, true, MyMove.HEAL_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_EAST);
     }
 
     @Test
     void testTest() {
         setHp(FIELD_MEDIC, 50);
         setHp(COMMANDER, 50);
-        checkWithExpectedHealedSum(
-                4,
-                new String[]{
-                        "FC"
-                },
-                false,
-                true,
-                56,
-                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_EAST
-        );
+        setMap("FC");
+        setHp2();
+        check(FIELD_MEDIC, 4, TrooperStance.STANDING, false, false, true, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.USE_MEDIKIT_EAST);
     }
 
     @Test
@@ -405,47 +223,29 @@ public class HealingTest {
         setHp(SOLDIER, 1);
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 100);
-        check(
-                3,
-                new String[] {
-                        ".S",
-                        "F.",
-                        ".C"
-                },
-                false,
-                false,
-                MyMove.MOVE_EAST, MyMove.HEAL_NORTH
-        );
+        setMap(".S",
+                "F.",
+                ".C");
+        setHp2();
+        check(FIELD_MEDIC, 3, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST, MyMove.HEAL_NORTH);
 
         setHp(SOLDIER, 1);
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 100);
-        check(
-                3,
-                new String[] {
-                        ".#C",
-                        ".S.",
-                        "F.."
-                },
-                false,
-                false,
-                MyMove.MOVE_EAST, MyMove.HEAL_NORTH
-        );
+        setMap(".#C",
+                ".S.",
+                "F..");
+        setHp2();
+        check(FIELD_MEDIC, 3, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST, MyMove.HEAL_NORTH);
 
         setHp(SOLDIER, 100);
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 100);
-        check(
-                12,
-                new String[] {
-                        "..C",
-                        ".S.",
-                        "F.."
-                },
-                false,
-                false,
-                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_EAST
-        );
+        setMap("..C",
+                ".S.",
+                "F..");
+        setHp2();
+        check(FIELD_MEDIC, 12, TrooperStance.STANDING, false, false, false, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_EAST);
     }
 
     @Test
@@ -453,47 +253,29 @@ public class HealingTest {
         setHp(SOLDIER, 1);
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 100);
-        check(
-                2,
-                new String[] {
-                        "S.F.C"
-                },
-                false,
-                false,
-                MyMove.MOVE_WEST
-        );
+        setMap("S.F.C");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.MOVE_WEST);
 
         setHp(SOLDIER, 100);
         setHp(FIELD_MEDIC, 100);
         setHp(COMMANDER, 1);
-        check(
-                2,
-                new String[] {
-                        "S.F.C"
-                },
-                false,
-                false,
-                MyMove.MOVE_EAST
-        );
+        setMap("S.F.C");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.MOVE_EAST);
 
         setHp(SNIPER, 1);
         setHp(COMMANDER, 2);
         setHp(SOLDIER, 4);
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                2,
-                new String[] {
-                        "..S..",
-                        ".....",
-                        "R.F.C",
-                        ".....",
-                        "....."
-                },
-                false,
-                false,
-                MyMove.MOVE_WEST
-        );
+        setMap("..S..",
+                ".....",
+                "R.F.C",
+                ".....",
+                ".....");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.MOVE_WEST);
 
         setHp(SNIPER, 1);
         setHp(COMMANDER, 2);
@@ -501,19 +283,13 @@ public class HealingTest {
         setHp(SOLDIER, 4);
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                2,
-                new String[] {
-                        "..S..",
-                        ".....",
-                        "R.F.C",
-                        ".....",
-                        "..T.."
-                },
-                false,
-                false,
-                MyMove.MOVE_WEST
-        );
+        setMap("..S..",
+                ".....",
+                "R.F.C",
+                ".....",
+                "..T..");
+        setHp2();
+        check(FIELD_MEDIC, 2, TrooperStance.STANDING, false, false, false, MyMove.MOVE_WEST);
     }
 
     @Test
@@ -521,16 +297,11 @@ public class HealingTest {
         setHp(COMMANDER, 1);
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                12,
-                new String[] {
-                        "........#.......",
-                        "...F....#....C..",
-                        "........#.......",
-                },
-                false,
-                false
-        );
+        setMap("........#.......",
+                "...F....#....C..",
+                "........#.......");
+        setHp2();
+        check(FIELD_MEDIC, 12, TrooperStance.STANDING, false, false, false);
     }
 
     @Test
@@ -539,19 +310,15 @@ public class HealingTest {
         setHp(SOLDIER, 100);
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                12,
-                new String[] {
-                        "F...............",
-                        "S##############.",
-                        "C..............."
-                },
-                false,
-                false
-        );
+        setMap("F...............",
+                "S##############.",
+                "C...............");
+        setHp2();
+        check(FIELD_MEDIC, 12, TrooperStance.STANDING, false, false, false);
     }
 
-    @Test (enabled = false) //manual
+    @Test(enabled = false)
+        //manual
     void testTooSlow() {
         //setHp(SNIPER, 1);
         setHp(COMMANDER, 2);
@@ -559,18 +326,13 @@ public class HealingTest {
         setHp(SOLDIER, 4);
         setHp(FIELD_MEDIC, 1);
 
-        check(
-                12,
-                new String[] {
-                        "..........",
-                        "..S.......",
-                        "..F.......",
-                        "..........",
-                        ".........."
-                },
-                true,
-                true
-        );
+        setMap("..........",
+                "..S.......",
+                "..F.......",
+                "..........",
+                "..........");
+        setHp2();
+        check(FIELD_MEDIC, 12, TrooperStance.STANDING, true, false, true);
     }
 
     @Test
@@ -579,15 +341,9 @@ public class HealingTest {
         setHp(SOLDIER, 95);
         setHp(FIELD_MEDIC, 100);
 
-        check(
-                8,
-                new String[] {
-                        "SF....C",
-                },
-                true,
-                false,
-                MyMove.HEAL_WEST, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
-        );
+        setMap("SF....C");
+        setHp2();
+        check(FIELD_MEDIC, 8, TrooperStance.STANDING, true, false, false, MyMove.HEAL_WEST, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
     }
 
     @Test
@@ -595,47 +351,27 @@ public class HealingTest {
         setHp(COMMANDER, 90);
         setHp(FIELD_MEDIC, 97);
 
-        check(
-                8,
-                new String[]{
-                        "F....C",
-                },
-                true,
-                false,
-                MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST
-        );
+        setMap("F....C");
+        setHp2();
+        check(FIELD_MEDIC, 8, TrooperStance.STANDING, true, false, false, MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
     }
 
     @Test
     void testOneMoreBug2() {
         setHp(FIELD_MEDIC, 1);
 
-        checkWithExpectedHealedSum(
-                8,
-                new String[] {
-                        "F",
-                },
-                true,
-                false,
-                33,
-                MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 8, TrooperStance.STANDING, true, false, false, MyMove.HEAL_SELF, MyMove.EAT_FIELD_RATION, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF);
     }
 
     @Test
     void testOneMoreBug3() {
         setHp(FIELD_MEDIC, 99);
 
-        checkWithExpectedHealedSum(
-                1,
-                new String[] {
-                        "F",
-                },
-                true,
-                false,
-                1,
-                MyMove.HEAL_SELF
-        );
+        setMap("F");
+        setHp2();
+        check(FIELD_MEDIC, 1, TrooperStance.STANDING, true, false, false, MyMove.HEAL_SELF);
     }
 
     @Test
@@ -644,75 +380,24 @@ public class HealingTest {
         setHp(COMMANDER, 25);
         setHp(SOLDIER, 60);
 
-        checkWithExpectedHealedSum(
-                12,
-                new String[] {
-                        ".C",
-                        "SF"
-                },
-                false,
-                true,
-                100,
-
-                MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH,
-                MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST,
-                MyMove.USE_MEDIKIT_NORTH
-        );
+        setMap(".C",
+                "SF");
+        setHp2();
+        check(FIELD_MEDIC, 12, TrooperStance.STANDING, false, false, true, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_NORTH, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.HEAL_WEST, MyMove.USE_MEDIKIT_NORTH);
     }
 
     private void setHp(TrooperType trooper, int val) {
         hp1d[trooper.ordinal()] = val;
     }
 
-    private void check(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, MyMove... expectedAr) {
-        checkWithExpectedHealedSum(actionPoints, map, holdingFieldRation, holdingMedikit, -1, expectedAr);
-    }
-
-    private void checkWithExpectedHealedSum(int actionPoints, String[] map, boolean holdingFieldRation, boolean holdingMedikit, int expectedHealSum, MyMove... expectedAr) {
-        char[][] cmap = Utils.toCharAndTranspose(map);
-        int x = -1, y = -1;
-        for (int i = 0; i < cmap.length; i++) {
-            for (int j = 0; j < cmap[i].length; j++) {
-                if(cmap[i][j] == Utils.getCharForTrooperType(FIELD_MEDIC)) {
-                    x = i;
-                    y = j;
+    private void setHp2() {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                if (Utils.isTeammateChar(map[i][j])) {
+                    int index = Utils.getTrooperTypeByChar(map[i][j]).ordinal();
+                    setTrooper(i, j, hp1d[index], TrooperStance.STANDING);
                 }
             }
-        }
-        int[][] hp2d = new int[cmap.length][cmap[0].length];
-        for (int i = 0; i < cmap.length; i++) {
-            for (int j = 0; j < cmap[i].length; j++) {
-                if (Utils.isTeammateChar(cmap[i][j])) {
-                        int index = Utils.getTrooperTypeByChar(cmap[i][j]).ordinal();
-                        hp2d[i][j] = hp1d[index];
-                }
-            }
-        }
-        TrooperStance[][] stances = new TrooperStance[cmap.length][cmap[0].length];
-        boolean[][] hasGrenade = new boolean[cmap.length][cmap[0].length];
-        for (TrooperStance[] a: stances) {
-            Arrays.fill(a, TrooperStance.STANDING);
-        }
-        State plan = new PlanComputer(
-                cmap,
-                Utils.HARDCODED_UTILS,
-                hp2d,
-                new BonusType[cmap.length][cmap[0].length],
-                stances,
-                hasGrenade,
-                null,
-                false, false, new State(actionPoints, hp1d[FIELD_MEDIC.ordinal()], x, y, TrooperStance.STANDING, holdingFieldRation, false, holdingMedikit)
-        ).getPlan();
-
-        List<MyMove> actual = plan.actions;
-        List<MyMove> expected = Arrays.asList(expectedAr);
-        assertEquals(
-                actual,
-                expected,
-                String.format("\n\nActual: %s \nExpected: %s\nActual heal: %s\n Expected heal: %s\n\n", actual, expected, plan.healedSum, expectedHealSum)
-        );
-        if(expectedHealSum != -1) {
-            assertEquals(plan.healedSum, expectedHealSum);
         }
     }
 }

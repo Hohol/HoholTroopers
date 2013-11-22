@@ -1,7 +1,9 @@
 import model.BonusType;
 import model.Game;
 import model.TrooperStance;
+
 import static model.TrooperType.*;
+
 import model.TrooperType;
 
 import java.util.ArrayList;
@@ -18,14 +20,13 @@ public class PlanComputer {
     private final char[][] map;
     private final Game game;
     private final Utils utils;
-    private final List<Cell> enemyPositions = new ArrayList<>();
-    private final List<Cell> allyPositions = new ArrayList<>();
+    private final List<MutableTrooper> enemies;
+    private final List<MutableTrooper> teammates; //here, unlike MyStrategy, teammates does not contain self
     private State cur, best;
     private TrooperType selfType;
     private boolean[] visibilities;
     private int[][] sqrDistSum;
     BonusType[][] bonuses;
-    TrooperStance[][] stances;
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
@@ -33,7 +34,6 @@ public class PlanComputer {
     private int[][] numberOfTeammatesWhoCanReachEnemy;
     boolean[] enemyIsAlive;
     int[][] enemyIndex;
-    private int enemyCnt;
     private boolean healForbidden;
     private boolean bonusUseForbidden;
 
@@ -41,43 +41,43 @@ public class PlanComputer {
 
     MutableTrooper[][] troopers;
 
-    public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[][] hasGrenade, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, State state) {
+    public PlanComputer(char[][] map, Utils utils, BonusType[][] bonuses, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, MutableTrooper[][] troopers, List<MutableTrooper> teammates, List<MutableTrooper> enemies, State state
+    ) {
         this.map = map;
         n = map.length;
         m = map[0].length;
         this.utils = utils;
         this.game = utils.getGame();
         this.bonuses = bonuses;
-        this.stances = stances;
         this.visibilities = visibilities;
         this.cur = state;
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
-        prepareTroopers(hasGrenade, hp);
+        this.troopers = troopers;
+        this.teammates = teammates;
+        this.enemies = enemies;
+        enemyIndex = new int[n][m];
+        for (int i = 0; i < enemies.size(); i++) {
+            MutableTrooper enemy = enemies.get(i);
+            enemyIndex[enemy.getX()][enemy.getY()] = i;
+        }
         prepare();
         rec();
     }
 
     private void prepare() {
-        enemyIndex = new int[n][m];
         selfType = getType(cur.x, cur.y);
-        cur.selfHp = troopers[cur.x][cur.y].getHitpoints();
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 char ch = map[i][j];
-                if (Utils.isEnemyChar(ch)) {
-                    enemyPositions.add(new Cell(i, j));
-                    enemyCnt++;
-                    enemyIndex[i][j] = enemyPositions.size() - 1;
-                } else if (Utils.isTeammateChar(ch)) {
-                    allyPositions.add(new Cell(i, j));
+                if (Utils.isTeammateChar(ch)) {
                     updateSqrDistSum(i, j);
                 }
             }
         }
-        enemyIsAlive = new boolean[enemyCnt];
+        enemyIsAlive = new boolean[enemies.size()];
         Arrays.fill(enemyIsAlive, true);
 
         char[][] mapWithoutTeammates = new char[n][m];
@@ -91,9 +91,9 @@ public class PlanComputer {
         }
 
         bfsDistFromTeammateForHealing = new ArrayList<>();
-        for (Cell cell : allyPositions) {
-            int[][] curDist = Utils.bfsByMap(map, cell.x, cell.y);
-            int[][] curDistWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, cell.x, cell.y);
+        for (MutableTrooper ally : teammates) {
+            int[][] curDist = Utils.bfsByMap(map, ally.getX(), ally.getY());
+            int[][] curDistWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
             bfsDistFromTeammateForHealing.add(curDist);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < map[i].length; j++) {
@@ -104,14 +104,14 @@ public class PlanComputer {
             }
         }
         prepareHelp();
-        numberOfTeammatesWhoCanShoot = new int[enemyPositions.size()];
-        for (int i = 0; i < enemyPositions.size(); i++) {
-            Cell enemyPos = enemyPositions.get(i);
-            int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
-            for (Cell allyPos : allyPositions) {
-                int allyStance = stances[allyPos.x][allyPos.y].ordinal();
-                TrooperType allyType = getType(allyPos.x, allyPos.y);
-                if (canShoot(allyPos.x, allyPos.y, enemyPos.x, enemyPos.y, Math.min(enemyStance, allyStance), allyType)) {
+        numberOfTeammatesWhoCanShoot = new int[enemies.size()];
+        for (int i = 0; i < enemies.size(); i++) {
+            MutableTrooper enemy = enemies.get(i);
+            int enemyStance = enemy.getStance().ordinal();
+            for (MutableTrooper ally : teammates) {
+                int allyStance = ally.getStance().ordinal();
+                TrooperType allyType = getType(ally.getX(), ally.getY());
+                if (canShoot(ally.getX(), ally.getY(), enemy.getX(), enemy.getY(), Math.min(enemyStance, allyStance), allyType)) {
                     numberOfTeammatesWhoCanShoot[i]++;
                 }
             }
@@ -123,54 +123,28 @@ public class PlanComputer {
         prepareMaxDamageEnemyCanDeal();
     }
 
-    private void prepareTroopers(boolean[][] hasGrenade, int[][] hp) {
-        troopers = new MutableTrooper[n][m];
-        MTBuilder[][] builders = new MTBuilder[n][m];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                builders[i][j] = new MTBuilder();
-            }
-        }
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if(Utils.isLetter(map[i][j])) {
-                    MTBuilder builder = builders[i][j];
-                    if(hasGrenade[i][j]) {
-                        builder.grenade();
-                    }
-                    builder.hp(hp[i][j]);
-                }
-            }
-        }
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if(Utils.isLetter(map[i][j])) {
-                    troopers[i][j] = builders[i][j].build();
-                }
-            }
-        }
-    }
+
 
     private void prepareMaxDamageEnemyCanDeal() {
-        maxDamageEnemyCanDeal = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
+        maxDamageEnemyCanDeal = new int[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
 
-        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
-            Cell enemyPos = enemyPositions.get(enemyIndex);
-            int[][] dist = Utils.bfsByMap(map, enemyPos.x, enemyPos.y);
-            int initialEnemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
-            TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemyPos.x][enemyPos.y]);
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
+            int[][] dist = Utils.bfsByMap(map, enemy.getX(), enemy.getY());
+            int initialEnemyStance = enemy.getStance().ordinal();
+            TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemy.getX()][enemy.getY()]);
 
             for (int shooterX = 0; shooterX < n; shooterX++) {
                 for (int shooterY = 0; shooterY < m; shooterY++) {
                     if (dist[shooterX][shooterY] > 6) {
                         continue;
                     }
-                    if (!isFree(shooterX, shooterY) && (shooterX != enemyPos.x || shooterY != enemyPos.y)) {
+                    if (!isFree(shooterX, shooterY) && (shooterX != enemy.getX() || shooterY != enemy.getY())) {
                         continue;
                     }
                     for (int targetX = 0; targetX < n; targetX++) {
                         for (int targetY = 0; targetY < m; targetY++) {
-                            boolean grenade = troopers[enemyPos.x][enemyPos.y].isHoldingGrenade();
+                            boolean grenade = troopers[enemy.getX()][enemy.getY()].isHoldingGrenade();
                             boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
                             boolean canThrowGrenadeCollateral = grenade &&
                                     (
@@ -183,7 +157,7 @@ public class PlanComputer {
                                 int minShooterStance = -1;
                                 for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
                                     boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, Math.min(targetStance, shooterStance), enemyType);
-                                    if (targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemyPos.x + 2 && shooterY == enemyPos.y + 1) {
+                                    if (targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemy.getX() + 2 && shooterY == enemy.getY() + 1) {
                                         int x = 0;
                                         x++;
                                     }
@@ -249,7 +223,7 @@ public class PlanComputer {
     }
 
     private void prepareHelp() {
-        helpFactor = new int[enemyCnt][n][m];
+        helpFactor = new int[enemies.size()][n][m];
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -259,16 +233,16 @@ public class PlanComputer {
                 if (distFromMe[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
                     continue;
                 }
-                for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
-                    Cell enemyPos = enemyPositions.get(enemyIndex);
-                    if (!canShoot(i, j, enemyPos.x, enemyPos.y, stances[enemyPos.x][enemyPos.y].ordinal(), selfType)) {
+                for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+                    MutableTrooper enemy = enemies.get(enemyIndex);
+                    if (!canShoot(i, j, enemy.getX(), enemy.getY(), enemy.getStance().ordinal(), selfType)) {
                         continue;
                     }
                     int d = 1;
-                    for (Cell allyPos : allyPositions) {
-                        TrooperType allyType = getType(allyPos.x, allyPos.y);
-                        int allyStance = stances[allyPos.x][allyPos.y].ordinal();
-                        if (canShoot(allyPos.x, allyPos.y, enemyPos.x, enemyPos.y, allyStance, allyType)) {
+                    for (MutableTrooper ally : teammates) {
+                        TrooperType allyType = getType(ally.getX(), ally.getY());
+                        int allyStance = ally.getStance().ordinal();
+                        if (canShoot(ally.getX(), ally.getY(), enemy.getX(), enemy.getY(), allyStance, allyType)) {
                             d++;
                         }
                     }
@@ -277,8 +251,8 @@ public class PlanComputer {
             }
         }
 
-        helpDist = new int[enemyCnt][][];
-        for (int i = 0; i < enemyCnt; i++) {
+        helpDist = new int[enemies.size()][][];
+        for (int i = 0; i < enemies.size(); i++) {
             helpDist[i] = Utils.bfsByMapAndStartingCells(map, helpFactor[i]);
         }
     }
@@ -304,7 +278,7 @@ public class PlanComputer {
 
     private boolean someOfTeammatesCanBeKilled() {
         int max = 0;
-        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
@@ -315,16 +289,16 @@ public class PlanComputer {
             return true;
         }
 
-        for (Cell allyPos : allyPositions) {
+        for (MutableTrooper ally : teammates) {
             int t = 0;
-            int stance = stances[allyPos.x][allyPos.y].ordinal();
-            for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            int stance = ally.getStance().ordinal();
+            for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+                t += maxDamageEnemyCanDeal[enemyIndex][ally.getX()][ally.getY()][stance];
             }
-            if (t >= troopers[allyPos.x][allyPos.y].getHitpoints()) {
+            if (t >= troopers[ally.getX()][ally.getY()].getHitpoints()) {
                 return true;
             }
         }
@@ -334,21 +308,21 @@ public class PlanComputer {
 
     private int getMaxDamageEnemyCanDeal() { //todo maximize minimal hp
         int max = 0;
-        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
             max += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
         }
 
-        for (Cell allyPos : allyPositions) {
+        for (MutableTrooper ally : teammates) {
             int t = 0;
-            int stance = stances[allyPos.x][allyPos.y].ordinal();
-            for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+            int stance = ally.getStance().ordinal();
+            for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
                 if (!enemyIsAlive[enemyIndex]) {
                     continue;
                 }
-                t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
+                t += maxDamageEnemyCanDeal[enemyIndex][ally.getX()][ally.getY()][stance];
             }
             max = Math.max(max, t);
         }
@@ -358,7 +332,7 @@ public class PlanComputer {
 
     private int getHelpDist() {
         int r = Integer.MAX_VALUE;
-        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
@@ -369,7 +343,7 @@ public class PlanComputer {
 
     private int getHelpFactor() {
         int r = 0;
-        for (int enemyIndex = 0; enemyIndex < enemyCnt; enemyIndex++) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
@@ -384,12 +358,12 @@ public class PlanComputer {
             map[cur.x][cur.y] = Utils.getCharForTrooperType(selfType);
             numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] = 0;
 
-            for (Cell ally : allyPositions) {
-                if (getType(ally.x, ally.y) == FIELD_MEDIC) {
+            for (MutableTrooper ally : teammates) {
+                if (getType(ally.getX(), ally.getY()) == FIELD_MEDIC) {
                     continue;
                 }
-                int[][] dist = Utils.bfsByMap(map, ally.x, ally.y);
-                if (canReachSomeEnemy(ally.x, ally.y, dist)) {
+                int[][] dist = Utils.bfsByMap(map, ally.getX(), ally.getY());
+                if (canReachSomeEnemy(ally.getX(), ally.getY(), dist)) {
                     numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y]++;
                 }
             }
@@ -400,7 +374,7 @@ public class PlanComputer {
     }
 
     private boolean canReachSomeEnemy(int startX, int startY, int[][] dist) {
-        int allyStance = stances[startX][startY].ordinal();
+        int allyStance = troopers[startX][startY].getStance().ordinal();
         TrooperType allyType = getType(startX, startY);
 
         for (int newX = 0; newX < n; newX++) {
@@ -411,9 +385,9 @@ public class PlanComputer {
                 if (dist[newX][newY] >= 7) {
                     continue;
                 }
-                for (Cell enemyPos : enemyPositions) {
-                    int enemyStance = stances[enemyPos.x][enemyPos.y].ordinal();
-                    if (canShoot(newX, newY, enemyPos.x, enemyPos.y, Math.min(enemyStance, allyStance), allyType)) {
+                for (MutableTrooper enemy : enemies) {
+                    int enemyStance = enemy.getStance().ordinal();
+                    if (canShoot(newX, newY, enemy.getX(), enemy.getY(), Math.min(enemyStance, allyStance), allyType)) {
                         return true;
                     }
                 }
@@ -660,9 +634,9 @@ public class PlanComputer {
         if (cur.actionPoints < shootCost) {
             return;
         }
-        for (Cell pos : enemyPositions) {
-            int ex = pos.x, ey = pos.y;
-            if (troopers[ex][ey].getHitpoints() > 0 && canShoot(cur.x, cur.y, ex, ey, Math.min(cur.stance.ordinal(), stances[ex][ey].ordinal()))) {
+        for (MutableTrooper enemy : enemies) {
+            int ex = enemy.getX(), ey = enemy.getY();
+            if (troopers[ex][ey].getHitpoints() > 0 && canShoot(cur.x, cur.y, ex, ey, Math.min(cur.stance.ordinal(), enemy.getStance().ordinal()))) {
                 shoot(ex, ey);
                 rec();
                 unshoot(ex, ey);
@@ -766,12 +740,12 @@ public class PlanComputer {
         if (!cur.holdingGrenade || cur.actionPoints < game.getGrenadeThrowCost()) {
             return;
         }
-        for (Cell pos : enemyPositions) {
-            tryThrowGrenade(pos.x, pos.y);
-            tryThrowGrenade(pos.x + 1, pos.y);
-            tryThrowGrenade(pos.x - 1, pos.y);
-            tryThrowGrenade(pos.x, pos.y + 1);
-            tryThrowGrenade(pos.x, pos.y - 1);
+        for (MutableTrooper enemy : enemies) {
+            tryThrowGrenade(enemy.getX(), enemy.getY());
+            tryThrowGrenade(enemy.getX() + 1, enemy.getY());
+            tryThrowGrenade(enemy.getX() - 1, enemy.getY());
+            tryThrowGrenade(enemy.getX(), enemy.getY() + 1);
+            tryThrowGrenade(enemy.getX(), enemy.getY() - 1);
         }
     }
 
@@ -831,20 +805,20 @@ public class PlanComputer {
 
     private int getFocusFireParameter() {
         int r = 0;
-        for (int i = 0; i < enemyPositions.size(); i++) {
-            Cell enemy = enemyPositions.get(i);
-            if (troopers[enemy.x][enemy.y].getHitpoints() <= 0) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
+            if (troopers[enemy.getX()][enemy.getY()].getHitpoints() <= 0) {
                 continue;
             }
-            r += (10000 - sqrDistSum[enemy.x][enemy.y] + 10000 * numberOfTeammatesWhoCanShoot[i]) * (Utils.INITIAL_TROOPER_HP * 2 - troopers[enemy.x][enemy.y].getHitpoints()); // =)
+            r += (10000 - sqrDistSum[enemy.getX()][enemy.getY()] + 10000 * numberOfTeammatesWhoCanShoot[enemyIndex]) * (Utils.INITIAL_TROOPER_HP * 2 - troopers[enemy.getX()][enemy.getY()].getHitpoints()); // =)
         }
         return r;
     }
 
     private int getMinHp() {
         int mi = cur.selfHp;
-        for (Cell cell : allyPositions) {
-            mi = Math.min(mi, troopers[cell.x][cell.y].getHitpoints());
+        for (MutableTrooper ally : teammates) {
+            mi = Math.min(mi, troopers[ally.getX()][ally.getY()].getHitpoints());
         }
         return mi;
     }
@@ -852,13 +826,13 @@ public class PlanComputer {
     private int getDistToTeammatesSum() {
         int r = 0;
         int minHp = Integer.MAX_VALUE;
-        for (Cell cell : allyPositions) {
-            minHp = Math.min(minHp, troopers[cell.x][cell.y].getHitpoints());
+        for (MutableTrooper ally : teammates) {
+            minHp = Math.min(minHp, troopers[ally.getX()][ally.getY()].getHitpoints());
         }
-        for (int i = 0; i < allyPositions.size(); i++) {
-            Cell cell = allyPositions.get(i);
+        for (int i = 0; i < teammates.size(); i++) {
+            MutableTrooper ally = teammates.get(i);
             int d = bfsDistFromTeammateForHealing.get(i)[cur.x][cur.y];
-            if (troopers[cell.x][cell.y].getHitpoints() == minHp) {
+            if (troopers[ally.getX()][ally.getY()].getHitpoints() == minHp) {
                 d *= 100;
             }
             r += d;

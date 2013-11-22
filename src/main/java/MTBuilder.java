@@ -46,4 +46,47 @@ public class MTBuilder {
         holdingGrenade = true;
         return this;
     }
+
+    public MTBuilder x(int x) {
+        this.x = x;
+        return this;
+    }
+
+    public MTBuilder y(int y) {
+        this.y = y;
+        return this;
+    }
+
+    public MTBuilder teammate() {
+        this.teammate = true;
+        return this;
+    }
+
+    public MTBuilder stance(TrooperStance stance) {
+        if(stance == null) { //todo remove
+            stance = TrooperStance.STANDING;
+        }
+        this.stance = stance;
+        return this;
+    }
+
+    public MTBuilder actionPoints(int actionPoints) {
+        this.actionPoints = actionPoints;
+        return this;
+    }
+
+    public MTBuilder holdingFieldRation() {
+        holdingFieldRation = true;
+        return this;
+    }
+
+    public MTBuilder holdingGrenade() {
+        holdingGrenade = true;
+        return this;
+    }
+
+    public MTBuilder holdingMedikit() {
+        holdingMedikit = true;
+        return this;
+    }
 }
