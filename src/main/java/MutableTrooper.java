@@ -33,7 +33,7 @@ public final class MutableTrooper {
     private final boolean holdingGrenade;
     private final boolean holdingMedikit;
     private final boolean holdingFieldRation;
-    private int lastSeenTime;
+    private int lastSeenTime; //todo it does not belong here
 
     public MutableTrooper(Trooper t, int lastSeenTime) {
         this.id = t.getId();
@@ -59,6 +59,31 @@ public final class MutableTrooper {
         this.holdingMedikit = t.isHoldingMedikit();
         this.holdingFieldRation = t.isHoldingFieldRation();
         this.lastSeenTime = lastSeenTime;
+    }
+
+    public MutableTrooper(long id, int x, int y, long playerId, int teammateIndex, boolean teammate, TrooperType type, TrooperStance stance, int hitpoints, int maximalHitpoints, int actionPoints, int initialActionPoints, double visionRange, double shootingRange, int shootCost, int standingDamage, int kneelingDamage, int proneDamage, int damage, boolean holdingGrenade, boolean holdingMedikit, boolean holdingFieldRation) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.playerId = playerId;
+        this.teammateIndex = teammateIndex;
+        this.teammate = teammate;
+        this.type = type;
+        this.stance = stance;
+        this.hitpoints = hitpoints;
+        this.maximalHitpoints = maximalHitpoints;
+        this.actionPoints = actionPoints;
+        this.initialActionPoints = initialActionPoints;
+        this.visionRange = visionRange;
+        this.shootingRange = shootingRange;
+        this.shootCost = shootCost;
+        this.standingDamage = standingDamage;
+        this.kneelingDamage = kneelingDamage;
+        this.proneDamage = proneDamage;
+        this.damage = damage;
+        this.holdingGrenade = holdingGrenade;
+        this.holdingMedikit = holdingMedikit;
+        this.holdingFieldRation = holdingFieldRation;
     }
 
     /**
@@ -266,5 +291,9 @@ public final class MutableTrooper {
      */
     public int getY() {
         return y;
+    }
+
+    public void setHitpoints(int hp) {
+        hitpoints = hp;
     }
 }

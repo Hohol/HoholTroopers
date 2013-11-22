@@ -1,16 +1,14 @@
 import model.BonusType;
 import model.Game;
 import model.TrooperStance;
+import static model.TrooperType.*;
 import model.TrooperType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static model.TrooperStance.PRONE;
-import static model.TrooperStance.STANDING;
-import static model.TrooperType.COMMANDER;
-import static model.TrooperType.FIELD_MEDIC;
+import static model.TrooperStance.*;
 
 public class PlanComputer {
     private static final long MAX_RECURSIVE_CALLS = 3000000;
@@ -24,7 +22,6 @@ public class PlanComputer {
     private final List<Cell> allyPositions = new ArrayList<>();
     private State cur, best;
     private TrooperType selfType;
-    private int[][] hp;
     private boolean[] visibilities;
     private int[][] sqrDistSum;
     BonusType[][] bonuses;
@@ -39,9 +36,10 @@ public class PlanComputer {
     private int enemyCnt;
     private boolean healForbidden;
     private boolean bonusUseForbidden;
-    private boolean[][] hasGrenade;
 
     int[][][][] maxDamageEnemyCanDeal;
+
+    MutableTrooper[][] troopers;
 
     public PlanComputer(char[][] map, Utils utils, int[][] hp, BonusType[][] bonuses, TrooperStance[][] stances, boolean[][] hasGrenade, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, State state) {
         this.map = map;
@@ -49,27 +47,21 @@ public class PlanComputer {
         m = map[0].length;
         this.utils = utils;
         this.game = utils.getGame();
-        this.hp = hp;
         this.bonuses = bonuses;
         this.stances = stances;
         this.visibilities = visibilities;
         this.cur = state;
-        this.hp = hp;
-        this.hasGrenade = hasGrenade;
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
+        prepareTroopers(hasGrenade, hp);
         prepare();
-        //long start = System.currentTimeMillis();
         rec();
-        //long end = System.currentTimeMillis();
-        //System.out.println("Calculated in " + (end - start) + " milliseconds");
-        //System.out.println("Recursive calls cnt = " + recursiveCallsCnt);
     }
 
     private void prepare() {
         enemyIndex = new int[n][m];
         selfType = getType(cur.x, cur.y);
-        cur.selfHp = hp[cur.x][cur.y];
+        cur.selfHp = troopers[cur.x][cur.y].getHitpoints();
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[n][m];
         for (int i = 0; i < n; i++) {
@@ -82,8 +74,6 @@ public class PlanComputer {
                 } else if (Utils.isTeammateChar(ch)) {
                     allyPositions.add(new Cell(i, j));
                     updateSqrDistSum(i, j);
-                } else {
-                    hp[i][j] = Integer.MAX_VALUE;
                 }
             }
         }
@@ -133,6 +123,34 @@ public class PlanComputer {
         prepareMaxDamageEnemyCanDeal();
     }
 
+    private void prepareTroopers(boolean[][] hasGrenade, int[][] hp) {
+        troopers = new MutableTrooper[n][m];
+        MTBuilder[][] builders = new MTBuilder[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                builders[i][j] = new MTBuilder();
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if(Utils.isLetter(map[i][j])) {
+                    MTBuilder builder = builders[i][j];
+                    if(hasGrenade[i][j]) {
+                        builder.grenade();
+                    }
+                    builder.hp(hp[i][j]);
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if(Utils.isLetter(map[i][j])) {
+                    troopers[i][j] = builders[i][j].build();
+                }
+            }
+        }
+    }
+
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new int[enemyCnt][n][m][Utils.NUMBER_OF_STANCES];
 
@@ -152,7 +170,7 @@ public class PlanComputer {
                     }
                     for (int targetX = 0; targetX < n; targetX++) {
                         for (int targetY = 0; targetY < m; targetY++) {
-                            boolean grenade = hasGrenade[enemyPos.x][enemyPos.y];
+                            boolean grenade = troopers[enemyPos.x][enemyPos.y].isHoldingGrenade();
                             boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
                             boolean canThrowGrenadeCollateral = grenade &&
                                     (
@@ -306,7 +324,7 @@ public class PlanComputer {
                 }
                 t += maxDamageEnemyCanDeal[enemyIndex][allyPos.x][allyPos.y][stance];
             }
-            if (t >= hp[allyPos.x][allyPos.y]) {
+            if (t >= troopers[allyPos.x][allyPos.y].getHitpoints()) {
                 return true;
             }
         }
@@ -473,7 +491,7 @@ public class PlanComputer {
             return;
         }
 
-        int oldHp = c == null ? cur.selfHp : hp[c.x][c.y];//hp1d[typeOrdinal];
+        int oldHp = c == null ? cur.selfHp : troopers[c.x][c.y].getHitpoints();
         if (oldHp >= Utils.INITIAL_TROOPER_HP) {
             return;
         }
@@ -485,7 +503,7 @@ public class PlanComputer {
         if (c == null) {
             cur.selfHp = newHp;
         } else {
-            hp[c.x][c.y] = newHp;
+            troopers[c.x][c.y].setHitpoints(newHp);
         }
         cur.actionPoints -= healCost;
         cur.healedSum += diffHp;
@@ -497,7 +515,7 @@ public class PlanComputer {
         if (c == null) {
             cur.selfHp = oldHp;
         } else {
-            hp[c.x][c.y] = oldHp;
+            troopers[c.x][c.y].setHitpoints(oldHp);
         }
         popAction();
     }
@@ -549,7 +567,7 @@ public class PlanComputer {
     }
 
     private boolean isFree(int x, int y) {
-        return map[x][y] == '.' || map[x][y] == '?' || hp[x][y] <= 0;
+        return map[x][y] == '.' || map[x][y] == '?' || troopers[x][y] != null && troopers[x][y].getHitpoints() <= 0;
     }
 
     void dealDamage(int ex, int ey, int damage) {
@@ -560,14 +578,14 @@ public class PlanComputer {
             return;
         }
 
-        if (hp[ex][ey] > 0) {
-            if (damage >= hp[ex][ey]) {
+        if (troopers[ex][ey].getHitpoints() > 0) {
+            if (damage >= troopers[ex][ey].getHitpoints()) {
                 cur.killCnt++;
                 enemyIsAlive[enemyIndex[ex][ey]] = false;
             }
-            cur.damageSum += Math.min(damage, hp[ex][ey]);
+            cur.damageSum += Math.min(damage, troopers[ex][ey].getHitpoints());
         }
-        hp[ex][ey] -= damage;
+        troopers[ex][ey].decHp(damage);
     }
 
     private void undealDamage(int ex, int ey, int damage) {
@@ -578,14 +596,14 @@ public class PlanComputer {
             return;
         }
 
-        if (hp[ex][ey] + damage > 0) {
-            if (hp[ex][ey] <= 0) {
+        if (troopers[ex][ey].getHitpoints() + damage > 0) {
+            if (troopers[ex][ey].getHitpoints() <= 0) {
                 cur.killCnt--;
                 enemyIsAlive[enemyIndex[ex][ey]] = true;
             }
-            cur.damageSum -= Math.min(damage, hp[ex][ey] + damage);
+            cur.damageSum -= Math.min(damage, troopers[ex][ey].getHitpoints() + damage);
         }
-        hp[ex][ey] += damage;
+        troopers[ex][ey].decHp(-damage);
     }
 
     private void unshoot(int ex, int ey) {
@@ -644,7 +662,7 @@ public class PlanComputer {
         }
         for (Cell pos : enemyPositions) {
             int ex = pos.x, ey = pos.y;
-            if (hp[ex][ey] > 0 && canShoot(cur.x, cur.y, ex, ey, Math.min(cur.stance.ordinal(), stances[ex][ey].ordinal()))) {
+            if (troopers[ex][ey].getHitpoints() > 0 && canShoot(cur.x, cur.y, ex, ey, Math.min(cur.stance.ordinal(), stances[ex][ey].ordinal()))) {
                 shoot(ex, ey);
                 rec();
                 unshoot(ex, ey);
@@ -815,10 +833,10 @@ public class PlanComputer {
         int r = 0;
         for (int i = 0; i < enemyPositions.size(); i++) {
             Cell enemy = enemyPositions.get(i);
-            if (hp[enemy.x][enemy.y] <= 0) {
+            if (troopers[enemy.x][enemy.y].getHitpoints() <= 0) {
                 continue;
             }
-            r += (10000 - sqrDistSum[enemy.x][enemy.y] + 10000 * numberOfTeammatesWhoCanShoot[i]) * (Utils.INITIAL_TROOPER_HP * 2 - hp[enemy.x][enemy.y]); // =)
+            r += (10000 - sqrDistSum[enemy.x][enemy.y] + 10000 * numberOfTeammatesWhoCanShoot[i]) * (Utils.INITIAL_TROOPER_HP * 2 - troopers[enemy.x][enemy.y].getHitpoints()); // =)
         }
         return r;
     }
@@ -826,7 +844,7 @@ public class PlanComputer {
     private int getMinHp() {
         int mi = cur.selfHp;
         for (Cell cell : allyPositions) {
-            mi = Math.min(mi, hp[cell.x][cell.y]);
+            mi = Math.min(mi, troopers[cell.x][cell.y].getHitpoints());
         }
         return mi;
     }
@@ -835,12 +853,12 @@ public class PlanComputer {
         int r = 0;
         int minHp = Integer.MAX_VALUE;
         for (Cell cell : allyPositions) {
-            minHp = Math.min(minHp, hp[cell.x][cell.y]);
+            minHp = Math.min(minHp, troopers[cell.x][cell.y].getHitpoints());
         }
         for (int i = 0; i < allyPositions.size(); i++) {
             Cell cell = allyPositions.get(i);
             int d = bfsDistFromTeammateForHealing.get(i)[cur.x][cur.y];
-            if (hp[cell.x][cell.y] == minHp) {
+            if (troopers[cell.x][cell.y].getHitpoints() == minHp) {
                 d *= 100;
             }
             r += d;
