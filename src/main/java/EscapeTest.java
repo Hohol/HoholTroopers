@@ -1,7 +1,6 @@
 import static model.TrooperType.*;
 
 import static model.TrooperStance.*;
-import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.Test;
 
@@ -16,10 +15,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.LOWER_STANCE
         );
 
@@ -34,14 +29,10 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "C.......",
                 ".......c"
         );
-        setTrooper(0, 0, 50, STANDING);
+        ally(COMMANDER).hp(50);
         check(
                 COMMANDER,
-                2,
-                STANDING,
-                false,
-                false,
-                false
+                2
         );
     }
 
@@ -50,14 +41,10 @@ public class EscapeTest extends AbstractPlanComputerTest {
         setMap(
                 "S1s"
         );
-        setTrooper(0, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
         check(
                 SOLDIER,
                 12,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.LOWER_STANCE, MyMove.shoot(2, 0), MyMove.shoot(2, 0), MyMove.LOWER_STANCE
         );
     }
@@ -68,15 +55,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "...",
                 "S.s"
         );
-        setTrooper(0, 1, 1, STANDING);
-        setTrooper(2, 1, 1, STANDING);
+        ally(SOLDIER).hp(1);
+        enemy(SOLDIER).hp(1);
         check(
                 SOLDIER,
                 6,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(2, 1)
         );
     }
@@ -89,10 +72,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 12,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(6, 0), MyMove.shoot(6, 0), MyMove.shoot(6, 0)
         );
     }
@@ -102,14 +81,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
         setMap(
                 ".FS......s"
         );
-        setTrooper(2, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
+        ally(FIELD_MEDIC).medikit();
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                true,
                 MyMove.USE_MEDIKIT_EAST
         );
     }
@@ -119,13 +95,10 @@ public class EscapeTest extends AbstractPlanComputerTest {
         setMap(
                 ".S.......s"
         );
+        ally(SOLDIER).medikit();
         check(
                 SOLDIER,
                 4,
-                STANDING,
-                false,
-                false,
-                true,
                 MyMove.shoot(9, 0)
         );
     }
@@ -138,13 +111,10 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "s..F.",
                 "##..."
         );
+        ally(FIELD_MEDIC).medikit();
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                true,
                 MyMove.MOVE_SOUTH
         );
     }
@@ -158,10 +128,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.LOWER_STANCE
         );
     }
@@ -174,11 +140,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
         check(
                 FIELD_MEDIC,
-                2,
-                STANDING,
-                false,
-                false,
-                false
+                2
         );
     }
 
@@ -191,10 +153,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(4, 1)
         );
     }
@@ -208,10 +166,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 3,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -226,10 +180,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -244,10 +194,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -263,10 +209,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST
         );
     }
@@ -279,15 +221,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "....s"
         );
 
-        setTrooper(4, 2, 100, KNEELING);
+        enemy(SOLDIER).stance(KNEELING);
 
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_SOUTH
         );
     }
@@ -299,15 +237,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "S#......."
         );
 
-        setTrooper(0, 1, 1, STANDING);
+        ally(SOLDIER).hp(1);
 
         check(
                 SOLDIER,
-                2,
-                STANDING,
-                false,
-                false,
-                false
+                2
         );
     }
 
@@ -324,10 +258,6 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -339,15 +269,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "s.S.1.F"
         );
 
-        setTrooper(0, 1, 100, PRONE);
+        enemy(SOLDIER).stance(PRONE);
 
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -358,15 +284,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 ".S...#f"
         );
 
-        giveGrenade(6, 0);
+        enemy(FIELD_MEDIC).grenade();
 
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_WEST
         );
     }
@@ -377,15 +299,11 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 ".S....#f"
         );
 
-        giveGrenade(7, 0);
+        enemy(FIELD_MEDIC).grenade();
 
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_WEST
         );
     }

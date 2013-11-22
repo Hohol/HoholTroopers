@@ -75,17 +75,12 @@ public class MTBuilder {
         return this;
     }
 
-    public MTBuilder holdingFieldRation() {
+    public MTBuilder fieldRation() {
         holdingFieldRation = true;
         return this;
     }
 
-    public MTBuilder holdingGrenade() {
-        holdingGrenade = true;
-        return this;
-    }
-
-    public MTBuilder holdingMedikit() {
+    public MTBuilder medikit() {
         holdingMedikit = true;
         return this;
     }

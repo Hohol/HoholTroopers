@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static model.TrooperStance.STANDING;
 import static org.testng.Assert.assertEquals;
 
 public class AbstractPlanComputerTest {
@@ -60,13 +59,6 @@ public class AbstractPlanComputerTest {
         builders[x][y].hp(newHp).stance(stance).x(x).y(y);
     }
 
-    protected void giveGrenade(int x, int y) {
-        if (!Utils.isLetter(map[x][y])) {
-            throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
-        }
-        builders[x][y].grenade();
-    }
-
     protected void addBonus(int x, int y, BonusType bonus) {
         if (!Utils.isLetter(map[x][y])) {
             throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
@@ -74,7 +66,7 @@ public class AbstractPlanComputerTest {
         bonuses[x][y] = bonus;
     }
 
-    protected MTBuilder addAlly(TrooperType type) {
+    protected MTBuilder ally(TrooperType type) {
         int x = -1, y = -1;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
@@ -90,12 +82,12 @@ public class AbstractPlanComputerTest {
         return builders[x][y];
     }
 
-    protected MTBuilder addEnemy(TrooperType type) {
+    protected MTBuilder enemy(TrooperType type) {
         int x = -1, y = -1;
         int cnt = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                if (Utils.isEnemyChar(map[i][j]) && map[i][j] == Utils.getCharForTrooperType(type)) {
+                if (Utils.isEnemyChar(map[i][j]) && Character.toUpperCase(map[i][j]) == Utils.getCharForTrooperType(type)) {
                     x = i;
                     y = j;
                     cnt++;
@@ -129,25 +121,10 @@ public class AbstractPlanComputerTest {
     protected void check(
             TrooperType selfType,
             int actionPoints,
-            TrooperStance stance,
-            boolean holdingFieldRation,
-            boolean holdingGrenade,
-            boolean holdingMedikit,
             MyMove... expectedAr
     ) {
-        MTBuilder selfBuilder = addAlly(selfType)
-                .actionPoints(actionPoints)
-                .stance(stance);
-
-        if (holdingFieldRation) {
-            selfBuilder.holdingFieldRation();
-        }
-        if (holdingGrenade) {
-            selfBuilder.holdingGrenade();
-        }
-        if (holdingMedikit) {
-            selfBuilder.holdingMedikit();
-        }
+        MTBuilder selfBuilder = ally(selfType)
+                .actionPoints(actionPoints);
 
         MutableTrooper self = selfBuilder.build();
 

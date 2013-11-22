@@ -11,25 +11,19 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         setMap("F");
         check(
                 FIELD_MEDIC,
-                12,
-                STANDING,
-                false,
-                false,
-                false);
+                12
+        );
     }
 
     @Test
     void medicShouldHeal() {
         setMap("SF.s");
 
-        setTrooper(0, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
+        ally(FIELD_MEDIC).medikit();
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                true,
                 MyMove.USE_MEDIKIT_WEST
         );
     }
@@ -47,10 +41,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -67,10 +57,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_SOUTH
         );
     }
@@ -84,10 +70,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(0, 0)
         );
     }
@@ -99,15 +81,11 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 ".+"
         );
 
-        setTrooper(1, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
 
         check(
                 FIELD_MEDIC,
                 6,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH
         );
     }
@@ -119,16 +97,12 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 ".++"
         );
 
-        setTrooper(1, 0, 1, STANDING);
-        setTrooper(2, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
+        ally(COMMANDER).hp(1);
 
         check(
                 FIELD_MEDIC,
                 10,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH, MyMove.MOVE_EAST, MyMove.USE_MEDIKIT_NORTH
         );
     }
@@ -150,13 +124,11 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "..................F..........."
         );
 
+        ally(FIELD_MEDIC).grenade();
+
         check(
                 FIELD_MEDIC,
                 10,
-                STANDING,
-                false,
-                true,
-                false,
                 MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
         );
     }
@@ -181,10 +153,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 10,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
         );
     }
@@ -201,10 +169,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_SOUTH
         );
     }
@@ -220,10 +184,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -240,10 +200,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_NORTH
         );
     }
@@ -258,15 +214,12 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "..f..."
         );
 
-        setTrooper(5, 0, 90, STANDING);
+        enemy(SOLDIER).hp(90);
+        ally(FIELD_MEDIC).grenade();
 
         check(
                 FIELD_MEDIC,
                 8,
-                STANDING,
-                false,
-                true,
-                false,
                 MyMove.grenade(5, 0)
         );
     }
@@ -281,10 +234,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST
         );
     }
@@ -299,10 +248,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 5,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST, MyMove.shoot(4, 1)
         );
 
@@ -312,10 +257,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_WEST
         );
 
@@ -334,11 +275,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
 
         check(
                 FIELD_MEDIC,
-                2,
-                STANDING,
-                false,
-                false,
-                false
+                2
         );
     }
 
@@ -352,10 +289,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(8, 0)
         );
     }
@@ -366,13 +299,11 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "C.S.s"
         );
 
+        ally(SOLDIER).fieldRation().grenade();
+
         check(
                 SOLDIER,
                 8,
-                STANDING,
-                true,
-                true,
-                false,
                 MyMove.grenade(4, 0)
         );
     }
@@ -386,10 +317,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_WEST
         );
     }
@@ -401,14 +328,10 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "...",
                 "S1s"
         );
-        setTrooper(2, 2, 1, STANDING);
+        enemy(SOLDIER).hp(1);
         check(
                 SOLDIER,
                 6,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.shoot(2, 2)
         );
     }
@@ -419,14 +342,10 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "S........",
                 "........f"
         );
-        setTrooper(0, 0, 120, PRONE);
+        ally(SOLDIER).fieldRation().stance(PRONE);
         check(
                 SOLDIER,
                 12,
-                PRONE,
-                true,
-                false,
-                false,
                 MyMove.MOVE_SOUTH, MyMove.EAT_FIELD_RATION, MyMove.shoot(8, 1), MyMove.shoot(8, 1)
         );
     }
@@ -437,15 +356,13 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 "S#s",
                 "..."
         );
-        setTrooper(0, 0, 80, STANDING);
-        giveGrenade(2, 0);
+
+        ally(SOLDIER).hp(80).medikit();
+        enemy(SOLDIER).grenade();
+
         check(
                 SOLDIER,
                 2,
-                STANDING,
-                false,
-                false,
-                true,
                 MyMove.USE_MEDIKIT_SELF
         );
     }
@@ -455,29 +372,22 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         setMap(
                 "s....+S"
         );
-        giveGrenade(0, 0);
+        enemy(SOLDIER).grenade();
+        ally(SOLDIER).grenade();
         check(
                 SOLDIER,
                 10,
-                STANDING,
-                false,
-                true,
-                false,
                 MyMove.LOWER_STANCE, MyMove.shoot(0, 0), MyMove.shoot(0, 0)
         );
 
         setMap(
                 "s....+S."
         );
-        giveGrenade(0, 0);
-        setTrooper(6, 0, 85, STANDING);
+        enemy(SOLDIER).grenade();
+        ally(SOLDIER).hp(85);
         check(
                 SOLDIER,
                 8,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.shoot(0, 0)
         );
     }
@@ -487,14 +397,10 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         setMap(
                 "s+....S"
         );
-        setTrooper(6, 0, 75, STANDING);
+        ally(SOLDIER).hp(75);
         check(
                 SOLDIER,
                 12,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.USE_MEDIKIT_SELF
         );
     }
@@ -508,10 +414,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST
         );
     }
@@ -527,10 +429,6 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                STANDING,
-                false,
-                false,
-                false,
                 MyMove.MOVE_EAST
         );
     }
