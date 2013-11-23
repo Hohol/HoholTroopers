@@ -69,14 +69,10 @@ public class PlanComputer {
         selfType = getType(cur.x, cur.y);
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[n][m];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                char ch = map[i][j];
-                if (Utils.isTeammateChar(ch)) {
-                    updateSqrDistSum(i, j);
-                }
-            }
+        for (MutableTrooper ally : teammates) {
+            updateSqrDistSum(ally.getX(), ally.getY());
         }
+
         enemyIsAlive = new boolean[enemies.size()];
         Arrays.fill(enemyIsAlive, true);
 
@@ -123,10 +119,9 @@ public class PlanComputer {
         prepareMaxDamageEnemyCanDeal();
     }
 
-
-
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new int[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+
 
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             MutableTrooper enemy = enemies.get(enemyIndex);
@@ -157,10 +152,6 @@ public class PlanComputer {
                                 int minShooterStance = -1;
                                 for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
                                     boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, Math.min(targetStance, shooterStance), enemyType);
-                                    if (targetX == 18 && targetY == 14 && enemyIndex == 0 && targetStance == 2 && shooterStance == 2 && shooterX == enemy.getX() + 2 && shooterY == enemy.getY() + 1) {
-                                        int x = 0;
-                                        x++;
-                                    }
                                     if (canShoot && minShooterStance == -1) {
                                         minShooterStance = shooterStance;
                                     }
@@ -616,11 +607,6 @@ public class PlanComputer {
             return false;
         }
         return visible(viewerX, viewerY, objectX, objectY, stance);
-    }
-
-    private boolean canSee(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
-        int range = utils.getVisionRange(type);
-        return reachable(viewerX, viewerY, objectX, objectY, stance, range);
     }
 
     private boolean canShoot(int viewerX, int viewerY, int objectX, int objectY, int stance, TrooperType type) {
