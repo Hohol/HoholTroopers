@@ -28,10 +28,12 @@ public class AbstractPlanComputerTest {
         builders = new MTBuilder[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                if (Utils.isLetter(map[i][j])) {
+                char ch = map[i][j];
+                if (Utils.isLetter(ch)) {
                     builders[i][j] = new MTBuilder()
                             .x(i)
-                            .y(j);
+                            .y(j)
+                            .type(Utils.getTrooperTypeByChar(ch));
                     if (Utils.isTeammateChar(map[i][j])) {
                         builders[i][j].teammate();
                     }
@@ -122,8 +124,7 @@ public class AbstractPlanComputerTest {
                 getVisibilities(),
                 false,
                 false, troopers, teammates, enemies,
-
-                new State(self)
+                self
         ).getPlan().actions;
 
         List<MyMove> expected = Arrays.asList(expectedAr);

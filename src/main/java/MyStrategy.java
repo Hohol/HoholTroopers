@@ -476,8 +476,8 @@ public final class MyStrategy implements Strategy {
                 bonusUseForbidden,
                 getTroopers2d(),
                 teammatesWithoutSelf(),
-                new ArrayList(enemies),
-                new State(new MutableTrooper(self, -1)) //todo remove lastSeenTime from MutableTrooper
+                new ArrayList<>(enemies),
+                new MutableTrooper(self, -1) //todo remove lastSeenTime from MutableTrooper
         ).getPlan();
 
         /*

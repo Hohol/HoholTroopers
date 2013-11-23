@@ -84,4 +84,9 @@ public class MTBuilder {
         holdingMedikit = true;
         return this;
     }
+
+    public MTBuilder type(TrooperType type) {
+        this.type = type;
+        return this;
+    }
 }

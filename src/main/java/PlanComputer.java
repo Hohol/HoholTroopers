@@ -41,7 +41,7 @@ public class PlanComputer {
 
     MutableTrooper[][] troopers;
 
-    public PlanComputer(char[][] map, Utils utils, BonusType[][] bonuses, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, MutableTrooper[][] troopers, List<MutableTrooper> teammates, List<MutableTrooper> enemies, State state
+    public PlanComputer(char[][] map, Utils utils, BonusType[][] bonuses, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, MutableTrooper[][] troopers, List<MutableTrooper> teammates, List<MutableTrooper> enemies, MutableTrooper self
     ) {
         this.map = map;
         n = map.length;
@@ -50,7 +50,7 @@ public class PlanComputer {
         this.game = utils.getGame();
         this.bonuses = bonuses;
         this.visibilities = visibilities;
-        this.cur = state;
+        this.cur = new State(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
         this.troopers = troopers;
@@ -66,7 +66,7 @@ public class PlanComputer {
     }
 
     private void prepare() {
-        selfType = getType(cur.x, cur.y);
+        selfType = troopers[cur.x][cur.y].getType();
         map[cur.x][cur.y] = '.';
         sqrDistSum = new int[n][m];
         for (MutableTrooper ally : teammates) {
@@ -106,8 +106,7 @@ public class PlanComputer {
             int enemyStance = enemy.getStance().ordinal();
             for (MutableTrooper ally : teammates) {
                 int allyStance = ally.getStance().ordinal();
-                TrooperType allyType = getType(ally.getX(), ally.getY());
-                if (canShoot(ally.getX(), ally.getY(), enemy.getX(), enemy.getY(), Math.min(enemyStance, allyStance), allyType)) {
+                if (canShoot(ally.getX(), ally.getY(), enemy.getX(), enemy.getY(), Math.min(enemyStance, allyStance), ally.getType())) {
                     numberOfTeammatesWhoCanShoot[i]++;
                 }
             }
@@ -234,7 +233,7 @@ public class PlanComputer {
                     }
                     int d = 1;
                     for (MutableTrooper ally : teammates) {
-                        TrooperType allyType = getType(ally.getX(), ally.getY());
+                        TrooperType allyType = ally.getType();
                         int allyStance = ally.getStance().ordinal();
                         if (canShoot(ally.getX(), ally.getY(), enemy.getX(), enemy.getY(), allyStance, allyType)) {
                             d++;
@@ -353,11 +352,11 @@ public class PlanComputer {
             numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] = 0;
 
             for (MutableTrooper ally : teammates) {
-                if (getType(ally.getX(), ally.getY()) == FIELD_MEDIC) {
+                if (ally.getType() == FIELD_MEDIC) {
                     continue;
                 }
                 int[][] dist = Utils.bfsByMap(map, ally.getX(), ally.getY());
-                if (canReachSomeEnemy(ally.getX(), ally.getY(), dist)) {
+                if (canReachSomeEnemy(ally, dist)) {
                     numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y]++;
                 }
             }
@@ -367,13 +366,13 @@ public class PlanComputer {
         return numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y];
     }
 
-    private boolean canReachSomeEnemy(int startX, int startY, int[][] dist) {
-        int allyStance = troopers[startX][startY].getStance().ordinal();
-        TrooperType allyType = getType(startX, startY);
+    private boolean canReachSomeEnemy(MutableTrooper ally, int[][] dist) {
+        int allyStance = ally.getStance().ordinal();
+        TrooperType allyType = ally.getType();
 
         for (int newX = 0; newX < n; newX++) {
             for (int newY = 0; newY < map[newX].length; newY++) {
-                if (!isFree(newX, newY) && !(newX == startX && newY == startY)) {
+                if (!isFree(newX, newY) && !(newX == ally.getX() && newY == ally.getY())) {
                     continue;
                 }
                 if (dist[newX][newY] >= 7) {
@@ -390,11 +389,6 @@ public class PlanComputer {
 
         return false;
     }
-
-    private TrooperType getType(int x, int y) {
-        return Utils.getTrooperTypeByChar(map[x][y]);
-    }
-
 
     private void addAction(MyMove action) {
         cur.actions.add(action);
