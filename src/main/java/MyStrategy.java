@@ -464,10 +464,23 @@ public final class MyStrategy implements Strategy {
     }
 
     private State getPlan() {
-        return null;
-        /*boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
+        boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy();
 
+        return new PlanComputer(
+                createCharMap(),
+                utils,
+                bonuses,
+                vision,
+                healForbidden,
+                bonusUseForbidden,
+                getTroopers2d(),
+                teammatesWithoutSelf(),
+                new ArrayList(enemies),
+                new State(new MutableTrooper(self, -1)) //todo remove lastSeenTime from MutableTrooper
+        ).getPlan();
+
+        /*
         return new PlanComputer(
                 createCharMap(),
                 utils,
@@ -489,6 +502,27 @@ public final class MyStrategy implements Strategy {
                         self.isHoldingMedikit()
                 )
         ).getPlan();/**/
+    }
+
+    private List<MutableTrooper> teammatesWithoutSelf() { //todo store in teammates MutableTroopers without self
+        ArrayList<MutableTrooper> r = new ArrayList<>();
+        for (Trooper ally : teammates) {
+            if (ally.getId() != self.getId()) {
+                r.add(new MutableTrooper(ally, -1));
+            }
+        }
+        return r;
+    }
+
+    private MutableTrooper[][] getTroopers2d() {
+        MutableTrooper[][] r = new MutableTrooper[world.getWidth()][world.getHeight()];
+        for (Trooper ally : teammates) {
+            r[ally.getX()][ally.getY()] = new MutableTrooper(ally, -1);
+        }
+        for (MutableTrooper enemy : enemies) {
+            r[enemy.getX()][enemy.getY()] = enemy;
+        }
+        return r;
     }
 
     private boolean[][] getGrenades() {
