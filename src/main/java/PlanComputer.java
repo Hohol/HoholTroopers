@@ -260,8 +260,12 @@ public class PlanComputer {
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
-        cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
-        cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
+
+        updateMaxDamageEnemyCanDeal();
+
+        //cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
+        //cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
+
         //getMaxDamageEnemyCanDeal();
         if (cur.better(best, selfType)) {
             //cur.better(best, selfType);
@@ -269,58 +273,36 @@ public class PlanComputer {
         }
     }
 
-    private boolean someOfTeammatesCanBeKilled() {
-        int max = 0;
-        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-            if (!enemyIsAlive[enemyIndex]) {
-                continue;
-            }
-            max += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
-        }
+    private void updateMaxDamageEnemyCanDeal() {
+        cur.maxDamageEnemyCanDeal = 0;
+        cur.someOfTeammatesCanBeKilled = false;
 
-        if (max >= cur.selfHp) {
-            return true;
+        int damage = getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance);
+        if(damage >= cur.selfHp) {
+            cur.someOfTeammatesCanBeKilled = true;
+        } else {
+            cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
         }
 
         for (MutableTrooper ally : teammates) {
-            int t = 0;
-            int stance = ally.getStance().ordinal();
-            for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-                if (!enemyIsAlive[enemyIndex]) {
-                    continue;
-                }
-                t += maxDamageEnemyCanDeal[enemyIndex][ally.getX()][ally.getY()][stance];
-            }
-            if (t >= troopers[ally.getX()][ally.getY()].getHitpoints()) {
-                return true;
+            damage = getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance());
+            if(damage >= ally.getHitpoints()) {
+                cur.someOfTeammatesCanBeKilled = true;
+            } else {
+                cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
             }
         }
-
-        return false;
     }
 
-    private int getMaxDamageEnemyCanDeal() { //todo maximize minimal hp
-        int max = 0;
+    private int getMaxDamageEnemyCanDeal(int x, int y, TrooperType type, TrooperStance stance) {
+        int damage = 0;
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
-            max += maxDamageEnemyCanDeal[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+            damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()];
         }
-
-        for (MutableTrooper ally : teammates) {
-            int t = 0;
-            int stance = ally.getStance().ordinal();
-            for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-                if (!enemyIsAlive[enemyIndex]) {
-                    continue;
-                }
-                t += maxDamageEnemyCanDeal[enemyIndex][ally.getX()][ally.getY()][stance];
-            }
-            max = Math.max(max, t);
-        }
-
-        return max;
+        return damage;
     }
 
     private int getHelpDist() {
