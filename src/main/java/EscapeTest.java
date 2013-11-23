@@ -308,6 +308,20 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void testEnemyCanUseFieldRation() {
+        setMap(
+                ".S....1...f"
+        );
+        ally(SOLDIER).hp(60);
+        enemy(FIELD_MEDIC).fieldRation().grenade();
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_WEST
+        );
+    }
+
     /*
     @Test
     void testInteresting() {

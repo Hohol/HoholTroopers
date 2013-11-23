@@ -165,6 +165,9 @@ public class PlanComputer {
                                         minShooterStance = shooterStance;
                                     }
                                     int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
+                                    if(enemy.isHoldingFieldRation()) {
+                                        actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+                                    }
                                     int maxDamage = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
                                     maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] =
                                             Math.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], maxDamage);
