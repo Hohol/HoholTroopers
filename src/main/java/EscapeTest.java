@@ -11,7 +11,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
         setMap(
                 "S2s"
         );
-        setTrooper(0, 0, 1, STANDING);
+        enemy(SOLDIER).hp(1);
         check(
                 SOLDIER,
                 2,
@@ -176,7 +176,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 ".#........",
                 "S........s"
         );
-        setTrooper(0, 1, 1, STANDING);
+        enemy(SOLDIER).hp(1);
         check(
                 SOLDIER,
                 2,
@@ -252,8 +252,8 @@ public class EscapeTest extends AbstractPlanComputerTest {
                 "S#......."
         );
 
-        setTrooper(0, 1, 1, STANDING);
-        setTrooper(1, 0, 1, STANDING);
+        ally(SOLDIER).hp(1);
+        ally(COMMANDER).hp(1);
 
         check(
                 SOLDIER,

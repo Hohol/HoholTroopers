@@ -51,14 +51,6 @@ public class AbstractPlanComputerTest {
         }
     }
 
-    protected void setTrooper(int x, int y, int newHp, TrooperStance stance) {
-        char ch = map[x][y];
-        if (!Utils.isLetter(ch)) {
-            throw new RuntimeException("No trooper in cell (" + x + ", " + y + ")");
-        }
-        builders[x][y].hp(newHp).stance(stance).x(x).y(y);
-    }
-
     protected void addBonus(int x, int y, BonusType bonus) {
         if (!Utils.isLetter(map[x][y])) {
             throw new RuntimeException("No trooper in cell(" + x + ", " + y + ")");
@@ -104,16 +96,9 @@ public class AbstractPlanComputerTest {
         return builders[x][y];
     }
 
-    private MTBuilder addEnemy(int x, int y) {
+    protected MTBuilder enemy(int x, int y) {
         if (!Utils.isEnemyChar(map[x][y])) {
             throw new RuntimeException("No enemy in cell (" + x + ", " + y + ")");
-        }
-        return builders[x][y];
-    }
-
-    private MTBuilder addAlly(int x, int y) {
-        if (!Utils.isTeammateChar(map[x][y])) {
-            throw new RuntimeException("No ally in cell (" + x + ", " + y + ")");
         }
         return builders[x][y];
     }

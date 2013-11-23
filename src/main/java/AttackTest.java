@@ -23,7 +23,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "Ss"
         );
-        setTrooper(1, 0, 100, STANDING);
 
         check(
                 SOLDIER,
@@ -37,8 +36,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "....",
                 "c..."
         );
-        setTrooper(3, 0, 1, STANDING);
-        setTrooper(0, 2, 50, STANDING);
+        enemy(SOLDIER).hp(1);
+        enemy(COMMANDER).hp(50);
 
         check(
                 SOLDIER,
@@ -52,8 +51,8 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "....",
                 "s..."
         );
-        setTrooper(3, 0, 1, STANDING);
-        setTrooper(0, 2, 2, STANDING);
+        enemy(0, 2).hp(2);
+        enemy(3, 0).hp(1);
 
         check(
                 SOLDIER,
@@ -67,7 +66,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S.3.s"
         );
-        setTrooper(4, 0, 100, STANDING);
 
         check(
                 SOLDIER,
@@ -75,31 +73,11 @@ public class AttackTest extends AbstractPlanComputerTest {
         );
 
         //----------------------
-        setMap(
-                "..f..",
-                "..3..",
-                "s.C3f",
-                ".....",
-                "..c.."
-        );
-        setTrooper(2, 0, 1, STANDING);
-        setTrooper(4, 2, 1, STANDING);
-        setTrooper(0, 2, 16, STANDING);
-        setTrooper(2, 4, 15, STANDING);
-
-        check(
-                COMMANDER,
-                3,
-
-                MyMove.shoot(2, 4)
-        );
-
-        //----------------------
 
         setMap(
                 "S3.s"
         );
-        setTrooper(3, 0, 1, STANDING);
+        enemy(SOLDIER).hp(1);
 
         check(
                 SOLDIER,
@@ -117,10 +95,10 @@ public class AttackTest extends AbstractPlanComputerTest {
                 ".....",
                 "..c.."
         );
-        setTrooper(2, 0, 1, STANDING);
-        setTrooper(4, 2, 1, STANDING);
-        setTrooper(0, 2, 16, STANDING);
-        setTrooper(2, 4, 16, STANDING);
+        enemy(2, 0).hp(1);
+        enemy(4, 2).hp(1);
+        enemy(0, 2).hp(16);
+        enemy(2, 4).hp(16);
 
         check(
                 COMMANDER,
@@ -135,7 +113,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "2",
                 "C"
         );
-        setTrooper(0, 0, 1, STANDING);
+        enemy(FIELD_MEDIC).hp(1);
 
         check(
                 COMMANDER,
@@ -152,10 +130,10 @@ public class AttackTest extends AbstractPlanComputerTest {
                 ".....",
                 "..c.."
         );
-        setTrooper(2, 0, 1, STANDING);
-        setTrooper(4, 2, 1, KNEELING);
-        setTrooper(0, 2, 16, STANDING);
-        setTrooper(2, 4, 16, STANDING);
+        enemy(2, 0).hp(1);
+        enemy(4, 2).hp(1);
+        enemy(0, 2).hp(16);
+        enemy(2, 4).hp(16);
 
         check(
                 COMMANDER,
@@ -323,8 +301,8 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        setTrooper(0, 0, 35, STANDING);
-        setTrooper(5, 0, 25, STANDING);
+        enemy(COMMANDER).hp(35);
+        enemy(FIELD_MEDIC).hp(25);
 
         ally(SOLDIER).stance(KNEELING);
 
@@ -339,8 +317,8 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        setTrooper(0, 0, 36, STANDING);
-        setTrooper(5, 0, 25, STANDING);
+        enemy(COMMANDER).hp(36);
+        enemy(FIELD_MEDIC).hp(25);
 
         ally(SOLDIER).stance(KNEELING);
 
@@ -355,8 +333,8 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "c.S2.f"
         );
-        setTrooper(0, 0, 35, STANDING);
-        setTrooper(5, 0, 25, STANDING);
+        enemy(COMMANDER).hp(35);
+        enemy(FIELD_MEDIC).hp(25);
 
         ally(SOLDIER).fieldRation().stance(KNEELING);
 
@@ -386,7 +364,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S.3.f"
         );
-        setTrooper(4, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -398,7 +376,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "Sf"
         );
-        setTrooper(1, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -422,7 +400,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S.f"
         );
-        setTrooper(2, 0, 70, STANDING);
+        enemy(FIELD_MEDIC).hp(70);
         ally(SOLDIER).grenade().stance(PRONE);
         check(
                 SOLDIER,
@@ -437,7 +415,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S.fF"
         );
-        setTrooper(2, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -449,7 +427,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "..fF",
                 "S..."
         );
-        setTrooper(2, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -461,7 +439,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S3..F.f"
         );
-        setTrooper(6, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -472,7 +450,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S3.F..f"
         );
-        setTrooper(6, 0, 80, STANDING);
+        enemy(FIELD_MEDIC).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -504,8 +482,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "fs.....SC"
         );
-        setTrooper(0, 0, 100, STANDING);
-        setTrooper(1, 0, 120, STANDING);
         check(
                 SOLDIER,
                 4,
@@ -516,8 +492,6 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "cs.....SC"
         );
-        setTrooper(0, 0, 100, STANDING);
-        setTrooper(1, 0, 120, STANDING);
         check(
                 SOLDIER,
                 4,
@@ -544,7 +518,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "S^..s"
         );
-        setTrooper(4, 0, 80, STANDING);
+        enemy(SOLDIER).hp(80);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -557,7 +531,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "^..s",
                 "S33."
         );
-        setTrooper(3, 0, 79, STANDING);
+        enemy(SOLDIER).hp(79);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -570,7 +544,7 @@ public class AttackTest extends AbstractPlanComputerTest {
                 "^..s",
                 "S33."
         );
-        setTrooper(3, 0, 79, STANDING);
+        enemy(SOLDIER).hp(79);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -584,7 +558,7 @@ public class AttackTest extends AbstractPlanComputerTest {
         setMap(
                 "F..s"
         );
-        setTrooper(3, 0, 80, STANDING);
+        enemy(SOLDIER).hp(80);
         addBonus(0, 0, GRENADE);
         check(
                 FIELD_MEDIC,
@@ -596,7 +570,7 @@ public class AttackTest extends AbstractPlanComputerTest {
     @Test
     void testBerserkMedic() {
         setMap("F.s");
-        setTrooper(2, 0, 1000, STANDING);
+        enemy(SOLDIER).hp(1000);
         addBonus(0, 0, FIELD_RATION);
         ally(FIELD_MEDIC).fieldRation().stance(PRONE);
         check(
