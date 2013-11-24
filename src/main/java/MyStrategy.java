@@ -289,23 +289,28 @@ public final class MyStrategy implements Strategy {
         if (!suspiciousCells.isEmpty()) {
             return;
         }
-
-        for (Trooper trooper : world.getTroopers()) { // world.getTroopers() to include me
-            if (!trooper.isTeammate()) {
+        List<Trooper> damagedTeammates = getDamagedTeammates();
+        for (Trooper ally : damagedTeammates) {
+            findSuspiciousCells(ally);
+            if (suspiciousCells.isEmpty()) { //todo dafuk? kiting?
                 continue;
             }
+            return;
+        }
+    }
+
+    private List<Trooper> getDamagedTeammates() {
+        List<Trooper> damagedTeammates = new ArrayList<>();
+        for (Trooper trooper : teammates) {
             List<Integer> history = hpHistory.get(trooper.getType());
             if (history.size() < 2) {
                 continue;
             }
             if (trooper.getHitpoints() < history.get(history.size() - 2)) { //todo newHp != odlHp + previousMoveHealValue
-                findSuspiciousCells(trooper);
-                if (suspiciousCells.isEmpty()) { //todo dafuk? kiting?
-                    continue;
-                }
-                return;
+                damagedTeammates.add(trooper);
             }
         }
+        return damagedTeammates;
     }
 
     private void removeVisibleCellsFromSuspicious() {
