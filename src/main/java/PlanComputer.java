@@ -36,12 +36,23 @@ public class PlanComputer {
     int[][] enemyIndex;
     private boolean healForbidden;
     private boolean bonusUseForbidden;
-
     int[][][][] maxDamageEnemyCanDeal;
-
     MutableTrooper[][] troopers;
+    boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES]; //todo do not use for self
+    boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES]; //[ally type][enemy type]
 
-    public PlanComputer(char[][] map, Utils utils, BonusType[][] bonuses, boolean[] visibilities, boolean healForbidden, boolean bonusUseForbidden, MutableTrooper[][] troopers, List<MutableTrooper> teammates, List<MutableTrooper> enemies, MutableTrooper self
+    public PlanComputer(
+            char[][] map,
+            Utils utils,
+            BonusType[][] bonuses,
+            boolean[] visibilities,
+            boolean healForbidden,
+            boolean bonusUseForbidden,
+            MutableTrooper[][] troopers,
+            List<MutableTrooper> teammates,
+            List<MutableTrooper> enemies,
+            String moveOrder,
+            MutableTrooper self
     ) {
         this.map = map;
         n = map.length;
@@ -62,7 +73,53 @@ public class PlanComputer {
             enemyIndex[enemy.getX()][enemy.getY()] = i;
         }
         prepare();
+        canDamageIfBefore = getCanDamageIfBefore(moveOrder, selfType);
+        canDamageIfAfter = getCanDamageIfAfter(moveOrder, selfType);
         rec();
+    }
+
+    public static boolean[][] getCanDamageIfBefore(String moveOrder, TrooperType selfType) {
+        boolean[][] r = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
+        char selfChar = Utils.getCharForTrooperType(selfType);
+        int selfInd = -1;
+        for (int i = 0; i < moveOrder.length(); i++) {
+            if (moveOrder.charAt(i) == selfChar) {
+                selfInd = i;
+                break;
+            }
+        }
+        for (int i = 0; i < moveOrder.length(); i++) {
+            r[Utils.getTrooperTypeByChar(moveOrder.charAt(i)).ordinal()][selfType.ordinal()] = true;
+        }
+        for (int enemyShift = 1; enemyShift < moveOrder.length(); enemyShift++) {
+            char enemyChar = moveOrder.charAt((selfInd + enemyShift) % moveOrder.length());
+            int enemyInd = Utils.getTrooperTypeByChar(enemyChar).ordinal();
+            for (int allyShift = enemyShift; allyShift < moveOrder.length(); allyShift++) {
+                char allyChar = moveOrder.charAt((selfInd + allyShift) % moveOrder.length());
+                int allyInd = Utils.getTrooperTypeByChar(allyChar).ordinal();
+                r[enemyInd][allyInd] = true;
+            }
+        }
+        return r;
+    }
+
+    public static boolean[][] getCanDamageIfAfter(String moveOrder, TrooperType selfType) {
+        boolean[][] r = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
+        char selfChar = Utils.getCharForTrooperType(selfType);
+        int selfInd = moveOrder.indexOf(selfChar);
+        for (int i = 0; i < moveOrder.length(); i++) {
+            r[Utils.getTrooperTypeByChar(moveOrder.charAt(i)).ordinal()][selfType.ordinal()] = true;
+        }
+        for (int enemyShift = 0; enemyShift < moveOrder.length(); enemyShift++) {
+            char enemyChar = moveOrder.charAt((selfInd + enemyShift) % moveOrder.length());
+            int enemyInd = Utils.getTrooperTypeByChar(enemyChar).ordinal();
+            for (int allyShift = enemyShift + 1; allyShift < moveOrder.length(); allyShift++) {
+                char allyChar = moveOrder.charAt((selfInd + allyShift) % moveOrder.length());
+                int allyInd = Utils.getTrooperTypeByChar(allyChar).ordinal();
+                r[enemyInd][allyInd] = true;
+            }
+        }
+        return r;
     }
 
     private void prepare() {
@@ -155,7 +212,7 @@ public class PlanComputer {
                                         minShooterStance = shooterStance;
                                     }
                                     int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
-                                    if(enemy.isHoldingFieldRation()) {
+                                    if (enemy.isHoldingFieldRation()) {
                                         actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
                                     }
                                     int maxDamage = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
@@ -259,34 +316,39 @@ public class PlanComputer {
         cur.focusFireParameter = getFocusFireParameter();
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
+        /*if(stopOn(MyMove.USE_MEDIKIT_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST)) {
+            int x = 0;
+            x++;
+        }/**/
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
 
         updateMaxDamageEnemyCanDeal();
 
-        //cur.maxDamageEnemyCanDeal = getMaxDamageEnemyCanDeal();
-        //cur.someOfTeammatesCanBeKilled = someOfTeammatesCanBeKilled();
-
-        //getMaxDamageEnemyCanDeal();
         if (cur.better(best, selfType)) {
-            //cur.better(best, selfType);
             best = new State(cur);
         }
     }
 
-    private void updateMaxDamageEnemyCanDeal() {
+    private void updateMaxDamageEnemyCanDeal() {  //todo it is not actually correct. max damage value and canKill may correspond to different move orders
         cur.maxDamageEnemyCanDeal = 0;
         cur.someOfTeammatesCanBeKilled = false;
 
-        int damage = getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance);
-        if(damage >= cur.selfHp) {
+        int damage = Math.max(
+                getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
+                getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfAfter)
+        );
+        if (damage >= cur.selfHp) {
             cur.someOfTeammatesCanBeKilled = true;
         } else {
             cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
         }
 
         for (MutableTrooper ally : teammates) {
-            damage = getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance());
-            if(damage >= ally.getHitpoints()) {
+            damage = Math.max(
+                    getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance(), canDamageIfBefore),
+                    getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance(), canDamageIfAfter)
+            );
+            if (damage >= ally.getHitpoints()) {
                 cur.someOfTeammatesCanBeKilled = true;
             } else {
                 cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
@@ -294,10 +356,14 @@ public class PlanComputer {
         }
     }
 
-    private int getMaxDamageEnemyCanDeal(int x, int y, TrooperType type, TrooperStance stance) {
+    private int getMaxDamageEnemyCanDeal(int x, int y, TrooperType selfType, TrooperStance stance, boolean[][] canDamage) {
         int damage = 0;
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
             if (!enemyIsAlive[enemyIndex]) {
+                continue;
+            }
+            if (!canDamage[enemy.getType().ordinal()][selfType.ordinal()]) {
                 continue;
             }
             damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()];

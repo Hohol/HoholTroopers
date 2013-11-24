@@ -184,6 +184,7 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 COMMANDER,
                 2,
+                "SCF",
                 MyMove.MOVE_NORTH
         );
     }
@@ -432,4 +433,47 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_EAST
         );
     }
+
+    /*@Test
+    void testAvoidSplashDamage() {
+        setMap(
+                "S.C",
+                "...",
+                "..f"
+        );
+        ally(SOLDIER).hp(60);
+        ally(COMMANDER).hp(60);
+        enemy(FIELD_MEDIC).grenade();
+
+        check(
+                COMMANDER,
+                4,
+                MyMove.MOVE_SOUTH
+        );
+    }
+
+    @Test
+    void testMoveToBonusEvenIfCannotCollectOnCurrentMove() {
+        setMap(
+                "................",
+                "S########....f.C",
+                ".....*.........."
+        );
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_SOUTH
+        );
+
+        setMap(
+                ".....*..........",
+                "S########....f.C",
+                "................"
+        );
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_NORTH
+        );
+    } /**/
 }

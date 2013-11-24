@@ -110,6 +110,10 @@ public class AbstractPlanComputerTest {
             int actionPoints,
             MyMove... expectedAr
     ) {
+        check(selfType, actionPoints, getDefaultMoveOrder(), expectedAr);
+    }
+
+    protected void check(TrooperType selfType, int actionPoints, String moveOrder, MyMove ...expectedAr) {
         MTBuilder selfBuilder = ally(selfType)
                 .actionPoints(actionPoints);
 
@@ -124,6 +128,7 @@ public class AbstractPlanComputerTest {
                 getVisibilities(),
                 false,
                 false, troopers, teammates, enemies,
+                moveOrder,
                 self
         ).getPlan().actions;
 
@@ -133,6 +138,22 @@ public class AbstractPlanComputerTest {
                 expected,
                 String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
         );
+    }
+
+    private String getDefaultMoveOrder() {
+        String r = "";
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                char ch = map[i][j];
+                if(Utils.isLetter(ch)) {
+                    ch = Character.toUpperCase(ch);
+                    if(!r.contains(Character.toString(ch))) {
+                        r += ch;
+                    }
+                }
+            }
+        }
+        return r;
     }
 
     protected MutableTrooper[][] troopers;

@@ -2,6 +2,7 @@ import static model.TrooperType.*;
 
 import static model.TrooperStance.*;
 
+import model.TrooperType;
 import org.testng.annotations.Test;
 
 @Test
@@ -194,6 +195,7 @@ public class EscapeTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 2,
+                "CSF",
                 MyMove.MOVE_NORTH
         );
     }
@@ -322,23 +324,37 @@ public class EscapeTest extends AbstractPlanComputerTest {
         );
     }
 
-    /*
     @Test
-    void testInteresting() {
+    void testConsiderMoveOrder() {
         setMap(
-                "S#s",
-                "..."
+                "S.....cs",
+                ".C#....."
         );
-        setTrooper(0, 0, 1, STANDING);
         check(
-                SOLDIER,
-                12,
-                STANDING,
-                false,
-                false,
-                false,
-                MyMove.MOVE_SOUTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.shoot(2, 0), MyMove.MOVE_WEST
+                COMMANDER,
+                2
         );
-    }/**/
+    }
 
+    @Test
+    void testConsiderMoveOrder2() {
+        setMap(
+                ".....C",
+                ".####.",
+                ".#....",
+                "S...cs",
+                "......",
+                "......",
+                "......",
+                ".....#",
+                "....#f"
+        );
+        enemy(SOLDIER).stance(KNEELING);
+        check(
+                COMMANDER,
+                3,
+                "CSF",
+                MyMove.MOVE_WEST
+        );
+    }
 }

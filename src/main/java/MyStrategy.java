@@ -59,6 +59,7 @@ public final class MyStrategy implements Strategy {
     private static Cell destination;
     boolean phantoms;
     private static int initialTeamSize = -1;
+    static String moveOrder = "";
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
@@ -297,6 +298,10 @@ public final class MyStrategy implements Strategy {
     boolean stopOn(int moveIndex, TrooperType type) { //for debug only
         return world.getMoveIndex() >= moveIndex && self.getType() == type;
     }
+    @SuppressWarnings("unused")
+    boolean stopOn(int moveIndex, TrooperType type, int actionsPoints) {
+        return stopOn(moveIndex, type) && self.getActionPoints() == actionsPoints;
+    }
 
     private boolean shouldTrySomething() {
         if (seeSomeEnemy()) {
@@ -477,6 +482,7 @@ public final class MyStrategy implements Strategy {
                 getTroopers2d(),
                 teammatesWithoutSelf(),
                 new ArrayList<>(enemies),
+                moveOrder,
                 new MutableTrooper(self, -1) //todo remove lastSeenTime from MutableTrooper
         ).getPlan();
 
@@ -715,6 +721,12 @@ public final class MyStrategy implements Strategy {
         teammates = getTeammates();
         if (initialTeamSize == -1) {
             initialTeamSize = teammates.size() + 1;
+        }
+        if(moveOrder.length() != initialTeamSize) {
+            char ch = Utils.getCharForTrooperType(self.getType());
+            if(moveOrder.indexOf(ch) == -1) {
+                moveOrder += ch;
+            }
         }
         teammateToFollow = getTeammateToFollow();
         occupiedByTrooper = getOccupiedByTrooper();
