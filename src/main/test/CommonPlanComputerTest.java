@@ -434,6 +434,11 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void testSimpleScouting() {
+
+    }
+
     /*@Test
     void testAvoidSplashDamage() {
         setMap(
