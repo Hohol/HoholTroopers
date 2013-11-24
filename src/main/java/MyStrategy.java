@@ -48,6 +48,8 @@ public final class MyStrategy implements Strategy {
     static boolean scoreMustChange;
     static List<MutableTrooper> damageWasDealt = new ArrayList<>();
     static int expectedScoreChange;
+    int scoutSmallMoveIndex = -2;
+    Direction scoutReturnDir;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -98,6 +100,11 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
+        if (scoutSmallMoveIndex == smallMoveIndex - 1) { //todo rework ofc
+            move.setAction(MOVE);
+            move.setDirection(scoutReturnDir);
+        }
+
         if (tryMove()) {
             return;
         }
@@ -105,9 +112,55 @@ public final class MyStrategy implements Strategy {
         if (tryDeblock()) {
             return;
         }
+
+        if (tryScout()) {
+            return;
+        }/**/
         if (tryRandomShoot()) {
             return;
         }
+    }
+
+    private boolean tryScout() {
+        if (!haveTime(getMoveCost(self) * 2)) {
+            return false;
+        }
+        int bestD = -1;
+        int ma = 0;
+        for (int d = 0; d < 4; d++) {
+            Direction dir = Utils.dirs[d];
+            int toX = self.getX() + dir.getOffsetX();
+            int toY = self.getY() + dir.getOffsetY();
+            if (!isFreeCell(toX, toY)) {
+                continue;
+            }
+            int value = scoutValue(toX, toY);
+            if (value > ma) {
+                ma = value;
+                bestD = d;
+            }
+        }
+        if (bestD == -1) {
+            return false;
+        }
+        move.setAction(MOVE);
+        move.setDirection(Utils.dirs[bestD]);
+        scoutReturnDir = Utils.dirs[(bestD + 2) % 4];
+        scoutSmallMoveIndex = smallMoveIndex;
+        return true;
+    }
+
+    private int scoutValue(int x, int y) {
+        int r = 0;
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (!wasSeenOnCurrentBigMove[i][j][0] &&
+                        world.isVisible(self.getVisionRange(), x, y, PRONE, i, j, PRONE)) {
+                    r++;
+                }
+            }
+        }
+        return r;
     }
 
     private boolean tryRandomShoot() {
@@ -298,6 +351,7 @@ public final class MyStrategy implements Strategy {
     boolean stopOn(int moveIndex, TrooperType type) { //for debug only
         return world.getMoveIndex() >= moveIndex && self.getType() == type;
     }
+
     @SuppressWarnings("unused")
     boolean stopOn(int moveIndex, TrooperType type, int actionsPoints) {
         return stopOn(moveIndex, type) && self.getActionPoints() == actionsPoints;
@@ -720,11 +774,11 @@ public final class MyStrategy implements Strategy {
         cells = world.getCells();
         teammates = getTeammates();
         if (initialTeamSize == -1) {
-            initialTeamSize = teammates.size() + 1;
+            initialTeamSize = teammates.size();
         }
-        if(moveOrder.length() != initialTeamSize) {
+        if (moveOrder.length() != initialTeamSize) {
             char ch = Utils.getCharForTrooperType(self.getType());
-            if(moveOrder.indexOf(ch) == -1) {
+            if (moveOrder.indexOf(ch) == -1) {
                 moveOrder += ch;
             }
         }
@@ -1104,7 +1158,7 @@ public final class MyStrategy implements Strategy {
         } else {
             Trooper toFollow = teammateToFollow;
 
-            boolean fullTeam = (teammates.size() >= FIRST_ROUND_INITIAL_TEAMMATE_COUNT);
+            boolean fullTeam = (teammates.size() == initialTeamSize);
 
             if (fullTeam && tooCurvedPathTo(teammateToFollow, false)) {
                 toFollow = getOtherTeammate();
