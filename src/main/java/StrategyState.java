@@ -7,8 +7,15 @@ public class StrategyState extends AbstractState <StrategyState> {
         super(self);
     }
 
+    public StrategyState(StrategyState cur) {
+        super(cur);
+    }
+
     @Override
     boolean better(StrategyState old, TrooperType selfType) {
+        if(old == null) {
+            return true;
+        }
         return false;
     }
 }

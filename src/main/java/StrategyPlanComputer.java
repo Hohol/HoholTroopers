@@ -18,6 +18,8 @@ public class StrategyPlanComputer extends AbstractPlanComputer <StrategyState> {
 
     @Override
     void updateBest() {
-
+        if(cur.better(best, selfType)) {
+            best = new StrategyState(cur);
+        }
     }
 }

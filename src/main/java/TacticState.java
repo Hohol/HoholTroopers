@@ -22,16 +22,8 @@ class TacticState extends AbstractState <TacticState> {
     int numberOfTeammatesWhoCanReachEnemy;
     boolean someOfTeammatesCanBeKilled;
 
-    protected TacticState(
-            int actionPoints,
-            int hp, int x, int y, TrooperStance stance, boolean holdingFieldRation,
-            boolean holdingGrenade, boolean holdingMedikit
-    ) {
-        super(actionPoints, hp, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit);
-    }
-
     protected TacticState(TacticState cur) {
-        this(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
+        super(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
         this.actions = new ArrayList<>(cur.actions);
         this.killCnt = cur.killCnt;
         this.damageSum = cur.damageSum;

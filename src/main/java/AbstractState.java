@@ -27,6 +27,17 @@ public abstract class AbstractState <S extends AbstractState> {
         this.stance = stance;
         this.selfHp = hp;
     }
+    public AbstractState(AbstractState s) {
+        this.holdingFieldRation = s.holdingFieldRation;
+        this.holdingMedikit = s.holdingMedikit;
+        this.holdingGrenade = s.holdingGrenade;
+        this.actionPoints = s.actionPoints;
+        this.actions = s.actions;
+        this.x = s.x;
+        this.y = s.y;
+        this.stance = s.stance;
+        this.selfHp = s.selfHp;
+    }
     public AbstractState(MutableTrooper self) {
         this(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), self.isHoldingFieldRation(), self.isHoldingGrenade(), self.isHoldingMedikit());
     }
