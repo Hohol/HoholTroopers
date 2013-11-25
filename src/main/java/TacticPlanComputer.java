@@ -301,9 +301,9 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         );
         if (damage >= cur.selfHp) {
             cur.someOfTeammatesCanBeKilled = true;
-        } else {
-            cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
         }
+        damage = Math.min(damage, cur.selfHp);
+        cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
 
         for (MutableTrooper ally : teammates) {
             damage = Math.max(
@@ -312,9 +312,9 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
             );
             if (damage >= ally.getHitpoints()) {
                 cur.someOfTeammatesCanBeKilled = true;
-            } else {
-                cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
             }
+            damage = Math.min(damage, ally.getHitpoints());
+            cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
         }
     }
 

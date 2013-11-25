@@ -341,6 +341,19 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
+    private void moveByPlan(List<MyMove> actions) {
+        Utils.log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
+        if (actions.isEmpty()) {
+            move.setAction(END_TURN);
+            return;
+        }
+        Move bestMove = actions.get(0).getMove();
+        move.setAction(bestMove.getAction());
+        move.setDirection(bestMove.getDirection());
+        move.setX(bestMove.getX());
+        move.setY(bestMove.getY());
+    }
+
     @SuppressWarnings("unused")
     boolean stopOn(int moveIndex, TrooperType type) { //for debug only
         return world.getMoveIndex() >= moveIndex && self.getType() == type;
@@ -371,19 +384,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return false;
-    }
-
-    private void moveByPlan(List<MyMove> actions) {
-        Utils.log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
-        if (actions.isEmpty()) {
-            move.setAction(END_TURN);
-            return;
-        }
-        Move bestMove = actions.get(0).getMove();
-        move.setAction(bestMove.getAction());
-        move.setDirection(bestMove.getDirection());
-        move.setX(bestMove.getX());
-        move.setY(bestMove.getY());
     }
 
     @SuppressWarnings("unused")
@@ -651,7 +651,6 @@ public final class MyStrategy implements Strategy {
         }
         prevScore = getMyScore();
         if (isLastSubMove()) {
-            //enemies.clear();
             mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
         }

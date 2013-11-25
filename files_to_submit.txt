@@ -3,6 +3,10 @@ Cell.java
 Utils.java
 TrooperParameters.java
 MyMove.java
+MutableTrooper.java
+AbstractPlanComputer.java
+AbstractState.java
 TacticPlanComputer.java
 TacticState.java
-MutableTrooper.java
+StrategyPlanComputer.java
+StrategyState.java

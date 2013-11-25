@@ -457,4 +457,18 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.EAT_FIELD_RATION, MyMove.shoot(12, 0)
         );
     }
+
+    @Test
+    void testBug3() {
+        setMap(
+                ".F...s#f"
+        );
+        ally(FIELD_MEDIC).hp(1);
+        enemy(FIELD_MEDIC).grenade();
+        check(
+                FIELD_MEDIC,
+                2,
+                MyMove.shoot(5,0)
+        );
+    }
 }
