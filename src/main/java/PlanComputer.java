@@ -38,8 +38,8 @@ public class PlanComputer {
     private boolean bonusUseForbidden;
     int[][][][] maxDamageEnemyCanDeal;
     MutableTrooper[][] troopers;
-    boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES]; //todo do not use for self
-    boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES]; //[ally type][enemy type]
+    boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
+    boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
 
     public PlanComputer(
             char[][] map,
@@ -125,6 +125,7 @@ public class PlanComputer {
     private void prepare() {
         selfType = troopers[cur.x][cur.y].getType();
         map[cur.x][cur.y] = '.';
+        troopers[cur.x][cur.y] = null;
         sqrDistSum = new int[n][m];
         for (MutableTrooper ally : teammates) {
             updateSqrDistSum(ally.getX(), ally.getY());
@@ -492,12 +493,12 @@ public class PlanComputer {
         return best;
     }
 
-    private void newTryHeal(int healValue, int healCost, MyMove healAction, Cell c) {
+    private void newTryHeal(int healValue, int healCost, MyMove healAction, MutableTrooper ally) { // if ally == null, heal self
         if (cur.actionPoints < healCost) {
             return;
         }
 
-        int oldHp = c == null ? cur.selfHp : troopers[c.x][c.y].getHitpoints();
+        int oldHp = ally == null ? cur.selfHp : ally.getHitpoints();
         if (oldHp >= Utils.INITIAL_TROOPER_HP) {
             return;
         }
@@ -506,10 +507,10 @@ public class PlanComputer {
 
         addAction(healAction);
 
-        if (c == null) {
+        if (ally == null) {
             cur.selfHp = newHp;
         } else {
-            troopers[c.x][c.y].setHitpoints(newHp);
+            ally.setHitpoints(newHp);
         }
         cur.actionPoints -= healCost;
         cur.healedSum += diffHp;
@@ -518,10 +519,10 @@ public class PlanComputer {
 
         cur.healedSum -= diffHp;
         cur.actionPoints += healCost;
-        if (c == null) {
+        if (ally == null) {
             cur.selfHp = oldHp;
         } else {
-            troopers[c.x][c.y].setHitpoints(oldHp);
+            ally.setHitpoints(oldHp);
         }
         popAction();
     }
@@ -543,11 +544,11 @@ public class PlanComputer {
             if (!inField(toX, toY)) {
                 continue;
             }
-            char targetChar = map[toX][toY];
-            if (!Utils.isTeammateChar(targetChar)) {
+            MutableTrooper trooper = troopers[toX][toY];
+            if(trooper == null || !trooper.isTeammate()) {
                 continue;
             }
-            newTryHeal(healValue, healCost, heal, new Cell(toX, toY));
+            newTryHeal(healValue, healCost, heal, trooper);
         }
     }
 
@@ -584,14 +585,16 @@ public class PlanComputer {
             return;
         }
 
-        if (troopers[ex][ey].getHitpoints() > 0) {
-            if (damage >= troopers[ex][ey].getHitpoints()) {
+        MutableTrooper enemy = troopers[ex][ey];
+
+        if (enemy.getHitpoints() > 0) {
+            if (damage >= enemy.getHitpoints()) {
                 cur.killCnt++;
                 enemyIsAlive[enemyIndex[ex][ey]] = false;
             }
-            cur.damageSum += Math.min(damage, troopers[ex][ey].getHitpoints());
+            cur.damageSum += Math.min(damage, enemy.getHitpoints());
         }
-        troopers[ex][ey].decHp(damage);
+        enemy.decHp(damage);
     }
 
     private void undealDamage(int ex, int ey, int damage) {
@@ -601,15 +604,17 @@ public class PlanComputer {
         if (!Utils.isEnemyChar(map[ex][ey])) {
             return;
         }
+        
+        MutableTrooper enemy = troopers[ex][ey];
 
-        if (troopers[ex][ey].getHitpoints() + damage > 0) {
-            if (troopers[ex][ey].getHitpoints() <= 0) {
+        if (enemy.getHitpoints() + damage > 0) {
+            if (enemy.getHitpoints() <= 0) {
                 cur.killCnt--;
                 enemyIsAlive[enemyIndex[ex][ey]] = true;
             }
-            cur.damageSum -= Math.min(damage, troopers[ex][ey].getHitpoints() + damage);
+            cur.damageSum -= Math.min(damage, enemy.getHitpoints() + damage);
         }
-        troopers[ex][ey].decHp(-damage);
+        enemy.decHp(-damage);
     }
 
     private void unshoot(int ex, int ey) {
