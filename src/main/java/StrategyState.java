@@ -1,4 +1,7 @@
+import model.TrooperStance;
+import static model.TrooperStance.*;
 import model.TrooperType;
+import static model.TrooperType.*;
 
 public class StrategyState extends AbstractState<StrategyState> {
 
@@ -63,6 +66,12 @@ public class StrategyState extends AbstractState<StrategyState> {
 
         if (fieldRationsUsed != old.fieldRationsUsed) {
             return fieldRationsUsed < old.fieldRationsUsed;
+        }
+
+        if(selfType == SNIPER) {
+            if (stance != old.stance) {
+                return stance == KNEELING;
+            }
         }
 
         if (newSeenCellsCnt != old.newSeenCellsCnt) {

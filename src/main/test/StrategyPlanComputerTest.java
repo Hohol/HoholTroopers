@@ -241,4 +241,14 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_WEST
         );
     }
+
+    @Test
+    void sniperShouldEndTurnKneeling() {
+        setMap("R@");
+        check(
+                SNIPER,
+                12,
+                MyMove.MOVE_EAST, MyMove.LOWER_STANCE
+        );
+    }
 }
