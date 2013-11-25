@@ -88,14 +88,6 @@ public class Utils {
         return trooperParameters.getInitialActionPoints(type);
     }
 
-    public static Move createMove(ActionType action, Direction direction) {
-        return createMove(action, direction, -1, -1);
-    }
-
-    public static Move createMove(ActionType action) {
-        return createMove(action, null, -1, -1);
-    }
-
     public static char getCharForTrooperType(TrooperType type) {
         switch (type) {
             case COMMANDER:
@@ -185,21 +177,6 @@ public class Utils {
         return bfsByMap(map, -1, -1, isStartCell);
     }
 
-    public static int divCeil(int a, int b) {
-        return (a + b - 1) / b;
-    }
-
-    public int getFieldRationAddition() {
-        return game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
-    }
-
-    public static boolean equalMoves(Move a, Move b) {
-        return a.getAction() == b.getAction() &&
-                a.getDirection() == b.getDirection() &&
-                a.getX() == b.getX() &&
-                a.getY() == b.getY();
-    }
-
     public static Move createMove(ActionType action, Direction dir, int x, int y) {
         Move r = new Move();
         r.setAction(action);
@@ -255,18 +232,6 @@ public class Utils {
                 return GRENADE;
         }
         return null;
-    }
-
-    public static char getCharForBonusType(BonusType type) {
-        switch (type) {
-            case GRENADE:
-                return '*';
-            case MEDIKIT:
-                return '+';
-            case FIELD_RATION:
-                return '^';
-        }
-        throw new RuntimeException();
     }
 
     public int getInitialActionPointsWithCommanderBonus(TrooperType type) {

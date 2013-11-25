@@ -228,10 +228,7 @@ public class PlanComputer {
     }
 
     private boolean canThrowGrenade(int shooterX, int shooterY, int targetX, int targetY) {
-        if (Utils.sqrDist(shooterX, shooterY, targetX, targetY) > Utils.sqr(game.getGrenadeThrowRange())) {
-            return false;
-        }
-        return true;
+        return Utils.sqrDist(shooterX, shooterY, targetX, targetY) <= Utils.sqr(game.getGrenadeThrowRange());
     }
 
     private int getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance, boolean canShoot, boolean canThrowGrenadeDirect, boolean canThrowGrenadeCollateral) {
@@ -736,10 +733,7 @@ public class PlanComputer {
         if (x == cur.x && y == cur.y) {
             return true;
         }
-        if (Utils.isTeammateChar(map[x][y])) {
-            return true;
-        }
-        return false;
+        return Utils.isTeammateChar(map[x][y]);
     }
 
     private boolean canThrowGrenade(int ex, int ey) {
@@ -749,14 +743,11 @@ public class PlanComputer {
         if (Utils.sqrDist(cur.x, cur.y, ex, ey) > Utils.sqr(game.getGrenadeThrowRange())) {
             return false;
         }
-        if (forbidden(ex, ey) ||
+        return !(forbidden(ex, ey) ||
                 forbidden(ex + 1, ey) ||
                 forbidden(ex - 1, ey) ||
                 forbidden(ex, ey + 1) ||
-                forbidden(ex, ey - 1)) {
-            return false;
-        }
-        return true;
+                forbidden(ex, ey - 1));
     }
 
     private void tryThrowGrenade(int x, int y) {

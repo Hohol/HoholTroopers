@@ -30,7 +30,6 @@ public final class MyStrategy implements Strategy {
     Trooper teammateToFollow;
     static int smallMoveIndex;
     static int mediumMoveIndex;
-    final static int FIRST_ROUND_INITIAL_TEAMMATE_COUNT = 3;
 
     static Map<Cell, int[][]> bfsCache = new HashMap<>(), bfsCacheAvoidNarrowPath = new HashMap<>();
 
@@ -70,10 +69,7 @@ public final class MyStrategy implements Strategy {
         this.game = game;
         this.move = move;
 
-        phantoms = false;
-        if (enemies != null && enemies.size() > stupidEnemyCnt()) {
-            phantoms = true;
-        }
+        phantoms = enemies != null && enemies.size() > stupidEnemyCnt();
 
         init();
         moveInternal();
@@ -400,18 +396,6 @@ public final class MyStrategy implements Strategy {
         return false;
     }
 
-    private TrooperStance[][] getStances() {
-        TrooperStance[][] stances = new TrooperStance[world.getWidth()][world.getHeight()];
-        for (MutableTrooper trooper : enemies) {
-            stances[trooper.getX()][trooper.getY()] = trooper.getStance();
-        }
-        for (Trooper trooper : teammates) {
-            stances[trooper.getX()][trooper.getY()] = trooper.getStance();
-        }
-        return stances;
-    }
-
-    //m s c
     static String script = "";
     static int scriptPos;
 
@@ -486,13 +470,6 @@ public final class MyStrategy implements Strategy {
         return actionsToStandUp(stance) + dist * game.getStandingMoveCost();
     }
 
-    private int getActionsToMoveNear(int dist, TrooperStance stance) {
-        if (dist <= 1) {
-            return 0;
-        }
-        return actionsToStandUp(stance) + (dist - 1) * game.getStandingMoveCost();
-    }
-
     private int actionsToStandUp(TrooperStance stance) {
         return (STANDING.ordinal() - stance.ordinal()) * game.getStanceChangeCost();
     }
@@ -544,29 +521,6 @@ public final class MyStrategy implements Strategy {
                 moveOrder,
                 new MutableTrooper(self, -1) //todo remove lastSeenTime from MutableTrooper
         ).getPlan();
-
-        /*
-        return new PlanComputer(
-                createCharMap(),
-                utils,
-                getHpArray(),
-                bonuses,
-                getStances(),
-                getGrenades(),
-                vision,
-                healForbidden,
-                bonusUseForbidden,
-                new State(
-                        self.getActionPoints(),
-                        self.getHitpoints(),
-                        self.getX(),
-                        self.getY(),
-                        self.getStance(),
-                        self.isHoldingFieldRation(),
-                        self.isHoldingGrenade(),
-                        self.isHoldingMedikit()
-                )
-        ).getPlan();/**/
     }
 
     private List<MutableTrooper> teammatesWithoutSelf() { //todo store in teammates MutableTroopers without self
@@ -590,56 +544,12 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private boolean[][] getGrenades() {
-        boolean[][] hasGrenade = new boolean[world.getWidth()][world.getHeight()];
-        for (MutableTrooper enemy : enemies) {
-            if (enemy.isHoldingGrenade()) {
-                hasGrenade[enemy.getX()][enemy.getY()] = true;
-            }
-        }
-        return hasGrenade;
-    }
-
-    private int[][] getHpArray() {
-        int[][] hp = new int[world.getWidth()][world.getHeight()];
-        for (Trooper trooper : teammates) {
-            hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
-        }
-        for (MutableTrooper trooper : enemies) {
-            hp[trooper.getX()][trooper.getY()] = trooper.getHitpoints();
-        }
-        return hp;
-    }
-
     private BonusType[][] getBonuses() {
         BonusType[][] bonuses = new BonusType[world.getWidth()][world.getHeight()];
         for (Bonus bonus : world.getBonuses()) {
             bonuses[bonus.getX()][bonus.getY()] = bonus.getType();
         }
         return bonuses;
-    }
-
-    private boolean oldTryHeal() {    //todo rework
-        if (!self.isHoldingMedikit()) {
-            return false;
-        }
-        if (teammates.size() == 1) {
-            return false;
-        }
-        if (enemies.size() == 0) {
-            return false;
-        }
-        Trooper target = getTeammateToHeal();
-        if (target == null) {
-            return false;
-        }
-        if (manhattanDist(self, target) <= 1) {
-            return heal(target);
-        } else {
-            return self.getStance() == STANDING &&
-                    haveTime(getMoveCost(self)) &&
-                    moveTo(target, false);
-        }
     }
 
     private void print(char[][] map) {
@@ -655,77 +565,8 @@ public final class MyStrategy implements Strategy {
         System.out.println();
     }
 
-    private int[] getHpByOrdinal() {
-        int[] hp = new int[TrooperType.values().length];
-        for (Trooper trooper : teammates) {
-            hp[trooper.getType().ordinal()] = trooper.getHitpoints();
-        }
-        return hp;
-    }
-
     private boolean tooCurvedPathTo(Unit target, boolean avoidNarrowPathNearBorder) {
         return tooCurvedPathTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
-    }
-
-    private boolean medikitOverheals(Trooper target) {
-        return target.getMaximalHitpoints() - target.getHitpoints() < medikitHealValue(target);
-    }
-
-    private boolean heal(Trooper target) {
-        if (self.isHoldingMedikit() &&
-                haveTime(game.getMedikitUseCost()) &&
-                !medikitOverheals(target)
-                ) {
-            move.setAction(USE_MEDIKIT);
-            setDirection(target);
-            return true;
-        }
-        if (self.getType() == FIELD_MEDIC && haveTime(game.getFieldMedicHealCost())) {
-            move.setAction(HEAL);
-            setDirection(target);
-            return true;
-        }
-        return false;
-    }
-
-    private int medikitHealValue(Trooper target) {
-        if (target.getId() == self.getId()) {
-            return game.getMedikitHealSelfBonusHitpoints();
-        } else {
-            return game.getMedikitBonusHitpoints();
-        }
-    }
-
-    private Trooper getTeammateToHeal() { //todo separate methods for medic and not
-        Trooper r = null;
-        int minDist = Integer.MAX_VALUE;
-        for (Trooper target : teammates) {
-            if (self.getType() != FIELD_MEDIC && medikitOverheals(target)) {
-                continue;
-            }
-            if (target.getHitpoints() >= target.getMaximalHitpoints()) {
-                continue;
-            }
-            if (tooCurvedPathTo(target, false)) {
-                continue;
-            }
-            int dist = distTo(target, false);
-
-            if (self.getType() != FIELD_MEDIC) {
-                int actionsToMoveNearAndHeal = getActionsToMoveNear(dist, self.getStance()) + game.getMedikitUseCost();
-                if (!haveTime(actionsToMoveNearAndHeal)) {
-                    continue;
-                }
-            }
-            if (dist == 0) {
-                dist = 1; // doesn't matter if heal self or teammate near
-            }
-            if (r == null || dist < minDist || dist == minDist && target.getHitpoints() < r.getHitpoints()) {
-                minDist = dist;
-                r = target;
-            }
-        }
-        return r;
     }
 
     private boolean tryDeblock() {
@@ -999,8 +840,7 @@ public final class MyStrategy implements Strategy {
         for (Trooper trooper : world.getTroopers()) {
             seeRightNowIds.add(trooper.getId());
         }
-        Iterator<MutableTrooper> it = damageWasDealt.iterator();
-        it = enemies.iterator();
+        Iterator<MutableTrooper> it = enemies.iterator();
         while (it.hasNext()) {
             MutableTrooper mt = it.next();
             if (expired(mt)) {
@@ -1300,15 +1140,6 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
-    private boolean medicIsAlive() {
-        for (Trooper trooper : teammates) {
-            if (trooper.getType() == FIELD_MEDIC) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private Trooper getOtherTeammate() {
         for (Trooper trooper : teammates) {
             if (trooper.getId() != self.getId() && trooper.getId() != teammateToFollow.getId()) {
@@ -1316,10 +1147,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         throw new RuntimeException();
-    }
-
-    private int distTo(Unit target, boolean avoidNarrowPathNearBorder) {
-        return distTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
     }
 
     private int distTo(int x, int y, boolean avoidNarrowPathNearBorder) {
@@ -1583,22 +1410,7 @@ public final class MyStrategy implements Strategy {
         return -7; // >_<
     }
 
-    private boolean canShoot(Trooper target) {
-        return canShoot(self, target);
-    }
-
-    private boolean canShoot(Trooper shooter, Trooper target) {
-        return world.isVisible(shooter.getShootingRange(), shooter.getX(), shooter.getY(), shooter.getStance(),
-                target.getX(), target.getY(), target.getStance());
-    }
-
-    private boolean canShoot(Trooper target, TrooperStance shooterStance) {
-        return world.isVisible(self.getShootingRange(), self.getX(), self.getY(), shooterStance,
-                target.getX(), target.getY(), target.getStance());
-    }
-
     public ArrayList<Trooper> getTeammates() {
-
         commander = null;
         medic = null;
         soldier = null;
@@ -1643,18 +1455,6 @@ public final class MyStrategy implements Strategy {
             r[trooper.getX()][trooper.getY()] = true;
         }
         return r;
-    }
-
-    boolean canThrowGrenade(Trooper trooper) {
-        return canThrowGrenade(trooper.getX(), trooper.getY());
-    }
-
-    private boolean canThrowGrenade(int x, int y) {
-        return Utils.sqrDist(self.getX(), self.getY(), x, y) <= Utils.sqr(game.getGrenadeThrowRange());
-    }
-
-    public void setDirection(Trooper trooper) {
-        setDirection(trooper.getX(), trooper.getY());
     }
 
     private void setDirection(int x, int y) {

@@ -3,6 +3,7 @@ import model.*;
 /**
  * Класс, определяющий бойца. Содержит также все свойства юнита.
  */
+@SuppressWarnings("unused")
 public final class MutableTrooper {
     private final long id;
     private int x;
