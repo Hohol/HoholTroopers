@@ -358,7 +358,19 @@ public final class MyStrategy implements Strategy {
         if (self.getType() == FIELD_MEDIC && teammates.size() == 1) {
             return false;
         }
-        return self.getType() == FIELD_MEDIC && !allTeammatesFullHp();
+        return !allTeammatesFullHp() && someoneCanHeal();
+    }
+
+    private boolean someoneCanHeal() {
+        if (medicIsAlive()) {
+            return true;
+        }
+        for (Trooper ally : teammates) {
+            if (ally.isHoldingMedikit()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void moveByPlan(List<MyMove> actions) {
@@ -500,7 +512,7 @@ public final class MyStrategy implements Strategy {
 
     private List<MyMove> getTacticPlan() {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
-        boolean bonusUseForbidden = !seeSomeEnemy();
+        boolean bonusUseForbidden = !seeSomeEnemy() && medicIsAlive();
 
         return new TacticPlanComputer(
                 createCharMap(),
@@ -517,12 +529,16 @@ public final class MyStrategy implements Strategy {
         ).getPlan();
     }
 
+    private boolean medicIsAlive() {
+        return medic != null;
+    }
+
     private List<MyMove> getStrategyPlan(Cell destination) {
         return new StrategyPlanComputer(
                 createCharMap(),
                 utils,
                 teammatesWithoutSelf(),
-                new MutableTrooper(self,-1),
+                new MutableTrooper(self, -1),
                 vision,
                 getBonuses(),
                 getTroopers2d(),
@@ -939,7 +955,7 @@ public final class MyStrategy implements Strategy {
 
     private boolean tryMove() {
         Cell destination;
-        if(lastSeenEnemyPos != null) {
+        if (lastSeenEnemyPos != null) {
             destination = lastSeenEnemyPos;
         } else {
             destination = getNearestLongAgoSeenCell();
