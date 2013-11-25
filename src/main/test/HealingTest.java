@@ -1,11 +1,10 @@
-import model.TrooperType;
 import org.testng.annotations.Test;
 
 import static model.TrooperType.*;
 import static org.testng.Assert.assertEquals;
 
 @Test
-public class HealingTest extends AbstractPlanComputerTest {
+public class HealingTest extends TacticPlanComputerTest {
     @Test
     void testEmpty() {
         setMap("F");

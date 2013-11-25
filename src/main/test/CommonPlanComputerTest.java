@@ -5,7 +5,7 @@ import static model.TrooperStance.*;
 import org.testng.annotations.Test;
 
 @Test
-public class CommonPlanComputerTest extends AbstractPlanComputerTest {
+public class CommonPlanComputerTest extends TacticPlanComputerTest {
     @Test
     void testEmpty() {
         setMap("F");

@@ -2,18 +2,8 @@ import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.ArrayList;
-import java.util.List;
 
-class State {
-    List<MyMove> actions;
-    int actionPoints;
-    boolean holdingFieldRation;
-    boolean holdingMedikit;
-    boolean holdingGrenade;
-    int x;
-    int y;
-    TrooperStance stance;
-    int selfHp;
+class TacticState extends AbstractState <TacticState> {
 
     //----
 
@@ -32,23 +22,15 @@ class State {
     int numberOfTeammatesWhoCanReachEnemy;
     boolean someOfTeammatesCanBeKilled;
 
-    protected State(
+    protected TacticState(
             int actionPoints,
             int hp, int x, int y, TrooperStance stance, boolean holdingFieldRation,
             boolean holdingGrenade, boolean holdingMedikit
     ) {
-        this.actions = new ArrayList<>();
-        this.actionPoints = actionPoints;
-        this.holdingFieldRation = holdingFieldRation;
-        this.y = y;
-        this.x = x;
-        this.stance = stance;
-        this.selfHp = hp;
-        this.holdingMedikit = holdingMedikit;
-        this.holdingGrenade = holdingGrenade;
+        super(actionPoints, hp, x, y, stance, holdingFieldRation, holdingGrenade, holdingMedikit);
     }
 
-    protected State(State cur) {
+    protected TacticState(TacticState cur) {
         this(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
         this.actions = new ArrayList<>(cur.actions);
         this.killCnt = cur.killCnt;
@@ -67,11 +49,12 @@ class State {
         this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
     }
 
-    public State(MutableTrooper self) {
-        this(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), self.isHoldingFieldRation(), self.isHoldingGrenade(), self.isHoldingMedikit());
+    public TacticState(MutableTrooper self) {
+        super(self);
     }
 
-    boolean better(State old, TrooperType selfType) {
+    @Override
+    boolean better(TacticState old, TrooperType selfType) {
         if (old == null) {
             return true;
         }
@@ -150,7 +133,7 @@ class State {
         return false;
     }
 
-    int medicSpecificCompare(State old) {
+    int medicSpecificCompare(TacticState old) {
         if (minHp != old.minHp) {
             return old.minHp - minHp;
         }
@@ -160,7 +143,7 @@ class State {
         return 0;
     }
 
-    private int nonMedicSpecificBetter(State old) {
+    private int nonMedicSpecificBetter(TacticState old) {
         if (helpDist != old.helpDist) {
             return helpDist - old.helpDist;
         }

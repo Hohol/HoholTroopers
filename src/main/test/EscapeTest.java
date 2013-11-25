@@ -2,11 +2,10 @@ import static model.TrooperType.*;
 
 import static model.TrooperStance.*;
 
-import model.TrooperType;
 import org.testng.annotations.Test;
 
 @Test
-public class EscapeTest extends AbstractPlanComputerTest {
+public class EscapeTest extends TacticPlanComputerTest {
     @Test
     void testEscape() {
         setMap(

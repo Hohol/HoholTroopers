@@ -6,7 +6,7 @@ import static model.TrooperType.*;
 import org.testng.annotations.Test;
 
 @Test
-public class AttackTest extends AbstractPlanComputerTest {
+public class AttackTest extends TacticPlanComputerTest {
     @Test
     void testEmpty() {
         setMap(

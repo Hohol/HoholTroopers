@@ -2,14 +2,22 @@ import model.BonusType;
 
 import java.util.List;
 
-public class StrategyPlanComputer extends AbstractPlanComputer {
+public class StrategyPlanComputer extends AbstractPlanComputer <StrategyState> {
 
     public StrategyPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, MutableTrooper self, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers) {
-        super(map, utils, teammates, self, visibilities, bonuses, troopers);
+        super(map, utils, teammates, visibilities, bonuses, troopers);
+        cur = new StrategyState(self);
     }
 
     @Override
-    protected void rec() {
+    protected void tryAllActions() {
+        tryMove();
+        tryRaiseStance();
+        tryLowerStance();
+    }
+
+    @Override
+    void updateBest() {
 
     }
 }

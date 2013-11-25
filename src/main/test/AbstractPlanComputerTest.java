@@ -7,23 +7,19 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 
-public class AbstractPlanComputerTest {
+public abstract class AbstractPlanComputerTest {
+
+    protected static final Utils utils = Utils.HARDCODED_UTILS;
     protected BonusType[][] bonuses;
+    protected MutableTrooper[][] troopers;
+    protected List<MutableTrooper> teammates;
+    protected List<MutableTrooper> enemies;
     char[][] map;
-    int n, m;
+    int m;
+    int n;
+    MTBuilder[][] builders;
 
-    protected void setMap(String... smap) {
-        map = Utils.toCharAndTranspose(smap);
-        n = this.map.length;
-        m = this.map[0].length;
-        bonuses = new BonusType[this.map.length][this.map[0].length];
-        n = this.map.length;
-        m = this.map[0].length;
-        initBuilders();
-        addBonuses();
-    }
-
-    private void initBuilders() {
+    protected void initBuilders() {
         builders = new MTBuilder[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
@@ -59,6 +55,17 @@ public class AbstractPlanComputerTest {
         bonuses[x][y] = bonus;
     }
 
+    protected void setMap(String... smap) {
+        map = Utils.toCharAndTranspose(smap);
+        n = this.map.length;
+        m = this.map[0].length;
+        bonuses = new BonusType[this.map.length][this.map[0].length];
+        n = this.map.length;
+        m = this.map[0].length;
+        initBuilders();
+        addBonuses();
+    }
+
     protected MTBuilder ally(TrooperType type) {
         int x = -1, y = -1;
         for (int i = 0; i < n; i++) {
@@ -75,115 +82,7 @@ public class AbstractPlanComputerTest {
         return builders[x][y];
     }
 
-    protected MTBuilder enemy(TrooperType type) {
-        int x = -1, y = -1;
-        int cnt = 0;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if (Utils.isEnemyChar(map[i][j]) && Character.toUpperCase(map[i][j]) == Utils.getCharForTrooperType(type)) {
-                    x = i;
-                    y = j;
-                    cnt++;
-                }
-            }
-        }
-        if (x == -1) {
-            throw new RuntimeException("No enemy " + type + " on the map");
-        }
-        if (cnt > 1) {
-            throw new RuntimeException("Multiple enemy " + type + " on the map");
-        }
-
-        return builders[x][y];
-    }
-
-    protected MTBuilder enemy(int x, int y) {
-        if (!Utils.isEnemyChar(map[x][y])) {
-            throw new RuntimeException("No enemy in cell (" + x + ", " + y + ")");
-        }
-        return builders[x][y];
-    }
-
-    protected void check(
-            TrooperType selfType,
-            int actionPoints,
-            MyMove... expectedAr
-    ) {
-        check(selfType, actionPoints, getDefaultMoveOrder(), expectedAr);
-    }
-
-    protected void check(TrooperType selfType, int actionPoints, String moveOrder, MyMove ...expectedAr) {
-        MTBuilder selfBuilder = ally(selfType)
-                .actionPoints(actionPoints);
-
-        MutableTrooper self = selfBuilder.build();
-
-        prepareTroopers(selfType);
-
-        List<MyMove> actual = new TacticPlanComputer(
-                map,
-                Utils.HARDCODED_UTILS,
-                bonuses,
-                getVisibilities(),
-                false,
-                false, troopers, teammates, enemies,
-                moveOrder,
-                self
-        ).getPlan().actions;
-
-        List<MyMove> expected = Arrays.asList(expectedAr);
-        assertEquals(
-                actual,
-                expected,
-                String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
-        );
-    }
-
-    private String getDefaultMoveOrder() {
-        String r = "";
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                char ch = map[i][j];
-                if(Utils.isLetter(ch)) {
-                    ch = Character.toUpperCase(ch);
-                    if(!r.contains(Character.toString(ch))) {
-                        r += ch;
-                    }
-                }
-            }
-        }
-        return r;
-    }
-
-    protected MutableTrooper[][] troopers;
-    protected List<MutableTrooper> enemies, teammates;
-    MTBuilder[][] builders;
-
-    protected void prepareTroopers(TrooperType selfType) {
-        troopers = new MutableTrooper[n][m];
-        enemies = new ArrayList<>();
-        teammates = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if (Utils.isLetter(map[i][j])) {
-                    troopers[i][j] = builders[i][j].build();
-                }
-            }
-        }
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
-                    continue;
-                }
-                if (troopers[i][j] != null && troopers[i][j].isTeammate()) {
-                    teammates.add(troopers[i][j]);
-                }
-                if (troopers[i][j] != null && !troopers[i][j].isTeammate()) {
-                    enemies.add(troopers[i][j]);
-                }
-            }
-        }
-    }
+    protected abstract List<MyMove> getActual(String moveOrder, MutableTrooper self);
 
     protected int height(char ch) {
         if (ch == '#') {
@@ -254,5 +153,73 @@ public class AbstractPlanComputerTest {
             }
         }
         return r;
+    }
+
+    protected void prepareTroopers(TrooperType selfType) {
+        troopers = new MutableTrooper[n][m];
+        enemies = new ArrayList<>();
+        teammates = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isLetter(map[i][j])) {
+                    troopers[i][j] = builders[i][j].build();
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (Utils.isTeammateChar(map[i][j]) && Utils.getTrooperTypeByChar(map[i][j]) == selfType) {
+                    continue;
+                }
+                if (troopers[i][j] != null && troopers[i][j].isTeammate()) {
+                    teammates.add(troopers[i][j]);
+                }
+                if (troopers[i][j] != null && !troopers[i][j].isTeammate()) {
+                    enemies.add(troopers[i][j]);
+                }
+            }
+        }
+    }
+
+    protected void check(TrooperType selfType, int actionPoints, String moveOrder, MyMove ...expectedAr) {
+        MTBuilder selfBuilder = ally(selfType)
+                .actionPoints(actionPoints);
+
+        MutableTrooper self = selfBuilder.build();
+
+        prepareTroopers(selfType);
+
+        List<MyMove> actual = getActual(moveOrder, self);
+
+        List<MyMove> expected = Arrays.asList(expectedAr);
+        assertEquals(
+                actual,
+                expected,
+                String.format("\n\nExpected: %s \nActual: %s\n\n", expected, actual)
+        );
+    }
+
+    protected String getDefaultMoveOrder() {
+        String r = "";
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                char ch = map[i][j];
+                if(Utils.isLetter(ch)) {
+                    ch = Character.toUpperCase(ch);
+                    if(!r.contains(Character.toString(ch))) {
+                        r += ch;
+                    }
+                }
+            }
+        }
+        return r;
+    }
+
+    protected void check(
+            TrooperType selfType,
+            int actionPoints,
+            MyMove... expectedAr
+    ) {
+        check(selfType, actionPoints, getDefaultMoveOrder(), expectedAr);
     }
 }

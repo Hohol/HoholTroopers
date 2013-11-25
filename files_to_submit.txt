@@ -4,5 +4,5 @@ Utils.java
 TrooperParameters.java
 MyMove.java
 TacticPlanComputer.java
-State.java
+TacticState.java
 MutableTrooper.java

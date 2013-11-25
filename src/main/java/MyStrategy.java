@@ -342,7 +342,7 @@ public final class MyStrategy implements Strategy {
         if (!shouldTrySomething()) {
             return false;
         }
-        List<MyMove> actions = getPlan().actions;
+        List<MyMove> actions = getPlan();
         log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
         moveByPlan(actions);
         return true;
@@ -504,7 +504,7 @@ public final class MyStrategy implements Strategy {
         throw new RuntimeException();
     }
 
-    private State getPlan() {
+    private List<MyMove> getPlan() {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy();
 

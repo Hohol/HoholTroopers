@@ -1,5 +1,4 @@
 import model.BonusType;
-import model.Game;
 import model.TrooperStance;
 
 import static model.TrooperType.*;
@@ -12,7 +11,7 @@ import java.util.List;
 
 import static model.TrooperStance.*;
 
-public class TacticPlanComputer extends AbstractPlanComputer {
+public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
 
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
@@ -42,7 +41,8 @@ public class TacticPlanComputer extends AbstractPlanComputer {
             String moveOrder,
             MutableTrooper self
     ) {
-        super(map, utils, teammates, self, visibilities, bonuses, troopers);
+        super(map, utils, teammates, visibilities, bonuses, troopers);
+        this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
         this.enemies = enemies;
@@ -54,7 +54,6 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         prepare();
         canDamageIfBefore = getCanDamageIfBefore(moveOrder, selfType);
         canDamageIfAfter = getCanDamageIfAfter(moveOrder, selfType);
-        rec();
     }
 
     public static boolean[][] getCanDamageIfBefore(String moveOrder, TrooperType selfType) {
@@ -284,6 +283,7 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         }
     }
 
+    @Override
     void updateBest() {
 
         //todo do not store parameters calculable in O(1)
@@ -302,7 +302,7 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
-            best = new State(cur);
+            best = new TacticState(cur);
         }
     }
 
@@ -414,33 +414,6 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         return false;
     }
 
-    private void tryMove() {
-        int moveCost = utils.getMoveCost(cur.stance);
-        if (cur.actionPoints < moveCost) {
-            return;
-        }
-        for (MyMove movement : MyMove.movements) {
-            int toX = cur.x + movement.getDx();
-            int toY = cur.y + movement.getDy();
-            if (!inField(toX, toY)) {
-                continue;
-            }
-            if (!isFree(toX, toY)) {
-                continue;
-            }
-            addAction(movement);
-
-            cur.actionPoints -= moveCost;
-            cur.x += movement.getDx();
-            cur.y += movement.getDy();
-            rec();
-            cur.x -= movement.getDx();
-            cur.y -= movement.getDy();
-            cur.actionPoints += moveCost;
-            popAction();
-        }
-    }
-
     private void tryEatFieldRation() {
         if (cur.holdingFieldRation && cur.actionPoints >= game.getFieldRationEatCost() && cur.actionPoints < utils.getInitialActionPoints(selfType)) {
             addAction(MyMove.EAT_FIELD_RATION);
@@ -454,10 +427,6 @@ public class TacticPlanComputer extends AbstractPlanComputer {
             cur.actionPoints = oldActionPoints;
             popAction();
         }
-    }
-
-    public State getPlan() {
-        return best;
     }
 
     private void newTryHeal(int healValue, int healCost, MyMove healAction, MutableTrooper ally) { // if ally == null, heal self
@@ -634,38 +603,6 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         }
     }
 
-    private void tryLowerStance() {
-        if (cur.actionPoints < game.getStanceChangeCost()) {
-            return;
-        }
-        if (cur.stance == PRONE) {
-            return;
-        }
-        addAction(MyMove.LOWER_STANCE);
-        cur.actionPoints -= game.getStanceChangeCost();
-        cur.stance = Utils.stanceAfterLowering(cur.stance);
-        rec();
-        cur.stance = Utils.stanceAfterRaising(cur.stance);
-        cur.actionPoints += game.getStanceChangeCost();
-        popAction();
-    }
-
-    private void tryRaiseStance() {
-        if (cur.actionPoints < game.getStanceChangeCost()) {
-            return;
-        }
-        if (cur.stance == STANDING) {
-            return;
-        }
-        addAction(MyMove.RAISE_STANCE);
-        cur.actionPoints -= game.getStanceChangeCost();
-        cur.stance = Utils.stanceAfterRaising(cur.stance);
-        rec();
-        cur.stance = Utils.stanceAfterLowering(cur.stance);
-        cur.actionPoints += game.getStanceChangeCost();
-        popAction();
-    }
-
     private void unthrowGrenade(int ex, int ey) {
         popAction();
         cur.actionPoints += game.getGrenadeThrowCost();
@@ -734,31 +671,7 @@ public class TacticPlanComputer extends AbstractPlanComputer {
     }
 
     @Override
-    protected void rec() {
-        recursiveCallsCnt++;
-        BonusType bonus = bonuses[cur.x][cur.y];
-        boolean oldHoldingGrenade = cur.holdingGrenade;
-        boolean oldHoldingFieldRation = cur.holdingFieldRation;
-        boolean oldHoldingMedikit = cur.holdingMedikit;
-
-        if (bonus == BonusType.GRENADE && !cur.holdingGrenade) {
-            bonuses[cur.x][cur.y] = null;
-            cur.holdingGrenade = true;
-        }
-        if (bonus == BonusType.FIELD_RATION && !cur.holdingFieldRation) {
-            bonuses[cur.x][cur.y] = null;
-            cur.holdingFieldRation = true;
-        }
-        if (bonus == BonusType.MEDIKIT && !cur.holdingMedikit) {
-            bonuses[cur.x][cur.y] = null;
-            cur.holdingMedikit = true;
-        }
-
-        updateBest();
-        if (recursiveCallsCnt > MAX_RECURSIVE_CALLS) {
-            return;
-        }
-
+    protected void tryAllActions() {
         if (!bonusUseForbidden) {
             tryEatFieldRation();
         }
@@ -773,11 +686,6 @@ public class TacticPlanComputer extends AbstractPlanComputer {
         tryShoot();
         tryRaiseStance();
         tryLowerStance();
-
-        bonuses[cur.x][cur.y] = bonus;
-        cur.holdingGrenade = oldHoldingGrenade;
-        cur.holdingFieldRation = oldHoldingFieldRation;
-        cur.holdingMedikit = oldHoldingMedikit;
     }
 
     private void updateSqrDistSum(int x, int y) {
