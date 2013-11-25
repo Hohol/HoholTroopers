@@ -433,4 +433,28 @@ public class CommonPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_EAST
         );
     }
+
+    @Test
+    void testSniperRangeChange() {
+        setMap(
+                "R1.........s"
+        );
+        enemy(SOLDIER).hp(1);
+        check(
+                SNIPER,
+                12,
+                MyMove.LOWER_STANCE, MyMove.shoot(11,0)
+        );
+
+        setMap(
+                "R...........s"
+        );
+        enemy(SOLDIER).hp(95);
+        ally(SNIPER).fieldRation();
+        check(
+                SNIPER,
+                12,
+                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.EAT_FIELD_RATION, MyMove.shoot(12, 0)
+        );
+    }
 }

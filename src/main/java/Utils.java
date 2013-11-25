@@ -194,8 +194,12 @@ public class Utils {
         return ch >= 'A' && ch <= 'Z';
     }
 
-    public int getShootRange(TrooperType type) {
-        return trooperParameters.getShootRange(type);
+    public int getShootRange(TrooperType type, int stance) {
+        int range = trooperParameters.getShootRange(type);
+        if (type == TrooperType.SNIPER) {
+            range += Utils.NUMBER_OF_STANCES - stance - 1; //>_<
+        }
+        return range;
     }
 
     public int getMoveCost(TrooperStance stance) {

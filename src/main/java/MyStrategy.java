@@ -325,7 +325,7 @@ public final class MyStrategy implements Strategy {
                 if (!isFreeCell(i, j)) {
                     continue;
                 }
-                if (world.isVisible(utils.getShootRange(SOLDIER), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
+                if (world.isVisible(utils.getShootRange(SOLDIER, STANDING.ordinal()), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
                         !wasSeenOnCurrentBigMove[i][j][PRONE.ordinal()]) {
                     suspiciousCells.add(new Cell(i, j));
                 }
