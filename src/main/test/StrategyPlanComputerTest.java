@@ -40,6 +40,30 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         );
     }
 
+    @Test
+    void doNotMoveTooFarFromTeammates() {
+        setMap(
+                "RS.................@"
+        );
+        check(
+                SOLDIER,
+                10,
+                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void moveToTeammateIfAlreadyGotTooFar() {
+        setMap(
+                "R........S............@"
+        );
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_WEST
+        );
+    }
+
     @Override
     protected List<MyMove> getActual(String moveOrder, MutableTrooper self) {
         return new StrategyPlanComputer(

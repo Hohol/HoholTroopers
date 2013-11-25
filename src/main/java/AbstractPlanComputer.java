@@ -3,6 +3,7 @@ import model.Game;
 
 import model.TrooperType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -162,5 +163,14 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
     @SuppressWarnings("unused")
     boolean stopOn(MyMove... move) { //for debug only
         return Arrays.asList(move).equals(cur.actions);
+    }
+
+    protected List<int[][]> getDistToTeammates() {
+        List<int[][]> r = new ArrayList<>();
+        for (MutableTrooper ally : teammates) {
+            int[][] dist = Utils.bfsByMap(map, ally.getX(), ally.getY());
+            r.add(dist);
+        }
+        return r;
     }
 }

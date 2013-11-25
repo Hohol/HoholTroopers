@@ -15,7 +15,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
 
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
-    List<int[][]> bfsDistFromTeammateForHealing;
+    List<int[][]> distToTeammatesForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
     private int[] numberOfTeammatesWhoCanShoot;
@@ -121,19 +121,21 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
             }
         }
 
-        bfsDistFromTeammateForHealing = new ArrayList<>();
-        for (MutableTrooper ally : teammates) {
-            int[][] curDist = Utils.bfsByMap(map, ally.getX(), ally.getY());
-            int[][] curDistWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
-            bfsDistFromTeammateForHealing.add(curDist);
+        distToTeammatesForHealing = getDistToTeammates();
+        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
+            MutableTrooper ally = teammates.get(allyIndex);
+            int[][] dist = distToTeammatesForHealing.get(allyIndex);
+            int[][] distWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
             for (int i = 0; i < n; i++) {
-                for (int j = 0; j < map[i].length; j++) {
-                    if (curDist[i][j] - curDistWithoutTeammates[i][j] > 7) {
-                        curDist[i][j] = Utils.UNREACHABLE;
+                for (int j = 0; j < m; j++) {
+                    if (dist[i][j] - distWithoutTeammates[i][j] > 7) {
+                        dist[i][j] = Utils.UNREACHABLE;
                     }
                 }
             }
         }
+
+
         prepareHelp();
         numberOfTeammatesWhoCanShoot = new int[enemies.size()];
         for (int i = 0; i < enemies.size(); i++) {
@@ -723,7 +725,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         }
         for (int i = 0; i < teammates.size(); i++) {
             MutableTrooper ally = teammates.get(i);
-            int d = bfsDistFromTeammateForHealing.get(i)[cur.x][cur.y];
+            int d = distToTeammatesForHealing.get(i)[cur.x][cur.y];
             if (ally.getHitpoints() == minHp) {
                 d *= 100;
             }
