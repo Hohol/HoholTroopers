@@ -3,6 +3,7 @@ import model.Game;
 
 import model.TrooperType;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static model.TrooperStance.PRONE;
@@ -147,7 +148,19 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
     }
 
     public List<MyMove> getPlan() {
+        prepare();
         rec();
         return best.actions;
+    }
+
+    protected void prepare() {
+        selfType = troopers[cur.x][cur.y].getType();
+        map[cur.x][cur.y] = '.';
+        troopers[cur.x][cur.y] = null;
+    }
+
+    @SuppressWarnings("unused")
+    boolean stopOn(MyMove... move) { //for debug only
+        return Arrays.asList(move).equals(cur.actions);
     }
 }

@@ -3,12 +3,15 @@ import model.TrooperType;
 
 public class StrategyState extends AbstractState <StrategyState> {
 
+    int distToDestination;
+
     public StrategyState(MutableTrooper self) {
         super(self);
     }
 
     public StrategyState(StrategyState cur) {
         super(cur);
+        distToDestination = cur.distToDestination;
     }
 
     @Override
@@ -16,6 +19,29 @@ public class StrategyState extends AbstractState <StrategyState> {
         if(old == null) {
             return true;
         }
+        if(distToDestination != old.distToDestination) {
+            return distToDestination < old.distToDestination;
+        }
+
+        if (holdingMedikit != old.holdingMedikit) {
+            return holdingMedikit;
+        }
+        if (holdingFieldRation != old.holdingFieldRation) {
+            return holdingFieldRation;
+        }
+
+        if (holdingGrenade != old.holdingGrenade) {
+            return holdingGrenade;
+        }
+
+        if (fieldRationsUsed != old.fieldRationsUsed) {
+            return fieldRationsUsed < old.fieldRationsUsed;
+        }
+
+        if (actionPoints != old.actionPoints) {
+            return actionPoints > old.actionPoints;
+        }
+
         return false;
     }
 }

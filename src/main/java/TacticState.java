@@ -4,13 +4,9 @@ import model.TrooperType;
 import java.util.ArrayList;
 
 class TacticState extends AbstractState <TacticState> {
-
-    //----
-
     int healedSum;
     int killCnt;
     int damageSum;
-    int fieldRationsUsed;
 
     int focusFireParameter;
     int minHp;
@@ -23,8 +19,7 @@ class TacticState extends AbstractState <TacticState> {
     boolean someOfTeammatesCanBeKilled;
 
     protected TacticState(TacticState cur) {
-        super(cur.actionPoints, cur.selfHp, cur.x, cur.y, cur.stance, cur.holdingFieldRation, cur.holdingGrenade, cur.holdingMedikit);
-        this.actions = new ArrayList<>(cur.actions);
+        super(cur);
         this.killCnt = cur.killCnt;
         this.damageSum = cur.damageSum;
         this.healedSum = cur.healedSum;
@@ -33,7 +28,6 @@ class TacticState extends AbstractState <TacticState> {
         this.healDist = cur.healDist;
         this.helpFactor = cur.helpFactor;
         this.helpDist = cur.helpDist;
-        this.fieldRationsUsed = cur.fieldRationsUsed;
 
         this.numberOfTeammatesWhoCanReachEnemy = cur.numberOfTeammatesWhoCanReachEnemy;
 

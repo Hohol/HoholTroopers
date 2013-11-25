@@ -15,6 +15,7 @@ public abstract class AbstractState <S extends AbstractState> {
     int y;
     TrooperStance stance;
     int selfHp;
+    int fieldRationsUsed;
 
     public AbstractState(int actionPoints, int hp, int x, int y, TrooperStance stance, boolean holdingFieldRation, boolean holdingGrenade, boolean holdingMedikit) {
         this.holdingFieldRation = holdingFieldRation;
@@ -32,11 +33,12 @@ public abstract class AbstractState <S extends AbstractState> {
         this.holdingMedikit = s.holdingMedikit;
         this.holdingGrenade = s.holdingGrenade;
         this.actionPoints = s.actionPoints;
-        this.actions = s.actions;
+        this.actions = new ArrayList<MyMove>(s.actions);
         this.x = s.x;
         this.y = s.y;
         this.stance = s.stance;
         this.selfHp = s.selfHp;
+        this.fieldRationsUsed = s.fieldRationsUsed;
     }
     public AbstractState(MutableTrooper self) {
         this(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), self.isHoldingFieldRation(), self.isHoldingGrenade(), self.isHoldingMedikit());

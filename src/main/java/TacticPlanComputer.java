@@ -51,9 +51,9 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
             MutableTrooper enemy = enemies.get(i);
             enemyIndex[enemy.getX()][enemy.getY()] = i;
         }
-        prepare();
-        canDamageIfBefore = getCanDamageIfBefore(moveOrder, selfType);
-        canDamageIfAfter = getCanDamageIfAfter(moveOrder, selfType);
+
+        canDamageIfBefore = getCanDamageIfBefore(moveOrder, self.getType());
+        canDamageIfAfter = getCanDamageIfAfter(moveOrder, self.getType());
     }
 
     public static boolean[][] getCanDamageIfBefore(String moveOrder, TrooperType selfType) {
@@ -100,10 +100,9 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         return r;
     }
 
-    private void prepare() {
-        selfType = troopers[cur.x][cur.y].getType();
-        map[cur.x][cur.y] = '.';
-        troopers[cur.x][cur.y] = null;
+    @Override
+    protected void prepare() {
+        super.prepare();
         sqrDistSum = new int[n][m];
         for (MutableTrooper ally : teammates) {
             updateSqrDistSum(ally.getX(), ally.getY());
@@ -733,8 +732,4 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         return r;
     }
 
-    @SuppressWarnings("unused")
-    boolean stopOn(MyMove... move) { //for debug only
-        return Arrays.asList(move).equals(cur.actions);
-    }
 }
