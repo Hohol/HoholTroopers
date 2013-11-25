@@ -1,4 +1,6 @@
 import model.BonusType;
+import model.Trooper;
+import model.TrooperType;
 
 import java.util.List;
 
@@ -8,7 +10,10 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     Cell destination;
     int[][] distToDestination;
-    List<int[][]> distToTeammates;
+    //List<int[][]> distToTeammates;
+    List<int[][]> distWithoutTeammates;
+    MutableTrooper leader;
+    private int[][] distToLeader;
 
     public StrategyPlanComputer(
             char[][] map,
@@ -29,7 +34,50 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     protected void prepare() {
         super.prepare();
         distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
-        distToTeammates = getDistToTeammates();
+        distWithoutTeammates = getDistWithoutTeammates();
+        chooseLeader();
+    }
+
+    private void chooseLeader() {
+        int ind = getLeaderIndex();
+        if(ind != -1) {
+            leader = teammates.get(ind);
+            distToLeader = getDistWithoutTeammates().get(ind);
+        }
+    }
+
+    private int getLeaderIndex() { //returns -1 if self is leader
+        int best = -1;
+        int maxPriority = leaderPriority(selfType);
+        for (int i = 0; i < teammates.size(); i++) {
+            MutableTrooper ally = teammates.get(i);
+            int prior = leaderPriority(ally.getType());
+            if (prior > maxPriority) {
+                best = i;
+                maxPriority = prior;
+            }
+        }
+        return best;
+    }
+
+    boolean selfIsLeader() {
+        return leader == null;
+    }
+
+    public static int leaderPriority(TrooperType type) {
+        switch (type) {
+            case SOLDIER:
+                return 5;
+            case COMMANDER:
+                return 4;
+            case SCOUT:
+                return 3;
+            case FIELD_MEDIC:
+                return 2;
+            case SNIPER:
+                return 1;
+        }
+        throw new RuntimeException();
     }
 
     @Override
@@ -43,15 +91,20 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     void updateBest() {
         cur.distToDestination = distToDestination[cur.x][cur.y];
         cur.maxDistToTeammate = getMaxDistToTeammate();
+        cur.distToLeader = getDistToLeader();
 
         if (cur.better(best, selfType)) {
             best = new StrategyState(cur);
         }
     }
 
+    private int getDistToLeader() {
+        return selfIsLeader() ? 0 : distToLeader[cur.x][cur.y];
+    }
+
     private int getMaxDistToTeammate() {
         int ma = 0;
-        for (int[][] dist : distToTeammates) {
+        for (int[][] dist : distWithoutTeammates) {
             ma = Math.max(ma, dist[cur.x][cur.y]);
         }
         return ma;

@@ -173,4 +173,23 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
         }
         return r;
     }
+
+    protected List<int[][]> getDistWithoutTeammates() {
+        char[][] mapWithoutTeammates = new char[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                mapWithoutTeammates[i][j] = map[i][j];
+                if (Utils.isTeammateChar(map[i][j])) {
+                    mapWithoutTeammates[i][j] = '.';
+                }
+            }
+        }
+        List<int[][]> distWithoutTeammates = new ArrayList<>();
+        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
+            MutableTrooper ally = teammates.get(allyIndex);
+            int[][] dist = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
+            distWithoutTeammates.add(dist);
+        }
+        return distWithoutTeammates;
+    }
 }

@@ -111,30 +111,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         enemyIsAlive = new boolean[enemies.size()];
         Arrays.fill(enemyIsAlive, true);
 
-        char[][] mapWithoutTeammates = new char[n][m];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                mapWithoutTeammates[i][j] = map[i][j];
-                if (Utils.isTeammateChar(map[i][j])) {
-                    mapWithoutTeammates[i][j] = '.';
-                }
-            }
-        }
-
-        distToTeammatesForHealing = getDistToTeammates();
-        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
-            MutableTrooper ally = teammates.get(allyIndex);
-            int[][] dist = distToTeammatesForHealing.get(allyIndex);
-            int[][] distWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < m; j++) {
-                    if (dist[i][j] - distWithoutTeammates[i][j] > 7) {
-                        dist[i][j] = Utils.UNREACHABLE;
-                    }
-                }
-            }
-        }
-
+        prepareDistForHealing();
 
         prepareHelp();
         numberOfTeammatesWhoCanShoot = new int[enemies.size()];
@@ -155,10 +132,24 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         prepareMaxDamageEnemyCanDeal();
     }
 
+    private void prepareDistForHealing() {
+        List<int[][]> distWithoutTeammates = getDistWithoutTeammates();
+        distToTeammatesForHealing = getDistToTeammates();
+        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
+            int[][] dist = distToTeammatesForHealing.get(allyIndex);
+            int[][] distWithout = distWithoutTeammates.get(allyIndex);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    if (dist[i][j] - distWithout[i][j] > 7) {
+                        dist[i][j] = Utils.UNREACHABLE;
+                    }
+                }
+            }
+        }
+    }
+
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new int[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
-
-
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             MutableTrooper enemy = enemies.get(enemyIndex);
             int[][] dist = Utils.bfsByMap(map, enemy.getX(), enemy.getY());

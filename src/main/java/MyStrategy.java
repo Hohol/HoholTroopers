@@ -27,7 +27,7 @@ public final class MyStrategy implements Strategy {
 
     List<Trooper> teammates;
     static Set<MutableTrooper> enemies = new HashSet<>();
-    Trooper teammateToFollow;
+    Trooper leader;
     static int smallMoveIndex;
     static int mediumMoveIndex;
 
@@ -573,7 +573,7 @@ public final class MyStrategy implements Strategy {
         if (!haveTime(getMoveCost(self))) {
             return false;
         }
-        if (isBlockedByMe(teammateToFollow)) {
+        if (isBlockedByMe(leader)) {
             int canMakeMoveCnt = self.getActionPoints() / getMoveCost(self);
             if (canMakeMoveCnt % 2 == 0) {
                 move.setAction(MOVE);
@@ -586,14 +586,14 @@ public final class MyStrategy implements Strategy {
         return false;
     }
 
-    private boolean isBlockedByMe(Trooper teammateToFollow) {
-        return distTo(teammateToFollow.getX(), teammateToFollow.getY(), true) != Utils.UNREACHABLE &&
-                isBlocked(teammateToFollow);
+    private boolean isBlockedByMe(Trooper trooper) {
+        return distTo(trooper.getX(), trooper.getY(), true) != Utils.UNREACHABLE &&
+                isBlocked(trooper);
     }
 
     private boolean isBlocked(Trooper trooper) {
         int[][] dist = bfs(trooper.getX(), trooper.getY(), true);
-        if (trooper.getId() == teammateToFollow.getId() && destination != null &&
+        if (trooper.getId() == leader.getId() && destination != null &&
                 dist[destination.x][destination.y] == Utils.UNREACHABLE) {
             return true;
         }
@@ -628,7 +628,7 @@ public final class MyStrategy implements Strategy {
                 moveOrder += ch;
             }
         }
-        teammateToFollow = getTeammateToFollow();
+        leader = getLeader();
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
 
@@ -970,10 +970,10 @@ public final class MyStrategy implements Strategy {
         return Utils.manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
     }
 
-    private Trooper getTeammateToFollow() {
+    private Trooper getLeader() {
         Trooper r = null;
         for (Trooper trooper : teammates) {
-            if (r == null || followPriority(trooper) > followPriority(r)) {
+            if (r == null || leaderPriority(trooper) > leaderPriority(r)) {
                 r = trooper;
             }
         }
@@ -989,7 +989,7 @@ public final class MyStrategy implements Strategy {
             return false;
         }
 
-        if (self.getId() == teammateToFollow.getId()) {
+        if (self.getId() == leader.getId()) {
             if (self.getActionPoints() <= 4 && world.getMoveIndex() > 0 || shouldWaitForHealing()) {
                 return false;
             }
@@ -1001,11 +1001,11 @@ public final class MyStrategy implements Strategy {
             destination = r;
             return cautiouslyMoveTo(r);
         } else {
-            Trooper toFollow = teammateToFollow;
+            Trooper toFollow = leader;
 
             boolean fullTeam = (teammates.size() == initialTeamSize);
 
-            if (fullTeam && tooCurvedPathTo(teammateToFollow, false)) {
+            if (fullTeam && tooCurvedPathTo(leader, false)) {
                 toFollow = getOtherTeammate();
             }
 
@@ -1142,7 +1142,7 @@ public final class MyStrategy implements Strategy {
 
     private Trooper getOtherTeammate() {
         for (Trooper trooper : teammates) {
-            if (trooper.getId() != self.getId() && trooper.getId() != teammateToFollow.getId()) {
+            if (trooper.getId() != self.getId() && trooper.getId() != leader.getId()) {
                 return trooper;
             }
         }
@@ -1397,17 +1397,20 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    int followPriority(Trooper trooper) {
-        if (trooper.getType() == FIELD_MEDIC) {
-            return 0;
+    public static int leaderPriority(Trooper trooper) { //todo remove
+        switch (trooper.getType()) {
+            case SOLDIER:
+                return 5;
+            case COMMANDER:
+                return 4;
+            case SCOUT:
+                return 3;
+            case FIELD_MEDIC:
+                return 2;
+            case SNIPER:
+                return 1;
         }
-        if (trooper.getType() == COMMANDER) {
-            return 1;
-        }
-        if (trooper.getType() == SOLDIER) {
-            return 2;
-        }
-        return -7; // >_<
+        throw new RuntimeException();
     }
 
     public ArrayList<Trooper> getTeammates() {

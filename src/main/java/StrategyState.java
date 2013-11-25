@@ -5,6 +5,7 @@ public class StrategyState extends AbstractState<StrategyState> {
 
     int distToDestination;
     public int maxDistToTeammate;
+    public int distToLeader;
 
     public StrategyState(MutableTrooper self) {
         super(self);
@@ -14,6 +15,7 @@ public class StrategyState extends AbstractState<StrategyState> {
         super(cur);
         distToDestination = cur.distToDestination;
         maxDistToTeammate = cur.maxDistToTeammate;
+        distToLeader = cur.distToLeader;
     }
 
     @Override
@@ -21,7 +23,6 @@ public class StrategyState extends AbstractState<StrategyState> {
         if (old == null) {
             return true;
         }
-
 
         //--
         boolean tooFar = maxDistToTeammate > StrategyPlanComputer.MAX_DIST_TO_TEAMMATE;
@@ -34,6 +35,9 @@ public class StrategyState extends AbstractState<StrategyState> {
         }
         //--
 
+        if(distToLeader != old.distToLeader) {
+            return distToLeader < old.distToLeader;
+        }
 
         if (distToDestination != old.distToDestination) {
             return distToDestination < old.distToDestination;
