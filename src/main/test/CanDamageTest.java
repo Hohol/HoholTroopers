@@ -72,7 +72,7 @@ public class CanDamageTest {
     }
 
     void checkBefore() {
-        boolean[][] actualIfBefore = PlanComputer.getCanDamageIfBefore(moveOrder, selfType);
+        boolean[][] actualIfBefore = TacticPlanComputer.getCanDamageIfBefore(moveOrder, selfType);
         for (int i = 0; i < actualIfBefore.length; i++) {
             for (int j = 0; j < actualIfBefore[i].length; j++) {
                 assertEquals(actualIfBefore[i][j], canDamageIfBefore[i][j],
@@ -83,7 +83,7 @@ public class CanDamageTest {
     }
 
     private void checkAfter() {
-        boolean[][] actualIfAfter = PlanComputer.getCanDamageIfAfter(moveOrder, selfType);
+        boolean[][] actualIfAfter = TacticPlanComputer.getCanDamageIfAfter(moveOrder, selfType);
         for (int i = 0; i < actualIfAfter.length; i++) {
             for (int j = 0; j < actualIfAfter[i].length; j++) {
                 assertEquals(actualIfAfter[i][j], canDamageIfAfter[i][j],

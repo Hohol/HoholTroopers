@@ -12,21 +12,10 @@ import java.util.List;
 
 import static model.TrooperStance.*;
 
-public class PlanComputer {
-    private static final long MAX_RECURSIVE_CALLS = 3000000;
-    long recursiveCallsCnt;
+public class TacticPlanComputer extends AbstractPlanComputer {
 
-    private final int n, m;
-    private final char[][] map;
-    private final Game game;
-    private final Utils utils;
     private final List<MutableTrooper> enemies;
-    private final List<MutableTrooper> teammates; //here, unlike MyStrategy, teammates does not contain self
-    private State cur, best;
-    private TrooperType selfType;
-    private boolean[] visibilities;
     private int[][] sqrDistSum;
-    BonusType[][] bonuses;
     List<int[][]> bfsDistFromTeammateForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
@@ -37,11 +26,10 @@ public class PlanComputer {
     private boolean healForbidden;
     private boolean bonusUseForbidden;
     int[][][][] maxDamageEnemyCanDeal;
-    MutableTrooper[][] troopers;
     boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
 
-    public PlanComputer(
+    public TacticPlanComputer(
             char[][] map,
             Utils utils,
             BonusType[][] bonuses,
@@ -54,18 +42,9 @@ public class PlanComputer {
             String moveOrder,
             MutableTrooper self
     ) {
-        this.map = map;
-        n = map.length;
-        m = map[0].length;
-        this.utils = utils;
-        this.game = utils.getGame();
-        this.bonuses = bonuses;
-        this.visibilities = visibilities;
-        this.cur = new State(self);
+        super(map, utils, teammates, self, visibilities, bonuses, troopers);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
-        this.troopers = troopers;
-        this.teammates = teammates;
         this.enemies = enemies;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
@@ -435,18 +414,6 @@ public class PlanComputer {
         return false;
     }
 
-    private void addAction(MyMove action) {
-        cur.actions.add(action);
-    }
-
-    private void popAction() {
-        cur.actions.remove(cur.actions.size() - 1);
-    }
-
-    private boolean inField(int toX, int toY) {
-        return toX >= 0 && toX < n && toY >= 0 && toY < m;
-    }
-
     private void tryMove() {
         int moveCost = utils.getMoveCost(cur.stance);
         if (cur.actionPoints < moveCost) {
@@ -571,10 +538,6 @@ public class PlanComputer {
         }
         tryHealTeammates(MyMove.directedHeals, game.getFieldMedicHealBonusHitpoints(), game.getFieldMedicHealCost());
         tryHealSelfWithAbility();
-    }
-
-    private boolean isFree(int x, int y) {
-        return map[x][y] == '.' || map[x][y] == '?' || troopers[x][y] != null && troopers[x][y].getHitpoints() <= 0;
     }
 
     void dealDamage(int ex, int ey, int damage) {
@@ -770,7 +733,8 @@ public class PlanComputer {
         }
     }
 
-    private void rec() {
+    @Override
+    protected void rec() {
         recursiveCallsCnt++;
         BonusType bonus = bonuses[cur.x][cur.y];
         boolean oldHoldingGrenade = cur.holdingGrenade;

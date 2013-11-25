@@ -1,5 +1,4 @@
 import model.BonusType;
-import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.ArrayList;
@@ -121,7 +120,7 @@ public class AbstractPlanComputerTest {
 
         prepareTroopers(selfType);
 
-        List<MyMove> actual = new PlanComputer(
+        List<MyMove> actual = new TacticPlanComputer(
                 map,
                 Utils.HARDCODED_UTILS,
                 bonuses,

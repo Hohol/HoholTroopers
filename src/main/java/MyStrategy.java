@@ -508,7 +508,7 @@ public final class MyStrategy implements Strategy {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy();
 
-        return new PlanComputer(
+        return new TacticPlanComputer(
                 createCharMap(),
                 utils,
                 bonuses,
