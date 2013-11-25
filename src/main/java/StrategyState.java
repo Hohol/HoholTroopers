@@ -3,7 +3,7 @@ import model.TrooperType;
 public class StrategyState extends AbstractState<StrategyState> {
 
     public int distToDestination;
-    public int maxDistToTeammate;
+    public int maxDistToTeammate; //if self is leader, it is max of dist to teammates. otherwise it is dist to leader
     public int distToLeader;
     public int leadersDistToDestination;
     public int newSeenCellsCnt;

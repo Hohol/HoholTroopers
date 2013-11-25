@@ -206,6 +206,9 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     }
 
     private int getMaxDistToTeammate() {
+        if (!selfIsLeader()) {
+            return distToLeader[cur.x][cur.y];
+        }
         int ma = 0;
         for (int[][] dist : distWithoutTeammates) {
             ma = Math.max(ma, dist[cur.x][cur.y]);

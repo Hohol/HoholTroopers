@@ -224,4 +224,21 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 2
         );
     }
+    
+    @Test
+    void testBug() {
+        setMap(
+                "..C...@",
+                ".####..",
+                ".####..",
+                ".####R.",
+                ".####F.",
+                "S......"
+        );
+        check(
+                COMMANDER,
+                2,
+                MyMove.MOVE_WEST
+        );
+    }
 }
