@@ -92,7 +92,10 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     }
 
     private void chooseLeader() {
-        int ind = getLeaderIndex();
+        int ind = getLeaderIndex(15);
+        if (ind == -1) {
+            ind = getLeaderIndex(100);
+        }
         leadersDistToDestination = new int[n][m];
         if (ind != -1) {
             leader = teammates.get(ind);
@@ -111,11 +114,14 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         }
     }
 
-    private int getLeaderIndex() { //returns -1 if self is leader
+    private int getLeaderIndex(int maxDist) { //returns -1 if self is leader
         int best = -1;
         int maxPriority = leaderPriority(selfType);
         for (int i = 0; i < teammates.size(); i++) {
             MutableTrooper ally = teammates.get(i);
+            if (distWithoutTeammates.get(i)[cur.x][cur.y] > maxDist) {
+                continue;
+            }
             int prior = leaderPriority(ally.getType());
             if (prior > maxPriority) {
                 best = i;
@@ -170,7 +176,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         int r = 0;
         int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
         boolean[][] wasSeen = new boolean[n][m];
-        if(cur.actionPoints > 0) {
+        if (cur.actionPoints > 0) {
             r += markSeen(wasSeen, x, y, stance);
         }
         for (int i = cur.actions.size() - 1; i >= 0; i--) {

@@ -263,4 +263,32 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_EAST, MyMove.MOVE_WEST, MyMove.MOVE_WEST
         );
     }
+
+    @Test
+    void testDoNotMoveFarFromTeammates2() {
+        setMap(
+                ".........R.....F.....",
+                ".###################.",
+                "..........S@........."
+        );
+        check(
+                SNIPER,
+                2,
+                MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testDoNotMoveFarFromTeammates3() {
+        setMap(
+                ".........R......F....",
+                ".###################.",
+                "..........S@........."
+        );
+        check(
+                SNIPER,
+                2,
+                MyMove.MOVE_EAST
+        );
+    }
 }
