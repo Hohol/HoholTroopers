@@ -192,4 +192,22 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
         }
         return distWithoutTeammates;
     }
+
+    protected boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
+        int width = n;
+        int height = m;
+        int stanceCount = Utils.NUMBER_OF_STANCES;
+        return visibilities[viewerX * height * width * height * stanceCount
+                + viewerY * width * height * stanceCount
+                + objectX * height * stanceCount
+                + objectY * stanceCount
+                + stance];
+    }
+
+    protected boolean reachable(int viewerX, int viewerY, int objectX, int objectY, int stance, int range) {
+        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(range)) {
+            return false;
+        }
+        return visible(viewerX, viewerY, objectX, objectY, stance);
+    }
 }

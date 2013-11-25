@@ -1,14 +1,22 @@
 import static model.TrooperType.*;
+import static model.TrooperStance.*;
+
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
 @Test
 public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
-    Cell destination; //marked as '@'
+    Cell destination;
+    static final char DESTINATION_CHAR = '@';
 
     @Override
     protected List<MyMove> getActual(String moveOrder, MutableTrooper self) {
+        if(destination == null) {
+            throw new RuntimeException("Destination not specified");
+        }
         return new StrategyPlanComputer(
                 map,
                 utils,
@@ -22,12 +30,13 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Override
-    protected void setMap(String ...smap) {
+    protected void setMap(String... smap) {
         super.setMap(smap);
+        destination = null;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                if(map[i][j] == '@') {
-                    destination = new Cell(i,j);
+                if (map[i][j] == DESTINATION_CHAR) {
+                    destination = new Cell(i, j);
                     map[i][j] = '.';
                 }
             }
@@ -35,7 +44,10 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     private void setDestination(int x, int y) {
-        destination = new Cell(x,y);
+        if(destination != null) {
+            throw new RuntimeException("Destination already specified");
+        }
+        destination = new Cell(x, y);
     }
 
     @Test
@@ -154,6 +166,62 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 FIELD_MEDIC,
                 2,
                 MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void simpleScouting() {
+        setMap(
+                ".#....",
+                ".FS..@"
+        );
+        check(
+                FIELD_MEDIC,
+                4,
+                MyMove.MOVE_WEST, MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void raiseStanceToScout() {
+        setMap(
+                "S1...@"
+        );
+
+        ally(SOLDIER).stance(PRONE);
+
+        check(
+                SOLDIER,
+                3,
+                MyMove.RAISE_STANCE
+        );
+    }
+
+    @Test
+    void teammatesCanSeeAlso() {
+        setMap(
+                "C.....",
+                "#.####",
+                "#FS..@",
+                "#.####",
+                "..####"
+        );
+        check(
+                FIELD_MEDIC,
+                8,
+                MyMove.MOVE_SOUTH, MyMove.MOVE_SOUTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void youDontSeeAnythingWhenActionPointsAreOver() {
+        setMap(
+                "....#....",
+                "...S#...@"
+        );
+        check(
+                SOLDIER,
+                2
         );
     }
 }

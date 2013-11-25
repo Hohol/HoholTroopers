@@ -6,11 +6,11 @@ import java.util.List;
 
 public abstract class AbstractState <S extends AbstractState> {
 
+    List<MyMove> actions;
     boolean holdingFieldRation;
     boolean holdingMedikit;
     boolean holdingGrenade;
     int actionPoints;
-    List<MyMove> actions;
     int x;
     int y;
     TrooperStance stance;

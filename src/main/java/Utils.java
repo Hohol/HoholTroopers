@@ -52,6 +52,13 @@ public class Utils {
         throw new RuntimeException();
     }
 
+    static void log(Object o) {
+        if (!MyStrategy.local) {
+            return;
+        }
+        System.out.println(o);
+    }
+
     public int actionPointsAfterEatingFieldRation(TrooperType type, int actionPoints, Game game) {
         int r = actionPoints - game.getFieldRationEatCost() + game.getFieldRationBonusActionPoints();
         int initialActionPoints = trooperParameters.getInitialActionPoints(type);
@@ -200,6 +207,10 @@ public class Utils {
             range += Utils.NUMBER_OF_STANCES - stance - 1; //>_<
         }
         return range;
+    }
+
+    public int getVisionRange(TrooperType type) {
+        return trooperParameters.getVisionRange(type);
     }
 
     public int getMoveCost(TrooperStance stance) {

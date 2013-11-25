@@ -20,7 +20,7 @@ public class MTBuilder {
     private int actionPoints;
     private int initialActionPoints;
 
-    private double visionRange;
+    private int visionRange;
     private double shootingRange;
 
     private int shootCost;
@@ -35,7 +35,11 @@ public class MTBuilder {
     private int lastSeenTime;
     
     public MutableTrooper build() {
-        return new MutableTrooper(id, x, y, playerId, teammateIndex, teammate, type, stance, hitpoints, maximalHitpoints, actionPoints, initialActionPoints, visionRange, shootingRange, shootCost, standingDamage, kneelingDamage, proneDamage, damage, holdingGrenade, holdingMedikit, holdingFieldRation);
+        return new MutableTrooper(
+                id, x, y, playerId, teammateIndex, teammate, type, stance, hitpoints, maximalHitpoints, actionPoints, initialActionPoints,
+                TrooperParameters.HARDCODED_TROOPER_PARAMETERS.getVisionRange(type),
+                shootingRange, shootCost, standingDamage, kneelingDamage, proneDamage, damage, holdingGrenade, holdingMedikit, holdingFieldRation
+        );
     }
     public MTBuilder hp(int hp) {
         hitpoints = hp;

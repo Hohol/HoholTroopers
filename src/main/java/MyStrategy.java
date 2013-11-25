@@ -180,7 +180,7 @@ public final class MyStrategy implements Strategy {
         Cell cell = cells.get(rnd.nextInt(cells.size()));
         move.setAction(SHOOT);
         setDirection(cell.x, cell.y);
-        log("Random shoot to (" + cell.x + ", " + cell.y + ")");
+        Utils.log("Random shoot to (" + cell.x + ", " + cell.y + ")");
         return true;
     }
 
@@ -188,9 +188,9 @@ public final class MyStrategy implements Strategy {
         if (!local) {
             return;
         }
-        log(message);
+        Utils.log(message);
         if (cells.isEmpty()) {
-            log("No cells");
+            Utils.log("No cells");
             return;
         }
         char[][] map = getMapForPrinting();
@@ -362,7 +362,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void moveByPlan(List<MyMove> actions) {
-        log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
+        Utils.log(self.getType() + " having " + self.getActionPoints() + " action points is going to " + actions);
         if (actions.isEmpty()) {
             move.setAction(END_TURN);
             return;
@@ -580,7 +580,7 @@ public final class MyStrategy implements Strategy {
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
         smallMoveIndex++;
-        log("SmallStepNumber = " + smallMoveIndex);
+        Utils.log("SmallStepNumber = " + smallMoveIndex);
         cells = world.getCells();
         teammates = getTeammates();
         if (initialTeamSize == -1) {
@@ -867,13 +867,6 @@ public final class MyStrategy implements Strategy {
 
     private boolean expired(MutableTrooper mt) {
         return world.getMoveIndex() - mt.getLastSeenTime() > 2;
-    }
-
-    private static void log(Object o) {
-        if (!local) {
-            return;
-        }
-        System.out.println(o);
     }
 
     char[][] createCharMap() {

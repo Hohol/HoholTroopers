@@ -22,7 +22,7 @@ public final class MutableTrooper {
     private final int actionPoints;
     private final int initialActionPoints;
 
-    private final double visionRange;
+    private final int visionRange;
     private final double shootingRange;
 
     private final int shootCost;
@@ -49,7 +49,7 @@ public final class MutableTrooper {
         this.maximalHitpoints = t.getMaximalHitpoints();
         this.actionPoints = t.getActionPoints();
         this.initialActionPoints = t.getInitialActionPoints();
-        this.visionRange = t.getVisionRange();
+        this.visionRange = (int)(t.getVisionRange() + 0.5);
         this.shootingRange = t.getShootingRange();
         this.shootCost = t.getShootCost();
         this.standingDamage = t.getStandingDamage();
@@ -62,7 +62,7 @@ public final class MutableTrooper {
         this.lastSeenTime = lastSeenTime;
     }
 
-    public MutableTrooper(long id, int x, int y, long playerId, int teammateIndex, boolean teammate, TrooperType type, TrooperStance stance, int hitpoints, int maximalHitpoints, int actionPoints, int initialActionPoints, double visionRange, double shootingRange, int shootCost, int standingDamage, int kneelingDamage, int proneDamage, int damage, boolean holdingGrenade, boolean holdingMedikit, boolean holdingFieldRation) {
+    public MutableTrooper(long id, int x, int y, long playerId, int teammateIndex, boolean teammate, TrooperType type, TrooperStance stance, int hitpoints, int maximalHitpoints, int actionPoints, int initialActionPoints, int visionRange, double shootingRange, int shootCost, int standingDamage, int kneelingDamage, int proneDamage, int damage, boolean holdingGrenade, boolean holdingMedikit, boolean holdingFieldRation) {
         this.id = id;
         this.x = x;
         this.y = y;
@@ -153,7 +153,7 @@ public final class MutableTrooper {
     /**
      * @return Возвращает дальность обзора бойца.
      */
-    public double getVisionRange() {
+    public int getVisionRange() {
         return visionRange;
     }
 

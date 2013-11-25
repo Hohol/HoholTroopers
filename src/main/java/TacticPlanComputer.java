@@ -282,10 +282,6 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         cur.focusFireParameter = getFocusFireParameter();
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
-        /*if(stopOn(MyMove.USE_MEDIKIT_SELF, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST)) {
-            int x = 0;
-            x++;
-        }/**/
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
 
         updateMaxDamageEnemyCanDeal();
@@ -553,24 +549,6 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         int damage = utils.getShootDamage(selfType, cur.stance);
         cur.actionPoints -= utils.getShootCost(selfType);
         dealDamage(ex, ey, damage);
-    }
-
-    private boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {
-        int width = n;
-        int height = m;
-        int stanceCount = Utils.NUMBER_OF_STANCES;
-        return visibilities[viewerX * height * width * height * stanceCount
-                + viewerY * width * height * stanceCount
-                + objectX * height * stanceCount
-                + objectY * stanceCount
-                + stance];
-    }
-
-    private boolean reachable(int viewerX, int viewerY, int objectX, int objectY, int stance, int range) {
-        if (Utils.sqrDist(viewerX, viewerY, objectX, objectY) > Utils.sqr(range)) {
-            return false;
-        }
-        return visible(viewerX, viewerY, objectX, objectY, stance);
     }
 
     private boolean canShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType type) {

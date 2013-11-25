@@ -1,4 +1,3 @@
-import model.TrooperStance;
 import model.TrooperType;
 
 public class StrategyState extends AbstractState<StrategyState> {
@@ -7,6 +6,7 @@ public class StrategyState extends AbstractState<StrategyState> {
     public int maxDistToTeammate;
     public int distToLeader;
     public int leadersDistToDestination;
+    public int newSeenCellsCnt;
 
     public StrategyState(MutableTrooper self) {
         super(self);
@@ -18,6 +18,7 @@ public class StrategyState extends AbstractState<StrategyState> {
         maxDistToTeammate = cur.maxDistToTeammate;
         distToLeader = cur.distToLeader;
         leadersDistToDestination = cur.leadersDistToDestination;
+        newSeenCellsCnt = cur.newSeenCellsCnt;
     }
 
     @Override
@@ -64,10 +65,26 @@ public class StrategyState extends AbstractState<StrategyState> {
             return fieldRationsUsed < old.fieldRationsUsed;
         }
 
+        if (newSeenCellsCnt != old.newSeenCellsCnt) {
+            return newSeenCellsCnt > old.newSeenCellsCnt;
+        }
+
         if (actionPoints != old.actionPoints) {
             return actionPoints > old.actionPoints;
         }
 
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "StrategyState{" +
+                "actions = " + actions +
+                ", distToDestination=" + distToDestination +
+                ", maxDistToTeammate=" + maxDistToTeammate +
+                ", distToLeader=" + distToLeader +
+                ", leadersDistToDestination=" + leadersDistToDestination +
+                ", newSeenCellsCnt=" + newSeenCellsCnt +
+                '}';
     }
 }
