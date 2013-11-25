@@ -277,9 +277,6 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
 
     @Override
     void updateBest() {
-
-        //todo do not store parameters calculable in O(1)
-
         cur.healDist = getDistToTeammatesSum();
         cur.minHp = getMinHp();
         cur.focusFireParameter = getFocusFireParameter();

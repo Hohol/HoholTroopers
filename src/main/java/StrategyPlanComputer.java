@@ -14,6 +14,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     List<int[][]> distWithoutTeammates;
     MutableTrooper leader;
     private int[][] distToLeader;
+    int[][] leadersDistToDestination; //[self.x][self.y]
 
     public StrategyPlanComputer(
             char[][] map,
@@ -40,9 +41,21 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     private void chooseLeader() {
         int ind = getLeaderIndex();
-        if(ind != -1) {
+        leadersDistToDestination = new int[n][m];
+        if (ind != -1) {
             leader = teammates.get(ind);
             distToLeader = getDistWithoutTeammates().get(ind);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    if (!isFree(i, j)) {
+                        continue;
+                    }
+                    char buf = map[i][j];
+                    map[i][j] = Utils.getCharForTrooperType(selfType);
+                    leadersDistToDestination[i][j] = Utils.bfsByMap(map, leader.getX(), leader.getY())[destination.x][destination.y];
+                    map[i][j] = buf;
+                }
+            }
         }
     }
 
@@ -92,6 +105,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.distToDestination = distToDestination[cur.x][cur.y];
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
+        cur.leadersDistToDestination = leadersDistToDestination[cur.x][cur.y];
 
         if (cur.better(best, selfType)) {
             best = new StrategyState(cur);

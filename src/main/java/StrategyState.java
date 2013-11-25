@@ -3,9 +3,10 @@ import model.TrooperType;
 
 public class StrategyState extends AbstractState<StrategyState> {
 
-    int distToDestination;
+    public int distToDestination;
     public int maxDistToTeammate;
     public int distToLeader;
+    public int leadersDistToDestination;
 
     public StrategyState(MutableTrooper self) {
         super(self);
@@ -16,12 +17,17 @@ public class StrategyState extends AbstractState<StrategyState> {
         distToDestination = cur.distToDestination;
         maxDistToTeammate = cur.maxDistToTeammate;
         distToLeader = cur.distToLeader;
+        leadersDistToDestination = cur.leadersDistToDestination;
     }
 
     @Override
     boolean better(StrategyState old, TrooperType selfType) {
         if (old == null) {
             return true;
+        }
+
+        if (leadersDistToDestination != old.leadersDistToDestination) {
+            return leadersDistToDestination < old.leadersDistToDestination;
         }
 
         //--
@@ -35,7 +41,7 @@ public class StrategyState extends AbstractState<StrategyState> {
         }
         //--
 
-        if(distToLeader != old.distToLeader) {
+        if (distToLeader != old.distToLeader) {
             return distToLeader < old.distToLeader;
         }
 

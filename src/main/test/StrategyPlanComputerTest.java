@@ -143,4 +143,17 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 12
         );
     }
+
+    @Test
+    void testDeblock() {
+        setMap(
+                "....#",
+                "@..FS"
+        );
+        check(
+                FIELD_MEDIC,
+                2,
+                MyMove.MOVE_NORTH
+        );
+    }
 }
