@@ -5,7 +5,6 @@ import static model.TrooperType.*;
 
 import model.TrooperType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

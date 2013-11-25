@@ -25,7 +25,6 @@ public final class MyStrategy implements Strategy {
 
     List<Trooper> teammates;
     static Set<MutableTrooper> enemies = new HashSet<>();
-    Trooper leader;
     static int smallMoveIndex;
     static int mediumMoveIndex;
 
@@ -45,8 +44,6 @@ public final class MyStrategy implements Strategy {
     static boolean scoreMustChange;
     static List<MutableTrooper> damageWasDealt = new ArrayList<>();
     static int expectedScoreChange;
-    int scoutSmallMoveIndex = -2;
-    Direction scoutReturnDir;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -93,51 +90,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryRandomShoot()) {
-            return;
-        }
-    }
-
-    private boolean tryScout() {
-        if (!haveTime(getMoveCost(self) * 2)) {
-            return false;
-        }
-        int bestD = -1;
-        int ma = 0;
-        for (int d = 0; d < 4; d++) {
-            Direction dir = Utils.dirs[d];
-            int toX = self.getX() + dir.getOffsetX();
-            int toY = self.getY() + dir.getOffsetY();
-            if (!isFreeCell(toX, toY)) {
-                continue;
-            }
-            int value = scoutValue(toX, toY);
-            if (value > ma) {
-                ma = value;
-                bestD = d;
-            }
-        }
-        if (bestD == -1) {
-            return false;
-        }
-        move.setAction(MOVE);
-        move.setDirection(Utils.dirs[bestD]);
-        scoutReturnDir = Utils.dirs[(bestD + 2) % 4];
-        scoutSmallMoveIndex = smallMoveIndex;
-        return true;
-    }
-
-    private int scoutValue(int x, int y) {
-        int r = 0;
-        for (int i = 0; i < world.getWidth(); i++) {
-            for (int j = 0; j < world.getHeight(); j++) {
-                if (!wasSeenOnCurrentBigMove[i][j][0] &&
-                        world.isVisible(self.getVisionRange(), x, y, PRONE, i, j, PRONE)) {
-                    r++;
-                }
-            }
-        }
-        return r;
+        tryRandomShoot();
     }
 
     private boolean tryRandomShoot() {
@@ -422,80 +375,6 @@ public final class MyStrategy implements Strategy {
         return null;
     }
 
-    private boolean tryMoveToBonus() {
-        Bonus bonus = chooseBonus();
-        if (bonus == null) {
-            return false;
-        }
-        if (self.getStance() != STANDING && haveTime(game.getStanceChangeCost())) {
-            move.setAction(RAISE_STANCE);
-            return true;
-        }
-        return moveTo(bonus, true);
-    }
-
-    private Bonus chooseBonus() {
-        int[][] dist = bfs(self.getX(), self.getY(), true);
-        Bonus r = null;
-        for (Bonus bonus : world.getBonuses()) {
-            if (isHoldingBonus(bonus.getType())) {
-                continue;
-            }
-            if (bonusTooFarFromTeammates(bonus)) {
-                continue;
-            }
-            if (!isFreeCell(bonus.getX(), bonus.getY()) || isNarrowPathNearBorder(bonus.getX(), bonus.getY())) {
-                continue;
-            }
-            int d = dist[bonus.getX()][bonus.getY()];
-            if (!haveTime(getActionsToMoveIn(d, self.getStance()))) {
-                continue;
-            }
-            if (r == null || d < dist[r.getX()][r.getY()]) {
-                r = bonus;
-            }
-        }
-        return r;
-    }
-
-    private int getActionsToMoveIn(int dist, TrooperStance stance) {
-        return actionsToStandUp(stance) + dist * game.getStandingMoveCost();
-    }
-
-    private int actionsToStandUp(TrooperStance stance) {
-        return (STANDING.ordinal() - stance.ordinal()) * game.getStanceChangeCost();
-    }
-
-
-    private boolean bonusTooFarFromTeammates(Unit unit) {
-        return bonusTooFarFromTeammates(unit.getX(), unit.getY());
-    }
-
-    private boolean bonusTooFarFromTeammates(int x, int y) {
-        for (Trooper trooper : teammates) {
-            if (Utils.manhattanDist(x, y, trooper.getX(), trooper.getY()) >= 7) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isHoldingBonus(BonusType type) {
-        return isHoldingBonus(self, type);
-    }
-
-    private static boolean isHoldingBonus(Trooper trooper, BonusType type) {
-        switch (type) {
-            case GRENADE:
-                return trooper.isHoldingGrenade();
-            case MEDIKIT:
-                return trooper.isHoldingMedikit();
-            case FIELD_RATION:
-                return trooper.isHoldingFieldRation();
-        }
-        throw new RuntimeException();
-    }
-
     private List<MyMove> getTacticPlan() {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy() && medicIsAlive();
@@ -594,7 +473,6 @@ public final class MyStrategy implements Strategy {
                 moveOrder += ch;
             }
         }
-        leader = getLeader();
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
 
@@ -924,20 +802,6 @@ public final class MyStrategy implements Strategy {
         }
     }
 
-    private int manhattanDist(Trooper self, Trooper target) {
-        return Utils.manhattanDist(self.getX(), self.getY(), target.getX(), target.getY());
-    }
-
-    private Trooper getLeader() {
-        Trooper r = null;
-        for (Trooper trooper : teammates) {
-            if (r == null || leaderPriority(trooper) > leaderPriority(r)) {
-                r = trooper;
-            }
-        }
-        return r;
-    }
-
     private boolean tryMove() {
         Cell destination;
         if (lastSeenEnemyPos != null) {
@@ -966,15 +830,6 @@ public final class MyStrategy implements Strategy {
         return true;
     }
 
-    private Trooper getOtherTeammate() {
-        for (Trooper trooper : teammates) {
-            if (trooper.getId() != self.getId() && trooper.getId() != leader.getId()) {
-                return trooper;
-            }
-        }
-        throw new RuntimeException();
-    }
-
     private int distTo(int x, int y, boolean avoidNarrowPathNearBorder) {
         int[][] dist = bfs(self.getX(), self.getY(), avoidNarrowPathNearBorder);
         return dist[x][y];
@@ -985,7 +840,6 @@ public final class MyStrategy implements Strategy {
         int minDist = Integer.MAX_VALUE;
         int x = -1, y = -1;
 
-        //int[][] dist = bfs(self.getX(), self.getY(), true);
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
                 int newDist = Utils.manhattanDist(i, j, world.getWidth() / 2, world.getHeight() / 2);
@@ -1001,83 +855,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return new Cell(x, y);
-    }
-
-    private boolean cautiouslyMoveTo(Cell c) {
-        int x = c.x, y = c.y;
-        List<Direction> availableDirs = getFirstStepForMovingTo(x, y, true);
-        Direction bestDir = null;
-        int minDist = Integer.MAX_VALUE;
-        for (Direction dir : availableDirs) {
-            int toX = self.getX() + dir.getOffsetX();
-            int toY = self.getY() + dir.getOffsetY();
-            int maxDist = 0;
-            for (Trooper trooper : teammates) {
-                int[][] dist = bfsIgnoreTeammates(trooper.getX(), trooper.getY());   //todo rework
-                int d = dist[toX][toY];
-                maxDist = Math.max(maxDist, d);
-            }
-            if (maxDist < minDist) {
-                minDist = maxDist;
-                bestDir = dir;
-            }
-        }
-        int curMaxDist = 0;
-        for (Trooper trooper : teammates) {
-            if (trooper.getId() == self.getId()) {
-                continue;
-            }
-            int[][] dist = bfsIgnoreTeammates(trooper.getX(), trooper.getY());  //todo rework
-            int d = dist[self.getX()][self.getY()];
-            curMaxDist = Math.max(curMaxDist, d);
-        }
-        if (minDist > curMaxDist && minDist >= 5) {
-            return false;
-        }
-        if (bestDir == null) {
-            return false;
-        }
-        moveTo(bestDir);
-        return true;
-    }
-
-    private int[][] bfsIgnoreTeammates(int startX, int startY) { //todo rework, get rid of it, ugly kostyl
-        int[][] dist;
-        Queue<Integer> qx = new ArrayDeque<>();
-        Queue<Integer> qy = new ArrayDeque<>();
-        dist = createIntMap(Utils.UNREACHABLE);
-        qx.add(startX);
-        qy.add(startY);
-        dist[startX][startY] = 0;
-        Set<Cell> ignoredCells = new HashSet<>();
-        for (Trooper trooper : teammates) {
-            ignoredCells.add(new Cell(trooper.getX(), trooper.getY()));
-        }
-        while (!qx.isEmpty()) {
-            int x = qx.poll();
-            int y = qy.poll();
-            for (Direction dir : Utils.dirs) {
-                int toX = x + dir.getOffsetX();
-                int toY = y + dir.getOffsetY();
-                if (!inField(toX, toY)) {
-                    continue;
-                }
-                if (dist[toX][toY] != Utils.UNREACHABLE) {
-                    continue;
-                }
-                dist[toX][toY] = dist[x][y] + 1;
-                if (!isFreeCell(toX, toY) && !ignoredCells.contains(new Cell(toX, toY))) {
-                    continue;
-                }
-                qx.add(toX);
-                qy.add(toY);
-            }
-        }
-        return dist;
-    }
-
-    private boolean moveTo(Unit target, boolean avoidNarrowPathNearBorder) {
-        return moveTo(target.getX(), target.getY(), avoidNarrowPathNearBorder);
     }
 
     private boolean moveTo(int x, int y, boolean avoidNarrowPathNearBorder) {
@@ -1177,21 +954,6 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private int getMoveCost(Trooper self) {
-        return utils.getMoveCost(self.getStance());
-    }
-
-    private boolean isValidMove(Direction dir, Trooper trooper) {
-        int toX = trooper.getX() + dir.getOffsetX();
-        int toY = trooper.getY() + dir.getOffsetY();
-
-        return isFreeCell(toX, toY) && !isNarrowPathNearBorder(toX, toY);
-    }
-
-    private boolean isValidMove(Direction dir) {
-        return isValidMove(dir, self);
-    }
-
     private boolean isFreeCell(int toX, int toY) {
         return inField(toX, toY) && cells[toX][toY] == CellType.FREE &&
                 !occupiedByTrooper[toX][toY];
@@ -1206,37 +968,6 @@ public final class MyStrategy implements Strategy {
 
     private boolean inField(int toX, int toY) {
         return toX >= 0 && toY >= 0 && toX < world.getWidth() && toY < world.getHeight();
-    }
-
-    private void moveRandom() {
-        ArrayList<Direction> a = new ArrayList<>();
-        for (Direction dir : Utils.dirs) {
-            if (isValidMove(dir)) {
-                a.add(dir);
-            }
-        }
-        move.setAction(MOVE);
-        if (!a.isEmpty()) {
-            move.setDirection(a.get(rnd.nextInt(a.size())));
-        } else {
-            move.setDirection(Direction.CURRENT_POINT);
-        }
-    }
-
-    public static int leaderPriority(Trooper trooper) { //todo remove
-        switch (trooper.getType()) {
-            case SOLDIER:
-                return 5;
-            case COMMANDER:
-                return 4;
-            case SCOUT:
-                return 3;
-            case FIELD_MEDIC:
-                return 2;
-            case SNIPER:
-                return 1;
-        }
-        throw new RuntimeException();
     }
 
     public ArrayList<Trooper> getTeammates() {
@@ -1269,12 +1000,6 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        Collections.sort(r, new Comparator<Trooper>() {
-            @Override
-            public int compare(Trooper o1, Trooper o2) {
-                return Long.compare(o1.getId(), o2.getId());
-            }
-        });
         return r;
     }
 
