@@ -8,7 +8,6 @@ import java.util.*;
 
 public final class MyStrategy implements Strategy {
     static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
-    public static String MyName;
 
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
@@ -90,20 +89,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        if (tryMoveToBonus()) {
-            return;
-        }
-
-        if (scoutSmallMoveIndex == smallMoveIndex - 1) { //todo rework ofc
-            move.setAction(MOVE);
-            move.setDirection(scoutReturnDir);
-        }
-
         if (tryMove()) {
-            return;
-        }
-
-        if (tryScout()) {
             return;
         }
 
@@ -635,7 +621,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private int getMyScore() {
-        String name = local ? MyName : "Hohol";
+        String name = "Hohol";
         for (Player player : world.getPlayers()) {
             if (player.getName().equals(name)) {
                 return player.getScore();

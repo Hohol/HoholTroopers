@@ -45,23 +45,22 @@ public class StrategyState extends AbstractState<StrategyState> {
         }
         //--
 
-        if (distToLeader != old.distToLeader) {
-            return distToLeader < old.distToLeader;
-        }
-
-        if (distToDestination != old.distToDestination) {
-            return distToDestination < old.distToDestination;
-        }
-
         if (holdingMedikit != old.holdingMedikit) {
             return holdingMedikit;
         }
         if (holdingFieldRation != old.holdingFieldRation) {
             return holdingFieldRation;
         }
-
         if (holdingGrenade != old.holdingGrenade) {
             return holdingGrenade;
+        }
+
+        if (distToLeader != old.distToLeader) {
+            return distToLeader < old.distToLeader;
+        }
+
+        if (distToDestination != old.distToDestination) {
+            return distToDestination < old.distToDestination;
         }
 
         if (fieldRationsUsed != old.fieldRationsUsed) {

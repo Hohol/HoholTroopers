@@ -14,7 +14,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
 
     @Override
     protected List<MyMove> getActual(String moveOrder, MutableTrooper self) {
-        if(destination == null) {
+        if (destination == null) {
             throw new RuntimeException("Destination not specified");
         }
         return new StrategyPlanComputer(
@@ -44,7 +44,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     private void setDestination(int x, int y) {
-        if(destination != null) {
+        if (destination != null) {
             throw new RuntimeException("Destination already specified");
         }
         destination = new Cell(x, y);
@@ -224,7 +224,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 2
         );
     }
-    
+
     @Test
     void testBug() {
         setMap(
@@ -249,6 +249,18 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 SNIPER,
                 12,
                 MyMove.MOVE_EAST, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void collectBonus() {
+        setMap(
+                "S@.F+"
+        );
+        check(
+                FIELD_MEDIC,
+                6,
+                MyMove.MOVE_EAST, MyMove.MOVE_WEST, MyMove.MOVE_WEST
         );
     }
 }
