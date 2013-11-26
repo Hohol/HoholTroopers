@@ -285,21 +285,11 @@ public class HealingTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testDoNotTryToReachUnreachable() {
-        setMap("........#.......",
-                "...F....#....C..",
-                "........#.......");
-        ally(COMMANDER).hp(1);
-        ally(FIELD_MEDIC).hp(100);
-        check(FIELD_MEDIC, 12);
-    }
-
-    @Test
     void testDoNotGoTooFar() {
         setMap(
-                "F...............",
-                "S##############.",
-                "C..............."
+                "F..........R",
+                "S#########..",
+                "C..........."
         );
         ally(COMMANDER).hp(1);
         ally(SOLDIER).hp(100);

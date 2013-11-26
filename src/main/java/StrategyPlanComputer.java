@@ -18,9 +18,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     MutableTrooper leader;
     private int[][] distToLeader;
     int[][] leadersDistToDestination; //[self.x][self.y]
-    List<Cell>[][][] cellsVisibleFrom;
-    boolean[][][] visibleInitially;
-    MutableTrooper self;    //for immutable fields only
 
     public StrategyPlanComputer(
             char[][] map,
@@ -32,9 +29,8 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             MutableTrooper[][] troopers,
             Cell destination
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self);
         this.destination = destination;
-        this.self = self;
         cur = new StrategyState(self);
     }
 
@@ -44,51 +40,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
         distWithoutTeammates = getDistWithoutTeammates();
         chooseLeader();
-        prepareVisibleInitially();
-        prepareCellsVisibleFrom();
-    }
-
-    private void prepareVisibleInitially() {
-        visibleInitially = new boolean[n][m][Utils.NUMBER_OF_STANCES];
-        markVisibleInitially(self);
-        for (MutableTrooper ally : teammates) {
-            markVisibleInitially(ally);
-        }
-    }
-
-    private void markVisibleInitially(MutableTrooper ally) {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                    if (reachable(ally.getX(), ally.getY(), i, j, ally.getStance().ordinal(), ally.getVisionRange())) {
-                        visibleInitially[i][j][stance] = true;
-                    }
-                }
-            }
-        }
-    }
-
-    private void prepareCellsVisibleFrom() {
-        cellsVisibleFrom = new List[n][m][Utils.NUMBER_OF_STANCES];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                    cellsVisibleFrom[i][j][stance] = getCellsVisibleFrom(i, j, stance);
-                }
-            }
-        }
-    }
-
-    private List<Cell> getCellsVisibleFrom(int x, int y, int stance) {
-        List<Cell> r = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if (reachable(x, y, i, j, stance, utils.getVisionRange(selfType))) {
-                    r.add(new Cell(i, j));
-                }
-            }
-        }
-        return r;
     }
 
     private void chooseLeader() {
@@ -170,41 +121,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             Utils.log(cur);
             best = new StrategyState(cur);
         }
-    }
-
-    private int getSeenCellsCnt() {
-        int r = 0;
-        int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
-        boolean[][] wasSeen = new boolean[n][m];
-        if (cur.actionPoints > 0) {
-            r += markSeen(wasSeen, x, y, stance);
-        }
-        for (int i = cur.actions.size() - 1; i >= 0; i--) {
-            Move action = cur.actions.get(i).getMove();
-            if (action.getAction() == MOVE) {
-                x -= action.getDirection().getOffsetX();
-                y -= action.getDirection().getOffsetY();
-                r += markSeen(wasSeen, x, y, stance);
-            } else if (action.getAction() == RAISE_STANCE) {
-                stance--;
-                // no need to mark
-            } else if (action.getAction() == LOWER_STANCE) {
-                stance++;
-                r += markSeen(wasSeen, x, y, stance);
-            }
-        }
-        return r;
-    }
-
-    private int markSeen(boolean[][] wasSeen, int x, int y, int stance) {
-        int r = 0;
-        for (Cell cell : cellsVisibleFrom[x][y][stance]) {
-            if (!wasSeen[cell.x][cell.y] && !visibleInitially[cell.x][cell.y][stance]) {
-                wasSeen[cell.x][cell.y] = true;
-                r++;
-            }
-        }
-        return r;
     }
 
     private int getDistToLeader() {

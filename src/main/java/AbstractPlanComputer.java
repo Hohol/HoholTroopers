@@ -1,16 +1,20 @@
 import model.BonusType;
 import model.Game;
 
+import model.Move;
 import model.TrooperType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static model.ActionType.LOWER_STANCE;
+import static model.ActionType.MOVE;
+import static model.ActionType.RAISE_STANCE;
 import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
 
-public abstract class AbstractPlanComputer <S extends AbstractState> {
+public abstract class AbstractPlanComputer<S extends AbstractState> {
     protected static final long MAX_RECURSIVE_CALLS = 3000000;
     protected final int m;
     protected final int n;
@@ -24,8 +28,11 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
     long recursiveCallsCnt;
     BonusType[][] bonuses;
     MutableTrooper[][] troopers;
+    boolean[][][] visibleInitially;
+    List<Cell>[][][] cellsVisibleFrom;
+    MutableTrooper self;    //for immutable fields only
 
-    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers) {
+    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self) {
         m = map[0].length;
         n = map.length;
         this.map = map;
@@ -35,6 +42,7 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
         this.visibilities = visibilities;
         this.bonuses = bonuses;
         this.troopers = troopers;
+        this.self = self;
     }
 
     protected void addAction(MyMove action) {
@@ -52,6 +60,7 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
     protected boolean isFree(int x, int y) {
         return map[x][y] == '.' || map[x][y] == '?' || troopers[x][y] != null && troopers[x][y].getHitpoints() <= 0;
     }
+
     protected abstract void tryAllActions();
 
     abstract void updateBest();
@@ -158,6 +167,8 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
         selfType = troopers[cur.x][cur.y].getType();
         map[cur.x][cur.y] = '.';
         troopers[cur.x][cur.y] = null;
+        prepareVisibleInitially();
+        prepareCellsVisibleFrom();
     }
 
     @SuppressWarnings("unused")
@@ -209,5 +220,86 @@ public abstract class AbstractPlanComputer <S extends AbstractState> {
             return false;
         }
         return visible(viewerX, viewerY, objectX, objectY, stance);
+    }
+
+    protected void markVisibleInitially(MutableTrooper ally) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                    if (reachable(ally.getX(), ally.getY(), i, j, ally.getStance().ordinal(), ally.getVisionRange())) {
+                        visibleInitially[i][j][stance] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    protected List<Cell> getCellsVisibleFrom(int x, int y, int stance) {
+        List<Cell> r = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (reachable(x, y, i, j, stance, utils.getVisionRange(selfType))) {
+                    r.add(new Cell(i, j));
+                }
+            }
+        }
+        return r;
+    }
+
+    protected void prepareCellsVisibleFrom() {
+        cellsVisibleFrom = new List[n][m][Utils.NUMBER_OF_STANCES];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                    cellsVisibleFrom[i][j][stance] = getCellsVisibleFrom(i, j, stance);
+                }
+            }
+        }
+    }
+
+    protected void prepareVisibleInitially() {
+        visibleInitially = new boolean[n][m][Utils.NUMBER_OF_STANCES];
+        markVisibleInitially(self);
+        for (MutableTrooper ally : teammates) {
+            markVisibleInitially(ally);
+        }
+    }
+
+    protected int markSeen(boolean[][] wasSeen, int x, int y, int stance) {
+        int r = 0;
+        for (Cell cell : cellsVisibleFrom[x][y][stance]) {
+            if (!wasSeen[cell.x][cell.y] && !visibleInitially[cell.x][cell.y][stance]) {
+                wasSeen[cell.x][cell.y] = true;
+                r++;
+            }
+        }
+        return r;
+    }
+
+    protected int getSeenCellsCnt() {
+        if (recursiveCallsCnt > MAX_RECURSIVE_CALLS / 100) {
+            return 0;
+        }
+        int r = 0;
+        int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
+        boolean[][] wasSeen = new boolean[n][m];
+        if (cur.actionPoints > 0) {
+            r += markSeen(wasSeen, x, y, stance);
+        }
+        for (int i = cur.actions.size() - 1; i >= 0; i--) {
+            Move action = ((MyMove) cur.actions.get(i)).getMove();
+            if (action.getAction() == MOVE) {
+                x -= action.getDirection().getOffsetX();
+                y -= action.getDirection().getOffsetY();
+                r += markSeen(wasSeen, x, y, stance);
+            } else if (action.getAction() == RAISE_STANCE) {
+                stance--;
+                // no need to mark
+            } else if (action.getAction() == LOWER_STANCE) {
+                stance++;
+                r += markSeen(wasSeen, x, y, stance);
+            }
+        }
+        return r;
     }
 }

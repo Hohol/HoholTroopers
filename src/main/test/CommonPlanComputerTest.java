@@ -129,7 +129,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 10,
-                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
+                MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
         );
     }
 
@@ -153,7 +153,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 COMMANDER,
                 10,
-                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_WEST, MyMove.MOVE_NORTH
+                MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
         );
     }
 
@@ -454,7 +454,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 SNIPER,
                 12,
-                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.EAT_FIELD_RATION, MyMove.shoot(12, 0)
+                MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE, MyMove.EAT_FIELD_RATION, MyMove.shoot(12, 0)
         );
     }
 
@@ -545,6 +545,43 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 COMMANDER,
                 3,
                 MyMove.MOVE_SOUTH
+        );
+    }
+
+    @Test
+    void simpleScoutingInFight() {
+        setMap(
+                "S.1.s"
+        );
+        ally(SOLDIER).hp(1).stance(PRONE);
+        enemy(SOLDIER).stance(PRONE);
+        check(
+                SOLDIER,
+                8,
+                MyMove.RAISE_STANCE, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test (enabled = false)
+    void testSpeed() {
+        setMap(
+                "...............",
+                "...............",
+                "......rRt......",
+                "......SF..T....",
+                "......sCf......",
+                "...............",
+                "...............",
+                "..............."
+        );
+        ally(COMMANDER).hp(1);
+        ally(SNIPER).hp(1);
+        ally(SOLDIER).hp(1);
+        ally(FIELD_MEDIC).hp(1).fieldRation().medikit().grenade();
+
+        check(
+                FIELD_MEDIC,
+                12
         );
     }
 }

@@ -44,7 +44,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             String moveOrder,
             MutableTrooper self
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self);
         this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
@@ -343,6 +343,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
+        cur.newSeenCellsCnt = getSeenCellsCnt();
 
         updateMaxDamageEnemyCanDeal();
 

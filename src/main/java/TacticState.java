@@ -120,6 +120,10 @@ class TacticState extends AbstractState<TacticState> {
             return fieldRationsUsed < old.fieldRationsUsed;
         }
 
+        if (newSeenCellsCnt != old.newSeenCellsCnt) {
+            return newSeenCellsCnt > old.newSeenCellsCnt;
+        }
+
         if (actionPoints != old.actionPoints) {
             return actionPoints > old.actionPoints;
         }

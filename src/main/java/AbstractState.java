@@ -6,6 +6,7 @@ import java.util.List;
 
 public abstract class AbstractState <S extends AbstractState> {
 
+    public int newSeenCellsCnt;
     List<MyMove> actions;
     boolean holdingFieldRation;
     boolean holdingMedikit;
@@ -39,6 +40,7 @@ public abstract class AbstractState <S extends AbstractState> {
         this.stance = s.stance;
         this.selfHp = s.selfHp;
         this.fieldRationsUsed = s.fieldRationsUsed;
+        newSeenCellsCnt = s.newSeenCellsCnt;
     }
     public AbstractState(MutableTrooper self) {
         this(self.getActionPoints(), self.getHitpoints(), self.getX(), self.getY(), self.getStance(), self.isHoldingFieldRation(), self.isHoldingGrenade(), self.isHoldingMedikit());
