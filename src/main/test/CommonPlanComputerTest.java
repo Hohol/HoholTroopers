@@ -488,4 +488,20 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 2
         );
     }
+
+    @Test
+    void testHelpingMustConsiderStance() {
+        setMap(
+                "..R..",
+                "11111",
+                ".....",
+                "..s.S"
+        );
+        ally(SNIPER).stance(PRONE);
+        check(
+                SNIPER,
+                2,
+                MyMove.RAISE_STANCE
+        );
+    }
 }

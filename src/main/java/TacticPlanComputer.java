@@ -17,6 +17,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     List<int[][]> distToTeammatesForHealing;
     private int[][][] helpFactor;
     private int[][][] helpDist;
+    private int[][][] minStanceForHelp;
     private int[] numberOfTeammatesWhoCanShoot;
     private int[][] numberOfTeammatesWhoCanReachEnemy;
     boolean[] enemyIsAlive;
@@ -280,6 +281,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private void prepareHelp() {
         helpFactor = new int[enemies.size()][n][m];
+        minStanceForHelp = new int[enemies.size()][n][m];
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -291,9 +293,18 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 }
                 for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
                     MutableTrooper enemy = enemies.get(enemyIndex);
-                    if (!canShoot(i, j, enemy.getX(), enemy.getY(), STANDING.ordinal(), enemy.getStance().ordinal(), selfType)) {
+                    int minStance = -1;
+                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                        if (canShoot(i, j, enemy.getX(), enemy.getY(), STANDING.ordinal(), Math.min(enemy.getStance().ordinal(), stance), selfType)) {
+                            minStance = stance;
+                            break;
+                        }
+                    }
+                    if(minStance == -1) {
                         continue;
                     }
+                    minStanceForHelp[enemyIndex][i][j] = minStance;
+
                     int d = 1;
                     for (MutableTrooper ally : teammates) {
                         TrooperType allyType = ally.getType();
@@ -382,7 +393,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
-            r = Math.min(r, helpDist[enemyIndex][cur.x][cur.y]);
+            int dist = helpDist[enemyIndex][cur.x][cur.y];
+
+            // and here comes magic
+            if(dist == 0) {
+                dist = -3;
+                if(cur.stance.ordinal() < minStanceForHelp[enemyIndex][cur.x][cur.y]) {
+                    dist += minStanceForHelp[enemyIndex][cur.x][cur.y] - cur.stance.ordinal();
+                }
+            }
+
+            r = Math.min(r, dist);
         }
         return r;
     }
