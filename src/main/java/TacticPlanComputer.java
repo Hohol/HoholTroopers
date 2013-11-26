@@ -10,7 +10,7 @@ import java.util.List;
 
 import static model.TrooperStance.*;
 
-public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
+public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
@@ -23,7 +23,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
     int[][] enemyIndex;
     private boolean healForbidden;
     private boolean bonusUseForbidden;
-    int[][][][] maxDamageEnemyCanDeal;
+    DamageAndAP[][][][] maxDamageEnemyCanDeal;
     boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
 
@@ -148,7 +148,16 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
     }
 
     private void prepareMaxDamageEnemyCanDeal() {
-        maxDamageEnemyCanDeal = new int[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+        maxDamageEnemyCanDeal = new DamageAndAP[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+        for (int i = 0; i < enemies.size(); i++) {
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < m; k++) {
+                    for (int s = 0; s < Utils.NUMBER_OF_STANCES; s++) {
+                        maxDamageEnemyCanDeal[i][j][k][s] = DamageAndAP.ZERO;
+                    }
+                }
+            }
+        }
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             MutableTrooper enemy = enemies.get(enemyIndex);
             int[][] dist = Utils.bfsByMap(map, enemy.getX(), enemy.getY());
@@ -185,9 +194,8 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
                                     if (enemy.isHoldingFieldRation()) {
                                         actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
                                     }
-                                    int maxDamage = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
-                                    maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] =
-                                            Math.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], maxDamage);
+                                    DamageAndAP p = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
+                                    maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] = DamageAndAP.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], p);
                                 }
                             }
                         }
@@ -201,15 +209,41 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         return Utils.sqrDist(shooterX, shooterY, targetX, targetY) <= Utils.sqr(game.getGrenadeThrowRange());
     }
 
-    private int getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance, boolean canShoot, boolean canThrowGrenadeDirect, boolean canThrowGrenadeCollateral) {
+    static class DamageAndAP {
+        int damage; //max damage enemy can deal
+        int ap;     //action points he should waste on moving before dealing that damage
+
+        DamageAndAP(int damage, int ap) {
+            this.damage = damage;
+            this.ap = ap;
+        }
+
+        static DamageAndAP ZERO = new DamageAndAP(0, 0);
+
+        static DamageAndAP max(DamageAndAP a, DamageAndAP b) {
+            if (a.damage > b.damage) {
+                return a;
+            }
+            if (a.damage < b.damage) {
+                return b;
+            }
+            if (a.ap < b.ap) {
+                return a;
+            }
+            return b;
+        }
+    }
+
+    private DamageAndAP getMaxDamage(TrooperType type, int actionPoints, int dist, int curStance, int minStance, boolean canShoot, boolean canThrowGrenadeDirect, boolean canThrowGrenadeCollateral) {
         if (!canShoot && !canThrowGrenadeDirect && !canThrowGrenadeCollateral) {
-            return 0;
+            return DamageAndAP.ZERO;
         }
         boolean canThrowGrenade = canThrowGrenadeDirect || canThrowGrenadeCollateral;
         int grenadeDamage = canThrowGrenadeDirect ? game.getGrenadeDirectDamage() :
                 canThrowGrenadeCollateral ? game.getGrenadeCollateralDamage() : 0;
         final int maxStance = Utils.NUMBER_OF_STANCES - 1;
         int maxDamage = 0;
+        int bestAp = 0;
         for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
             for (int walkStance = Math.max(curStance, shootStance); walkStance <= maxStance; walkStance++) {
                 int stanceChangeCnt = walkStance - curStance + walkStance - shootStance;
@@ -218,10 +252,15 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
                         - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
                 int oneShotDamage = canShoot ? utils.getShootDamage(type, TrooperStance.values()[shootStance]) : 0;
                 int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, utils.getShootCost(type), canThrowGrenade, grenadeDamage);
+                if (damage > maxDamage) {
+                    maxDamage = damage;
+                    bestAp = actionPoints - remainingActionPoints;
+                }
+
                 maxDamage = Math.max(maxDamage, damage);
             }
         }
-        return maxDamage;
+        return new DamageAndAP(maxDamage, bestAp);
     }
 
     private int getMaxDamage(int remainingActionPoints, boolean canShoot, int shootDamage, int shootCost, boolean canThrowGrenade, int grenadeDamage) {
@@ -291,34 +330,35 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
     }
 
     private void updateMaxDamageEnemyCanDeal() {  //todo it is not actually correct. max damage value and canKill may correspond to different move orders
-        cur.maxDamageEnemyCanDeal = 0;
+        cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
 
-        int damage = Math.max(
+        DamageAndAP damage = DamageAndAP.max(
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfAfter)
         );
-        if (damage >= cur.selfHp) {
+        if (damage.damage >= cur.selfHp) {
             cur.someOfTeammatesCanBeKilled = true;
         }
-        damage = Math.min(damage, cur.selfHp);
-        cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
+        damage.damage = Math.min(damage.damage, cur.selfHp);
+        cur.maxDamageEnemyCanDeal = DamageAndAP.max(cur.maxDamageEnemyCanDeal, damage);
 
         for (MutableTrooper ally : teammates) {
-            damage = Math.max(
+            damage = DamageAndAP.max(
                     getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance(), canDamageIfBefore),
                     getMaxDamageEnemyCanDeal(ally.getX(), ally.getY(), ally.getType(), ally.getStance(), canDamageIfAfter)
             );
-            if (damage >= ally.getHitpoints()) {
+            if (damage.damage >= ally.getHitpoints()) {
                 cur.someOfTeammatesCanBeKilled = true;
             }
-            damage = Math.min(damage, ally.getHitpoints());
-            cur.maxDamageEnemyCanDeal = Math.max(cur.maxDamageEnemyCanDeal, damage);
+            damage.damage = Math.min(damage.damage, ally.getHitpoints());
+            cur.maxDamageEnemyCanDeal = DamageAndAP.max(cur.maxDamageEnemyCanDeal, damage);
         }
     }
 
-    private int getMaxDamageEnemyCanDeal(int x, int y, TrooperType selfType, TrooperStance stance, boolean[][] canDamage) {
+    private DamageAndAP getMaxDamageEnemyCanDeal(int x, int y, TrooperType selfType, TrooperStance stance, boolean[][] canDamage) {
         int damage = 0;
+        int ap = 0;
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
             MutableTrooper enemy = enemies.get(enemyIndex);
             if (!enemyIsAlive[enemyIndex]) {
@@ -327,9 +367,13 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
             if (!canDamage[enemy.getType().ordinal()][selfType.ordinal()]) {
                 continue;
             }
-            damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()];
+            damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].damage;
+            ap += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].ap;
         }
-        return damage;
+        if(damage == 0) {
+            return DamageAndAP.ZERO;
+        }
+        return new DamageAndAP(damage, ap);
     }
 
     private int getHelpDist() {
@@ -465,7 +509,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
                 continue;
             }
             MutableTrooper trooper = troopers[toX][toY];
-            if(trooper == null || !trooper.isTeammate()) {
+            if (trooper == null || !trooper.isTeammate()) {
                 continue;
             }
             newTryHeal(healValue, healCost, heal, trooper);
@@ -520,7 +564,7 @@ public class TacticPlanComputer extends AbstractPlanComputer <TacticState> {
         if (!Utils.isEnemyChar(map[ex][ey])) {
             return;
         }
-        
+
         MutableTrooper enemy = troopers[ex][ey];
 
         if (enemy.getHitpoints() + damage > 0) {

@@ -1,9 +1,6 @@
-import model.TrooperStance;
 import model.TrooperType;
 
-import java.util.ArrayList;
-
-class TacticState extends AbstractState <TacticState> {
+class TacticState extends AbstractState<TacticState> {
     int healedSum;
     int killCnt;
     int damageSum;
@@ -14,7 +11,7 @@ class TacticState extends AbstractState <TacticState> {
     int helpFactor;
     int helpDist;
 
-    int maxDamageEnemyCanDeal;
+    TacticPlanComputer.DamageAndAP maxDamageEnemyCanDeal;
     int numberOfTeammatesWhoCanReachEnemy;
     boolean someOfTeammatesCanBeKilled;
 
@@ -59,8 +56,8 @@ class TacticState extends AbstractState <TacticState> {
             return killDiff > oldKillDiff;
         }
 
-        int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal;
-        int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal;
+        int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal.damage;
+        int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal.damage;
 
         if (Math.abs(hpDiff - oldHpDiff) < 50) {
             if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
@@ -70,6 +67,10 @@ class TacticState extends AbstractState <TacticState> {
 
         if (hpDiff != oldHpDiff) {
             return hpDiff > oldHpDiff;
+        }
+
+        if(maxDamageEnemyCanDeal.ap != old.maxDamageEnemyCanDeal.ap) {
+            return maxDamageEnemyCanDeal.ap > old.maxDamageEnemyCanDeal.ap;
         }
 
         if (holdingMedikit != old.holdingMedikit) {
