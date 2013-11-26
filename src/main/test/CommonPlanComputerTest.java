@@ -504,4 +504,16 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.RAISE_STANCE
         );
     }
+
+    @Test
+    void sniperMustLowerStanceToIncreaseRange2() {
+        setMap(
+                "R1.........f"
+        );
+        check(
+                SNIPER,
+                2,
+                MyMove.LOWER_STANCE
+        );
+    }
 }

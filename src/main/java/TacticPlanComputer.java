@@ -18,6 +18,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     private int[][][] helpFactor;
     private int[][][] helpDist;
     private int[][][] minStanceForHelp;
+    private int[][][] maxStanceForHelp; //has meaning only for sniper
     private int[] numberOfTeammatesWhoCanShoot;
     private int[][] numberOfTeammatesWhoCanReachEnemy;
     boolean[] enemyIsAlive;
@@ -282,6 +283,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     private void prepareHelp() {
         helpFactor = new int[enemies.size()][n][m];
         minStanceForHelp = new int[enemies.size()][n][m];
+        maxStanceForHelp = new int[enemies.size()][n][m];
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -294,16 +296,20 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
                     MutableTrooper enemy = enemies.get(enemyIndex);
                     int minStance = -1;
+                    int maxStance = -1;
                     for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        if (canShoot(i, j, enemy.getX(), enemy.getY(), STANDING.ordinal(), Math.min(enemy.getStance().ordinal(), stance), selfType)) {
-                            minStance = stance;
-                            break;
+                        if (canShoot(i, j, enemy.getX(), enemy.getY(), stance, enemy.getStance().ordinal(), selfType)) {
+                            if (minStance == -1) {
+                                minStance = stance;
+                            }
+                            maxStance = stance;
                         }
                     }
-                    if(minStance == -1) {
+                    if (minStance == -1) {
                         continue;
                     }
                     minStanceForHelp[enemyIndex][i][j] = minStance;
+                    maxStanceForHelp[enemyIndex][i][j] = maxStance;
 
                     int d = 1;
                     for (MutableTrooper ally : teammates) {
@@ -381,7 +387,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].damage;
             ap += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].ap;
         }
-        if(damage == 0) {
+        if (damage == 0) {
             return DamageAndAP.ZERO;
         }
         return new DamageAndAP(damage, ap);
@@ -396,10 +402,13 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             int dist = helpDist[enemyIndex][cur.x][cur.y];
 
             // and here comes magic
-            if(dist == 0) {
+            if (dist == 0) {
                 dist = -3;
-                if(cur.stance.ordinal() < minStanceForHelp[enemyIndex][cur.x][cur.y]) {
+                if (cur.stance.ordinal() < minStanceForHelp[enemyIndex][cur.x][cur.y]) {
                     dist += minStanceForHelp[enemyIndex][cur.x][cur.y] - cur.stance.ordinal();
+                }
+                if (cur.stance.ordinal() > maxStanceForHelp[enemyIndex][cur.x][cur.y]) {
+                    dist += cur.stance.ordinal() - maxStanceForHelp[enemyIndex][cur.x][cur.y];
                 }
             }
 
