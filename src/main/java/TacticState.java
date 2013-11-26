@@ -14,6 +14,7 @@ class TacticState extends AbstractState<TacticState> {
     TacticPlanComputer.DamageAndAP maxDamageEnemyCanDeal;
     int numberOfTeammatesWhoCanReachEnemy;
     boolean someOfTeammatesCanBeKilled;
+    int numberOfTeammatesMedicCanReach;
 
     protected TacticState(TacticState cur) {
         super(cur);
@@ -30,6 +31,7 @@ class TacticState extends AbstractState<TacticState> {
 
         this.maxDamageEnemyCanDeal = cur.maxDamageEnemyCanDeal;
         this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
+        this.numberOfTeammatesMedicCanReach = cur.numberOfTeammatesMedicCanReach;
     }
 
     public TacticState(MutableTrooper self) {
@@ -63,10 +65,13 @@ class TacticState extends AbstractState<TacticState> {
             if (numberOfTeammatesWhoCanReachEnemy != old.numberOfTeammatesWhoCanReachEnemy) {
                 return numberOfTeammatesWhoCanReachEnemy > old.numberOfTeammatesWhoCanReachEnemy;
             }
+            if (numberOfTeammatesMedicCanReach != old.numberOfTeammatesMedicCanReach) {
+                return numberOfTeammatesMedicCanReach > old.numberOfTeammatesMedicCanReach;
+            }
         }
 
-        if(Math.abs(hpDiff-oldHpDiff) < 10) {
-            if(maxDamageEnemyCanDeal.ap != old.maxDamageEnemyCanDeal.ap) {
+        if (Math.abs(hpDiff - oldHpDiff) < 10) {
+            if (maxDamageEnemyCanDeal.ap != old.maxDamageEnemyCanDeal.ap) {
                 return maxDamageEnemyCanDeal.ap > old.maxDamageEnemyCanDeal.ap;
             }
         }

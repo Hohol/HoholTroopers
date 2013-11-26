@@ -12,6 +12,7 @@ import static model.TrooperStance.*;
 
 public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
+    protected static final int MAX_DIST_MEDIC_SHOULD_TRY_HEAL = 7;
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
     List<int[][]> distToTeammatesForHealing;
@@ -21,6 +22,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     private int[][][] maxStanceForHelp; //has meaning only for sniper
     private int[] numberOfTeammatesWhoCanShoot;
     private int[][] numberOfTeammatesWhoCanReachEnemy;
+    private int[][] numberOfTeammatesMedicCanReach;
     boolean[] enemyIsAlive;
     int[][] enemyIndex;
     private boolean healForbidden;
@@ -127,8 +129,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             }
         }
         numberOfTeammatesWhoCanReachEnemy = new int[n][m];
+        numberOfTeammatesMedicCanReach = new int[n][m];
         for (int i = 0; i < n; i++) {
             Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
+            Arrays.fill(numberOfTeammatesMedicCanReach[i], -1);
         }
         prepareMaxDamageEnemyCanDeal();
     }
@@ -141,7 +145,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             int[][] distWithout = distWithoutTeammates.get(allyIndex);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < m; j++) {
-                    if (dist[i][j] - distWithout[i][j] > 7) {
+                    if (dist[i][j] - distWithout[i][j] > MAX_DIST_MEDIC_SHOULD_TRY_HEAL) {
                         dist[i][j] = Utils.UNREACHABLE;
                     }
                 }
@@ -338,6 +342,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.helpFactor = getHelpFactor();
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
+        cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
 
         updateMaxDamageEnemyCanDeal();
 
@@ -428,6 +433,36 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return r;
     }
 
+    private int getNumberOfTeammatesMedicCanReach() {
+        MutableTrooper medic = null;
+        for (MutableTrooper ally : teammates) {
+            if (ally.getType() == FIELD_MEDIC) {
+                medic = ally;
+                break;
+            }
+        }
+        if (medic == null) { //even if self is medic
+            return -1;
+        }
+        if (numberOfTeammatesMedicCanReach[cur.x][cur.y] == -1) {
+            char buf = map[cur.x][cur.y];
+            map[cur.x][cur.y] = Utils.getCharForTrooperType(selfType);
+            numberOfTeammatesMedicCanReach[cur.x][cur.y] = 0;
+
+            for (MutableTrooper ally : teammates) {
+                if (ally.getType() == FIELD_MEDIC) {
+                    continue;
+                }
+                int[][] dist = Utils.bfsByMap(map, medic.getX(), medic.getY());
+                if (dist[ally.getX()][ally.getY()] <= MAX_DIST_MEDIC_SHOULD_TRY_HEAL) {
+                    numberOfTeammatesMedicCanReach[cur.x][cur.y]++;
+                }
+            }
+            map[cur.x][cur.y] = buf;
+        }
+        return numberOfTeammatesMedicCanReach[cur.x][cur.y];
+    }
+
     private int getNumberOfTeammatesWhoCanReachEnemy() {
         if (numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] == -1) {
             char buf = map[cur.x][cur.y];
@@ -443,7 +478,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y]++;
                 }
             }
-
             map[cur.x][cur.y] = buf;
         }
         return numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y];

@@ -530,4 +530,21 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.shoot(7,0), MyMove.shoot(7,0), MyMove.MOVE_WEST
         );
     }
+
+    @Test
+    void dontBlockPathForMedic() {
+        setMap(
+                "#F",
+                "SC",
+                "..",
+                "..",
+                ".s"
+        );
+        ally(SOLDIER).hp(1);
+        check(
+                COMMANDER,
+                3,
+                MyMove.MOVE_SOUTH
+        );
+    }
 }
