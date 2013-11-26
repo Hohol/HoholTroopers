@@ -65,12 +65,14 @@ class TacticState extends AbstractState<TacticState> {
             }
         }
 
-        if (hpDiff != oldHpDiff) {
-            return hpDiff > oldHpDiff;
+        if(Math.abs(hpDiff-oldHpDiff) < 10) {
+            if(maxDamageEnemyCanDeal.ap != old.maxDamageEnemyCanDeal.ap) {
+                return maxDamageEnemyCanDeal.ap > old.maxDamageEnemyCanDeal.ap;
+            }
         }
 
-        if(maxDamageEnemyCanDeal.ap != old.maxDamageEnemyCanDeal.ap) {
-            return maxDamageEnemyCanDeal.ap > old.maxDamageEnemyCanDeal.ap;
+        if (hpDiff != oldHpDiff) {
+            return hpDiff > oldHpDiff;
         }
 
         if (holdingMedikit != old.holdingMedikit) {

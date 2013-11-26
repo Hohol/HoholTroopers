@@ -443,7 +443,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 SNIPER,
                 12,
-                MyMove.LOWER_STANCE, MyMove.shoot(11,0)
+                MyMove.LOWER_STANCE, MyMove.shoot(11, 0)
         );
 
         setMap(
@@ -468,7 +468,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 2,
-                MyMove.shoot(5,0)
+                MyMove.shoot(5, 0)
         );
     }
 
@@ -514,6 +514,20 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SNIPER,
                 2,
                 MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void dontSuicide2() {
+        setMap(
+                "#######r",
+                "S......F"
+        );
+        enemy(SNIPER).fieldRation();
+        check(
+                FIELD_MEDIC,
+                6,
+                MyMove.shoot(7,0), MyMove.shoot(7,0), MyMove.MOVE_WEST
         );
     }
 }
