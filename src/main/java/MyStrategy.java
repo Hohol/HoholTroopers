@@ -7,8 +7,8 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    //static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
-    static final boolean local = false;
+    static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+    //static final boolean local = false;
 
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 

@@ -5,6 +5,7 @@ import model.Move;
 import model.TrooperType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
@@ -49,21 +50,27 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             ind = getLeaderIndex(100);
         }
         leadersDistToDestination = new int[n][m];
+        for (int[] a : leadersDistToDestination) {
+            Arrays.fill(a, -1);
+        }
         if (ind != -1) {
             leader = teammates.get(ind);
             distToLeader = getDistWithoutTeammates().get(ind);
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < m; j++) {
-                    if (!isFree(i, j)) {
-                        continue;
-                    }
-                    char buf = map[i][j];
-                    map[i][j] = Utils.getCharForTrooperType(selfType);
-                    leadersDistToDestination[i][j] = Utils.bfsByMap(map, leader.getX(), leader.getY())[destination.x][destination.y];
-                    map[i][j] = buf;
-                }
-            }
         }
+    }
+
+    private int getLeadersDistToDestination(int i, int j) {
+        if (selfIsLeader()) {
+            return 0;
+        }
+        if (leadersDistToDestination[i][j] == -1) {
+            char buf = map[i][j];
+            map[i][j] = Utils.getCharForTrooperType(selfType);
+            int r = Utils.bfsByMap(map, leader.getX(), leader.getY())[destination.x][destination.y];
+            map[i][j] = buf;
+            leadersDistToDestination[i][j] = r;
+        }
+        return leadersDistToDestination[i][j];
     }
 
     private int getLeaderIndex(int maxDist) { //returns -1 if self is leader
@@ -115,7 +122,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.distToDestination = distToDestination[cur.x][cur.y];
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
-        cur.leadersDistToDestination = leadersDistToDestination[cur.x][cur.y];
+        cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
         //cur.newSeenCellsCnt = getSeenCellsCnt();
 
         if (cur.better(best, selfType)) {

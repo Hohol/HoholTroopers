@@ -151,4 +151,22 @@ class TacticState extends AbstractState<TacticState> {
         }
         return 0;
     }
+
+    @Override
+    public String toString() {
+        return "TacticState{" +
+                "healedSum=" + healedSum +
+                ", killCnt=" + killCnt +
+                ", damageSum=" + damageSum +
+                ", focusFireParameter=" + focusFireParameter +
+                ", minHp=" + minHp +
+                ", healDist=" + healDist +
+                ", helpFactor=" + helpFactor +
+                ", helpDist=" + helpDist +
+                ", maxDamageEnemyCanDeal=" + maxDamageEnemyCanDeal +
+                ", numberOfTeammatesWhoCanReachEnemy=" + numberOfTeammatesWhoCanReachEnemy +
+                ", someOfTeammatesCanBeKilled=" + someOfTeammatesCanBeKilled +
+                ", numberOfTeammatesMedicCanReach=" + numberOfTeammatesMedicCanReach +
+                '}';
+    }
 }

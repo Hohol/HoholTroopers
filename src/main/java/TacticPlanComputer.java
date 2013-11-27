@@ -5,6 +5,7 @@ import static model.TrooperType.*;
 
 import model.TrooperType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
     List<int[][]> distToTeammatesForHealing;
+    List<int[][]> enemyBfs;
+
     private int[][][] helpFactor;
     private int[][][] helpDist;
     private int[][][] minStanceForHelp;
@@ -156,21 +159,19 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new DamageAndAP[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
-        for (int i = 0; i < enemies.size(); i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < m; k++) {
-                    for (int s = 0; s < Utils.NUMBER_OF_STANCES; s++) {
-                        maxDamageEnemyCanDeal[i][j][k][s] = DamageAndAP.ZERO;
-                    }
-                }
-            }
+        enemyBfs = new ArrayList<>();
+        for (MutableTrooper enemy : enemies) {
+            enemyBfs.add(Utils.bfsByMap(map, enemy.getX(), enemy.getY()));
         }
-        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+    }
+
+    private DamageAndAP getDamageAndAP(int enemyIndex, int targetX, int targetY, int targetStance) {
+        if (maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] == null) {
+            DamageAndAP r = null;
             MutableTrooper enemy = enemies.get(enemyIndex);
-            int[][] dist = Utils.bfsByMap(map, enemy.getX(), enemy.getY());
+            int[][] dist = enemyBfs.get(enemyIndex);
             int initialEnemyStance = enemy.getStance().ordinal();
             TrooperType enemyType = Utils.getTrooperTypeByChar(map[enemy.getX()][enemy.getY()]);
-
             for (int shooterX = 0; shooterX < n; shooterX++) {
                 for (int shooterY = 0; shooterY < m; shooterY++) {
                     if (dist[shooterX][shooterY] > 6) {
@@ -179,43 +180,38 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     if (!isFree(shooterX, shooterY) && (shooterX != enemy.getX() || shooterY != enemy.getY())) {
                         continue;
                     }
-                    int range = Math.max(6, utils.getShootRange(enemy.getType(), PRONE.ordinal()));
-                    int minI = Math.max(0, shooterX - range);
-                    int maxI = Math.min(n - 1, shooterX + range);
-                    int minJ = Math.max(0, shooterY - range);
-                    int maxJ = Math.min(m - 1, shooterY + range);
 
-                    for (int targetX = minI; targetX <= maxI; targetX++) {
-                        for (int targetY = minJ; targetY <= maxJ; targetY++) {
-                            boolean grenade = enemy.isHoldingGrenade();
-                            boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
-                            boolean canThrowGrenadeCollateral = grenade &&
-                                    (
-                                            canThrowGrenade(shooterX, shooterY, targetX + 1, targetY) ||
-                                                    canThrowGrenade(shooterX, shooterY, targetX - 1, targetY) ||
-                                                    canThrowGrenade(shooterX, shooterY, targetX, targetY + 1) ||
-                                                    canThrowGrenade(shooterX, shooterY, targetX, targetY - 1)
-                                    );
-                            for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
-                                int minShooterStance = -1;
-                                for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
-                                    boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, targetStance, shooterStance, enemyType);
-                                    if (canShoot && minShooterStance == -1) {
-                                        minShooterStance = shooterStance;
-                                    }
-                                    int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
-                                    if (enemy.isHoldingFieldRation()) {
-                                        actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
-                                    }
-                                    DamageAndAP p = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
-                                    maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] = DamageAndAP.max(maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance], p);
-                                }
-                            }
+                    boolean grenade = enemy.isHoldingGrenade();
+                    boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
+                    boolean canThrowGrenadeCollateral = grenade &&
+                            (
+                                    canThrowGrenade(shooterX, shooterY, targetX + 1, targetY) ||
+                                            canThrowGrenade(shooterX, shooterY, targetX - 1, targetY) ||
+                                            canThrowGrenade(shooterX, shooterY, targetX, targetY + 1) ||
+                                            canThrowGrenade(shooterX, shooterY, targetX, targetY - 1)
+                            );
+
+                    int minShooterStance = -1;
+                    for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
+                        boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, targetStance, shooterStance, enemyType);
+                        if (canShoot && minShooterStance == -1) {
+                            minShooterStance = shooterStance;
                         }
+                        int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
+                        if (enemy.isHoldingFieldRation()) {
+                            actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+                        }
+                        DamageAndAP p = getMaxDamage(enemyType, actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
+                        if (r == null) {
+                            r = p;
+                        }
+                        r = DamageAndAP.max(r, p);
                     }
                 }
             }
+            maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] = r;
         }
+        return maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance];
     }
 
     private boolean canThrowGrenade(int shooterX, int shooterY, int targetX, int targetY) {
@@ -356,6 +352,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
+            Utils.log(cur);
+            updateMaxDamageEnemyCanDeal();
             best = new TacticState(cur);
         }
     }
@@ -388,7 +386,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         }
     }
 
-    private DamageAndAP getMaxDamageEnemyCanDeal(int x, int y, TrooperType selfType, TrooperStance stance, boolean[][] canDamage) {
+    private DamageAndAP getMaxDamageEnemyCanDeal(int x, int y, TrooperType targetType, TrooperStance stance, boolean[][] canDamage) {
         int damage = 0;
         int ap = 0;
         for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
@@ -396,11 +394,12 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             if (!enemyIsAlive[enemyIndex]) {
                 continue;
             }
-            if (!canDamage[enemy.getType().ordinal()][selfType.ordinal()]) {
+            if (!canDamage[enemy.getType().ordinal()][targetType.ordinal()]) {
                 continue;
             }
-            damage += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].damage;
-            ap += maxDamageEnemyCanDeal[enemyIndex][x][y][stance.ordinal()].ap;
+            DamageAndAP p = getDamageAndAP(enemyIndex,x,y,stance.ordinal());
+            damage += p.damage;
+            ap += p.ap;
         }
         if (damage == 0) {
             return DamageAndAP.ZERO;
