@@ -562,7 +562,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         );
     }
 
-    @Test (enabled = false)
+    /*@Test (enabled = true)
     void testSpeed() {
         setMap(
                 "...............",
@@ -581,7 +581,8 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
 
         check(
                 FIELD_MEDIC,
-                12
+                12,
+                MyMove.HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. EAT_FIELD_RATION, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. USE_MEDIKIT_SOUTH
         );
-    }
+    }/**/
 }

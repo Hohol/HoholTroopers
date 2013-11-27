@@ -25,7 +25,8 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 getVisibilities(),
                 bonuses,
                 troopers,
-                destination
+                destination,
+                false
         ).getPlan();
     }
 
@@ -289,6 +290,19 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 SNIPER,
                 2,
                 MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testScoutingBug() {
+        setMap(
+                "S.",
+                "11"
+        );
+        setDestination(0,0);
+        check(
+                SOLDIER,
+                12
         );
     }
 }

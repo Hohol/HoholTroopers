@@ -52,7 +52,7 @@ public class EscapeTest extends TacticPlanComputerTest {
     @Test
     void testDoNotFearDeadEnemy() {
         setMap(
-                "...",
+                ".#.",
                 "S.s"
         );
         ally(SOLDIER).hp(1);

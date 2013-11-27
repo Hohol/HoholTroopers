@@ -27,9 +27,10 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             boolean[] visibilities,
             BonusType[][] bonuses,
             MutableTrooper[][] troopers,
-            Cell destination
+            Cell destination,
+            boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic);
         this.destination = destination;
         cur = new StrategyState(self);
     }
@@ -115,7 +116,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = leadersDistToDestination[cur.x][cur.y];
-        cur.newSeenCellsCnt = getSeenCellsCnt();
+        //cur.newSeenCellsCnt = getSeenCellsCnt();
 
         if (cur.better(best, selfType)) {
             Utils.log(cur);

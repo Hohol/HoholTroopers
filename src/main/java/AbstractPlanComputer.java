@@ -28,11 +28,12 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     long recursiveCallsCnt;
     BonusType[][] bonuses;
     MutableTrooper[][] troopers;
-    boolean[][][] visibleInitially;
-    List<Cell>[][][] cellsVisibleFrom;
+    int[][] visibleInitially;
+    static List<Cell>[][][] cellsVisibleFrom;
     MutableTrooper self;    //for immutable fields only
+    boolean mapIsStatic;
 
-    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self) {
+    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic) {
         m = map[0].length;
         n = map.length;
         this.map = map;
@@ -43,6 +44,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         this.bonuses = bonuses;
         this.troopers = troopers;
         this.self = self;
+        this.mapIsStatic = mapIsStatic;
     }
 
     protected void addAction(MyMove action) {
@@ -108,7 +110,9 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         addAction(MyMove.RAISE_STANCE);
         cur.actionPoints -= game.getStanceChangeCost();
         cur.stance = Utils.stanceAfterRaising(cur.stance);
+        see(1);
         rec();
+        see(-1);
         cur.stance = Utils.stanceAfterLowering(cur.stance);
         cur.actionPoints += game.getStanceChangeCost();
         popAction();
@@ -149,11 +153,28 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
             cur.actionPoints -= moveCost;
             cur.x += movement.getDx();
             cur.y += movement.getDy();
+            see(1);
             rec();
+            see(-1);
             cur.x -= movement.getDx();
             cur.y -= movement.getDy();
             cur.actionPoints += moveCost;
             popAction();
+        }
+    }
+
+    private void see(int d) {
+        if (cur.actionPoints == 0) {
+            return;
+        }
+        for (Cell cell : cellsVisibleFrom[cur.x][cur.y][cur.stance.ordinal()]) {
+            if (visibleInitially[cell.x][cell.y] == 0) {
+                cur.newSeenCellsCnt++;
+            }
+            visibleInitially[cell.x][cell.y] += d;
+            if (visibleInitially[cell.x][cell.y] == 0) {
+                cur.newSeenCellsCnt--;
+            }
         }
     }
 
@@ -225,20 +246,26 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     protected void markVisibleInitially(MutableTrooper ally) {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                    if (reachable(ally.getX(), ally.getY(), i, j, ally.getStance().ordinal(), ally.getVisionRange())) {
-                        visibleInitially[i][j][stance] = true;
-                    }
+                //for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                if (reachable(ally.getX(), ally.getY(), i, j, ally.getStance().ordinal(), ally.getVisionRange())) {
+                    visibleInitially[i][j] = 1;
                 }
+                //}
             }
         }
     }
 
     protected List<Cell> getCellsVisibleFrom(int x, int y, int stance) {
+        int range = utils.getVisionRange(selfType);
         List<Cell> r = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                if (reachable(x, y, i, j, stance, utils.getVisionRange(selfType))) {
+        int minI = Math.max(0, x - range);
+        int maxI = Math.min(n - 1, x + range);
+        int minJ = Math.max(0, y - range);
+        int maxJ = Math.min(m - 1, y + range);
+        for (int i = minI; i <= maxI; i++) {
+            for (int j = minJ; j <= maxJ; j++) {
+                if (isWall(i, j)) continue;
+                if (reachable(x, y, i, j, stance, range)) {
                     r.add(new Cell(i, j));
                 }
             }
@@ -246,7 +273,17 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         return r;
     }
 
+    private boolean isWall(int i, int j) {
+        if (map[i][j] == '#' || Character.isDigit(map[i][j])) {
+            return true;
+        }
+        return false;
+    }
+
     protected void prepareCellsVisibleFrom() {
+        if (mapIsStatic && cellsVisibleFrom != null) {
+            return;
+        }
         cellsVisibleFrom = new List[n][m][Utils.NUMBER_OF_STANCES];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
@@ -258,48 +295,10 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected void prepareVisibleInitially() {
-        visibleInitially = new boolean[n][m][Utils.NUMBER_OF_STANCES];
+        visibleInitially = new int[n][m];
         markVisibleInitially(self);
         for (MutableTrooper ally : teammates) {
             markVisibleInitially(ally);
         }
-    }
-
-    protected int markSeen(boolean[][] wasSeen, int x, int y, int stance) {
-        int r = 0;
-        for (Cell cell : cellsVisibleFrom[x][y][stance]) {
-            if (!wasSeen[cell.x][cell.y] && !visibleInitially[cell.x][cell.y][stance]) {
-                wasSeen[cell.x][cell.y] = true;
-                r++;
-            }
-        }
-        return r;
-    }
-
-    protected int getSeenCellsCnt() {
-        if (recursiveCallsCnt > MAX_RECURSIVE_CALLS / 100) {
-            return 0;
-        }
-        int r = 0;
-        int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
-        boolean[][] wasSeen = new boolean[n][m];
-        if (cur.actionPoints > 0) {
-            r += markSeen(wasSeen, x, y, stance);
-        }
-        for (int i = cur.actions.size() - 1; i >= 0; i--) {
-            Move action = ((MyMove) cur.actions.get(i)).getMove();
-            if (action.getAction() == MOVE) {
-                x -= action.getDirection().getOffsetX();
-                y -= action.getDirection().getOffsetY();
-                r += markSeen(wasSeen, x, y, stance);
-            } else if (action.getAction() == RAISE_STANCE) {
-                stance--;
-                // no need to mark
-            } else if (action.getAction() == LOWER_STANCE) {
-                stance++;
-                r += markSeen(wasSeen, x, y, stance);
-            }
-        }
-        return r;
     }
 }

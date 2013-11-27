@@ -42,9 +42,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             List<MutableTrooper> teammates,
             List<MutableTrooper> enemies,
             String moveOrder,
-            MutableTrooper self
+            MutableTrooper self,
+            boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic);
         this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
@@ -178,8 +179,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     if (!isFree(shooterX, shooterY) && (shooterX != enemy.getX() || shooterY != enemy.getY())) {
                         continue;
                     }
-                    for (int targetX = 0; targetX < n; targetX++) {
-                        for (int targetY = 0; targetY < m; targetY++) {
+                    int range = Math.max(6, utils.getShootRange(enemy.getType(), PRONE.ordinal()));
+                    int minI = Math.max(0, shooterX - range);
+                    int maxI = Math.min(n - 1, shooterX + range);
+                    int minJ = Math.max(0, shooterY - range);
+                    int maxJ = Math.min(m - 1, shooterY + range);
+
+                    for (int targetX = minI; targetX <= maxI; targetX++) {
+                        for (int targetY = minJ; targetY <= maxJ; targetY++) {
                             boolean grenade = enemy.isHoldingGrenade();
                             boolean canThrowGrenadeDirectly = grenade && canThrowGrenade(shooterX, shooterY, targetX, targetY);
                             boolean canThrowGrenadeCollateral = grenade &&
@@ -250,14 +257,15 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         final int maxStance = Utils.NUMBER_OF_STANCES - 1;
         int maxDamage = 0;
         int bestAp = 0;
+        int shootCost = utils.getShootCost(type);
         for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
+            int oneShotDamage = canShoot ? utils.getShootDamage(type, TrooperStance.values()[shootStance]) : 0;
             for (int walkStance = Math.max(curStance, shootStance); walkStance <= maxStance; walkStance++) {
                 int stanceChangeCnt = walkStance - curStance + walkStance - shootStance;
                 int remainingActionPoints = actionPoints
                         - stanceChangeCnt * game.getStanceChangeCost()
                         - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
-                int oneShotDamage = canShoot ? utils.getShootDamage(type, TrooperStance.values()[shootStance]) : 0;
-                int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, utils.getShootCost(type), canThrowGrenade, grenadeDamage);
+                int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, shootCost, canThrowGrenade, grenadeDamage);
                 if (damage > maxDamage) {
                     maxDamage = damage;
                     bestAp = actionPoints - remainingActionPoints;
@@ -343,7 +351,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
-        cur.newSeenCellsCnt = getSeenCellsCnt();
+        //cur.newSeenCellsCnt = getSeenCellsCnt();
 
         updateMaxDamageEnemyCanDeal();
 
@@ -353,6 +361,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void updateMaxDamageEnemyCanDeal() {  //todo it is not actually correct. max damage value and canKill may correspond to different move orders
+
         cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
 

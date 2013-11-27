@@ -7,7 +7,8 @@ import static model.TrooperType.*;
 import java.util.*;
 
 public final class MyStrategy implements Strategy {
-    static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+    //static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
+    static final boolean local = false;
 
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
 
@@ -390,7 +391,8 @@ public final class MyStrategy implements Strategy {
                 teammatesWithoutSelf(),
                 new ArrayList<>(enemies),
                 moveOrder,
-                new MutableTrooper(self, -1) //todo remove lastSeenTime from MutableTrooper
+                new MutableTrooper(self, -1), //todo remove lastSeenTime from MutableTrooper
+                true
         ).getPlan();
     }
 
@@ -407,7 +409,8 @@ public final class MyStrategy implements Strategy {
                 vision,
                 getBonuses(),
                 getTroopers2d(),
-                destination
+                destination,
+                true
         ).getPlan();
     }
 

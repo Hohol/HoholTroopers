@@ -173,7 +173,7 @@ public class AttackTest extends TacticPlanComputerTest {
         setMap(
                 "...",
                 "F3c",
-                "..."
+                ".1."
         );
         enemy(COMMANDER).hp(1);
 
