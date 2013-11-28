@@ -414,7 +414,7 @@ public final class MyStrategy implements Strategy {
             enemyKnowsWhereWeAre = true;
         }
 
-        return r;
+           return r;
     }
 
     private boolean checkEnemyKnowsWhereWeAre() {
