@@ -33,6 +33,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     MutableTrooper self;    //for immutable fields only
     boolean mapIsStatic;
     List<MyMove> prevActions;
+    private int[][] scoutingValue;
 
     public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic, List<MyMove> prevActions) {
         m = map[0].length;
@@ -171,11 +172,11 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         }
         for (Cell cell : cellsVisibleFrom[cur.x][cur.y][cur.stance.ordinal()]) {
             if (visibleInitially[cell.x][cell.y] == 0) {
-                cur.newSeenCellsCnt++;
+                cur.newSeenCellsCnt += scoutingValue[cell.x][cell.y];
             }
             visibleInitially[cell.x][cell.y] += d;
             if (visibleInitially[cell.x][cell.y] == 0) {
-                cur.newSeenCellsCnt--;
+                cur.newSeenCellsCnt -= scoutingValue[cell.x][cell.y];
             }
         }
     }
@@ -192,6 +193,20 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         troopers[cur.x][cur.y] = null;
         prepareVisibleInitially();
         prepareCellsVisibleFrom();
+        prepareScoutingValue();
+    }
+
+    private void prepareScoutingValue() {
+        scoutingValue = new int[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                scoutingValue[i][j] = getScoutingValue(i,j);
+            }
+        }
+    }
+
+    protected int getScoutingValue(int x, int y) {
+        return 1;
     }
 
     @SuppressWarnings("unused")

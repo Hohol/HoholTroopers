@@ -655,5 +655,17 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         );
     }
 
-
+    @Test
+    void preferScoutCellsNearEnemy() {
+        setMap(
+                ".s###",
+                "S####",
+                ".1..."
+        );
+        check(
+                SOLDIER,
+                4,
+                MyMove.MOVE_NORTH, MyMove.MOVE_SOUTH
+        );
+    }
 }

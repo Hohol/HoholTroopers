@@ -87,6 +87,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return enemyInitiallyKnowsWhereWeAre || best.enemyKnowsWhereWeAre && best.actions.size() <= 1;
     }
 
+    @Override
+    protected int getScoutingValue(int x, int y) {
+        for (MutableTrooper enemy : enemies) {
+            int d = Utils.manhattanDist(enemy.getX(), enemy.getY(), x, y);
+            if (d <= 2) {
+                return 100;
+            }
+        }
+        return 1;
+    }
+
     public static boolean[][] getCanDamageIfBefore(String moveOrder, TrooperType selfType) {
         boolean[][] r = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
         char selfChar = Utils.getCharForTrooperType(selfType);
