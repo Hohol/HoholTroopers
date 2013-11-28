@@ -527,7 +527,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 6,
-                MyMove.shoot(7,0), MyMove.shoot(7,0), MyMove.MOVE_WEST
+                MyMove.shoot(7, 0), MyMove.shoot(7, 0), MyMove.MOVE_WEST
         );
     }
 
@@ -559,6 +559,60 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SOLDIER,
                 8,
                 MyMove.RAISE_STANCE, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void doNotLetEnemySeeYou() {
+        setMap(
+                "S#",
+                ".f"
+        );
+        enemyDoesntKnowWhereWeAre();
+        check(
+                SOLDIER,
+                10,
+                MyMove.MOVE_SOUTH, MyMove.shoot(1, 1), MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void enemyCouldSeeUsInStartingPosition() {
+        setMap(
+                "#####.###",
+                "S.......c"
+        );
+        enemyDoesntKnowWhereWeAre();
+        check(
+                SOLDIER,
+                12,
+                MyMove.shoot(8, 1), MyMove.shoot(8, 1), MyMove.shoot(8, 1)
+        );
+
+        setMap(
+                "#####.###",
+                ".S......c"
+        );
+        setStartCell(0, 1, STANDING);
+        enemyDoesntKnowWhereWeAre();
+        check(
+                SOLDIER,
+                12,
+                MyMove.shoot(8, 1), MyMove.shoot(8, 1), MyMove.shoot(8, 1)
+        );
+    }
+
+    @Test
+    void testEnemyCouldNotSeeUsInStartingPosition() {
+        setMap(
+                "S....1f"
+        );
+        enemyDoesntKnowWhereWeAre();
+        setStartCell(0, 0, PRONE);
+        check(
+                SOLDIER,
+                4,
+                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
 }

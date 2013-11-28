@@ -15,6 +15,7 @@ class TacticState extends AbstractState<TacticState> {
     int numberOfTeammatesWhoCanReachEnemy;
     boolean someOfTeammatesCanBeKilled;
     int numberOfTeammatesMedicCanReach;
+    public boolean enemyKnowsWhereWeAre;
 
     protected TacticState(TacticState cur) {
         super(cur);
@@ -32,6 +33,7 @@ class TacticState extends AbstractState<TacticState> {
         this.maxDamageEnemyCanDeal = cur.maxDamageEnemyCanDeal;
         this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
         this.numberOfTeammatesMedicCanReach = cur.numberOfTeammatesMedicCanReach;
+        this.enemyKnowsWhereWeAre = cur.enemyKnowsWhereWeAre;
     }
 
     public TacticState(MutableTrooper self) {
@@ -57,6 +59,10 @@ class TacticState extends AbstractState<TacticState> {
         if (killDiff != oldKillDiff) {
             return killDiff > oldKillDiff;
         }
+
+        if (enemyKnowsWhereWeAre != old.enemyKnowsWhereWeAre) {
+            return !enemyKnowsWhereWeAre;
+        }/**/
 
         int hpDiff = damageSum + healedSum - maxDamageEnemyCanDeal.damage;
         int oldHpDiff = old.damageSum + old.healedSum - old.maxDamageEnemyCanDeal.damage;

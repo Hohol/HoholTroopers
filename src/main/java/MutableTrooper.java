@@ -297,4 +297,8 @@ public final class MutableTrooper {
     public void setHitpoints(int hp) {
         hitpoints = hp;
     }
+
+    public boolean isAlive() {
+        return hitpoints > 0;
+    }
 }

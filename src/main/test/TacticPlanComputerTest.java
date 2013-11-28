@@ -1,9 +1,28 @@
+import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.List;
 
 
 public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
+
+    private boolean enemyKnowsWhereWeAre;
+    private Cell3D startCell;
+
+    @Override
+    protected void setMap(String... smap) {
+        super.setMap(smap);
+        enemyKnowsWhereWeAre = true;
+        startCell = null;
+    }
+
+    protected void enemyDoesntKnowWhereWeAre() {
+        enemyKnowsWhereWeAre = false;
+    }
+
+    protected void setStartCell(int x, int y, TrooperStance stance) {
+        startCell = new Cell3D(x, y, stance.ordinal());
+    }
 
     protected MTBuilder enemy(TrooperType type) {
         int x = -1, y = -1;
@@ -36,18 +55,26 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
     @Override
     protected List<MyMove> getActual(String moveOrder, MutableTrooper self) {
+        if (startCell == null) {
+            startCell = new Cell3D(self.getX(), self.getY(), self.getStance().ordinal());
+        }
+        final boolean mapIsStatic = false;
         return new TacticPlanComputer(
-                    map,
-                    utils,
-                    bonuses,
-                    getVisibilities(),
-                    false,
-                    false, troopers, teammates, enemies,
-                    moveOrder,
-                    self,
-                    prevActions,
-                    false
-            ).getPlan();
+                map,
+                utils,
+                bonuses,
+                getVisibilities(),
+                false,
+                false,
+                troopers,
+                teammates,
+                enemies,
+                moveOrder,
+                enemyKnowsWhereWeAre,
+                self,
+                prevActions,
+                startCell,
+                mapIsStatic
+        ).getPlan();
     }
-
 }

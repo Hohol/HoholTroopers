@@ -272,7 +272,9 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         int maxJ = Math.min(m - 1, y + range);
         for (int i = minI; i <= maxI; i++) {
             for (int j = minJ; j <= maxJ; j++) {
-                if (isWall(i, j)) continue;
+                if (isWall(i, j)) {
+                    continue;
+                }
                 if (reachable(x, y, i, j, stance, range)) {
                     r.add(new Cell(i, j));
                 }

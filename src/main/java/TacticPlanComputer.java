@@ -33,6 +33,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     DamageAndAP[][][][] maxDamageEnemyCanDeal;
     boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
+    boolean enemyInitiallyKnowsWhereWeAre;
 
     public TacticPlanComputer(
             char[][] map,
@@ -45,8 +46,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             List<MutableTrooper> teammates,
             List<MutableTrooper> enemies,
             String moveOrder,
+            boolean enemyKnowsWhereWeAre,
             MutableTrooper self,
             List<MyMove> prevActions,
+            Cell3D startCell,
             boolean mapIsStatic
     ) {
         super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions);
@@ -54,14 +57,33 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
         this.enemies = enemies;
+        this.enemyInitiallyKnowsWhereWeAre = enemyKnowsWhereWeAre;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);
             enemyIndex[enemy.getX()][enemy.getY()] = i;
         }
 
+        if(checkEnemyInitiallyKnowsWhereWeAre(startCell)) {
+            enemyInitiallyKnowsWhereWeAre = true;
+        }
+
         canDamageIfBefore = getCanDamageIfBefore(moveOrder, self.getType());
         canDamageIfAfter = getCanDamageIfAfter(moveOrder, self.getType());
+    }
+
+    private boolean checkEnemyInitiallyKnowsWhereWeAre(Cell3D startCell) {
+        boolean know = false;
+        for (MutableTrooper enemy : enemies) {
+            if (canSee(enemy, startCell.x, startCell.y, startCell.stance)) {
+                know = true;
+            }
+        }
+        return know;
+    }
+
+    public boolean enemyWillKnowWhereWeAre() {
+        return enemyInitiallyKnowsWhereWeAre || best.enemyKnowsWhereWeAre && best.actions.size() <= 1;
     }
 
     public static boolean[][] getCanDamageIfBefore(String moveOrder, TrooperType selfType) {
@@ -348,15 +370,36 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.helpDist = getHelpDist();
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
-        //cur.newSeenCellsCnt = getSeenCellsCnt();
-
+        cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
-            Utils.log(cur);
-            updateMaxDamageEnemyCanDeal();
             best = new TacticState(cur);
         }
+    }
+
+    private boolean checkEnemyKnowsWhereWeAre() {
+        if (enemyInitiallyKnowsWhereWeAre) {
+            return true;
+        }
+        for (MutableTrooper enemy : enemies) {
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            if (canSee(enemy, cur.x, cur.y, cur.stance.ordinal())) {
+                return true;
+            }
+            for (MutableTrooper ally : teammates) {
+                if (canSee(enemy, ally.getX(), ally.getY(), ally.getStance().ordinal())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean canSee(MutableTrooper enemy, int x, int y, int stance) {
+        return reachable(enemy.getX(), enemy.getY(), x, y, Math.min(enemy.getStance().ordinal(), stance), (int) enemy.getVisionRange());
     }
 
     private void updateMaxDamageEnemyCanDeal() {  //todo it is not actually correct. max damage value and canKill may correspond to different move orders
@@ -398,7 +441,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             if (!canDamage[enemy.getType().ordinal()][targetType.ordinal()]) {
                 continue;
             }
-            DamageAndAP p = getDamageAndAP(enemyIndex,x,y,stance.ordinal());
+            DamageAndAP p = getDamageAndAP(enemyIndex, x, y, stance.ordinal());
             damage += p.damage;
             ap += p.ap;
         }
