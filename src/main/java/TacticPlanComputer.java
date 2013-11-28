@@ -46,9 +46,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             List<MutableTrooper> enemies,
             String moveOrder,
             MutableTrooper self,
+            List<MyMove> prevActions,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions);
         this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;

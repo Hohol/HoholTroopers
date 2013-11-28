@@ -14,6 +14,7 @@ public abstract class AbstractPlanComputerTest {
     protected MutableTrooper[][] troopers;
     protected List<MutableTrooper> teammates;
     protected List<MutableTrooper> enemies;
+    protected List<MyMove> prevActions = new ArrayList<>();
     char[][] map;
     int m;
     int n;
@@ -63,6 +64,7 @@ public abstract class AbstractPlanComputerTest {
         n = this.map.length;
         m = this.map[0].length;
         initBuilders();
+        prevActions = new ArrayList<>();
         addBonuses();
     }
 
@@ -221,5 +223,9 @@ public abstract class AbstractPlanComputerTest {
             MyMove... expectedAr
     ) {
         check(selfType, actionPoints, getDefaultMoveOrder(), expectedAr);
+    }
+
+    protected void setPrevActions(MyMove... actions) {
+        prevActions = Arrays.asList(actions);
     }
 }

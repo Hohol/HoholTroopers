@@ -45,6 +45,7 @@ public final class MyStrategy implements Strategy {
     static boolean scoreMustChange;
     static List<MutableTrooper> damageWasDealt = new ArrayList<>();
     static int expectedScoreChange;
+    List<MyMove> prevActions = new ArrayList<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -392,6 +393,7 @@ public final class MyStrategy implements Strategy {
                 new ArrayList<>(enemies),
                 moveOrder,
                 new MutableTrooper(self, -1), //todo remove lastSeenTime from MutableTrooper
+                prevActions,
                 true
         ).getPlan();
     }
@@ -410,6 +412,7 @@ public final class MyStrategy implements Strategy {
                 getBonuses(),
                 getTroopers2d(),
                 destination,
+                prevActions,
                 true
         ).getPlan();
     }
@@ -517,9 +520,11 @@ public final class MyStrategy implements Strategy {
             lastSeenEnemyPos = new Cell(t.getX(), t.getY());
         }
         prevScore = getMyScore();
+        prevActions.add(MyMove.of(move));
         if (isLastSubMove()) {
             mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
+            prevActions.clear();
         }
         dealDamage();
     }

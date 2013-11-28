@@ -45,6 +45,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                     false, troopers, teammates, enemies,
                     moveOrder,
                     self,
+                    prevActions,
                     false
             ).getPlan();
     }

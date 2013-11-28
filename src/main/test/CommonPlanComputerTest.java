@@ -561,28 +561,4 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.RAISE_STANCE, MyMove.LOWER_STANCE
         );
     }
-
-    /*@Test (enabled = true)
-    void testSpeed() {
-        setMap(
-                "...............",
-                "...............",
-                "......rRt......",
-                "......SF..T....",
-                "......sCf......",
-                "...............",
-                "...............",
-                "..............."
-        );
-        ally(COMMANDER).hp(1);
-        ally(SNIPER).hp(1);
-        ally(SOLDIER).hp(1);
-        ally(FIELD_MEDIC).hp(1).fieldRation().medikit().grenade();
-
-        check(
-                FIELD_MEDIC,
-                12,
-                MyMove.HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. EAT_FIELD_RATION, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. HEAL_NORTH, MyMove. USE_MEDIKIT_SOUTH
-        );
-    }/**/
 }

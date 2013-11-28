@@ -118,4 +118,8 @@ public class MyMove {
     public static MyMove grenade(int x, int y) {
         return MyMove.of(THROW_GRENADE, x, y);
     }
+
+    public static MyMove of(Move move) {
+        return MyMove.of(move.getAction(), move.getDirection(), move.getX(), move.getY());
+    }
 }

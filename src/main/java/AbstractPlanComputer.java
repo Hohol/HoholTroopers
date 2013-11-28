@@ -32,8 +32,9 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     static List<Cell>[][][] cellsVisibleFrom;
     MutableTrooper self;    //for immutable fields only
     boolean mapIsStatic;
+    List<MyMove> prevActions;
 
-    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic) {
+    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic, List<MyMove> prevActions) {
         m = map[0].length;
         n = map.length;
         this.map = map;
@@ -45,6 +46,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         this.troopers = troopers;
         this.self = self;
         this.mapIsStatic = mapIsStatic;
+        this.prevActions = prevActions;
     }
 
     protected void addAction(MyMove action) {
@@ -244,13 +246,19 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected void markVisibleInitially(MutableTrooper ally) {
+        int x = ally.getX();
+        int y = ally.getY();
+        int stance = ally.getStance().ordinal();
+        int visionRange = ally.getVisionRange();
+        markVisibleInitially(x, y, stance, visionRange);
+    }
+
+    private void markVisibleInitially(int x, int y, int stance, int visionRange) {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                //for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                if (reachable(ally.getX(), ally.getY(), i, j, ally.getStance().ordinal(), ally.getVisionRange())) {
+                if (reachable(x, y, i, j, stance, visionRange)) {
                     visibleInitially[i][j] = 1;
                 }
-                //}
             }
         }
     }
@@ -296,6 +304,19 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
 
     protected void prepareVisibleInitially() {
         visibleInitially = new int[n][m];
+        int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
+        for (int i = prevActions.size() - 1; i >= 0; i--) {
+            Move move = prevActions.get(i).getMove();
+            if (move.getAction() == MOVE) {
+                x -= move.getDirection().getOffsetX();
+                y -= move.getDirection().getOffsetY();
+            } else if (move.getAction() == RAISE_STANCE) {
+                stance--;
+            } else if (move.getAction() == LOWER_STANCE) {
+                stance++;
+            }
+            markVisibleInitially(x, y, stance, self.getVisionRange());
+        }
         markVisibleInitially(self);
         for (MutableTrooper ally : teammates) {
             markVisibleInitially(ally);

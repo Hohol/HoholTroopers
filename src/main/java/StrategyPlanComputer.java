@@ -29,9 +29,10 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             BonusType[][] bonuses,
             MutableTrooper[][] troopers,
             Cell destination,
+            List<MyMove> prevActions,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions);
         this.destination = destination;
         cur = new StrategyState(self);
     }

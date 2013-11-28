@@ -1,8 +1,6 @@
 import static model.TrooperType.*;
 import static model.TrooperStance.*;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -17,6 +15,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         if (destination == null) {
             throw new RuntimeException("Destination not specified");
         }
+        final boolean mapIsStatic = false;
         return new StrategyPlanComputer(
                 map,
                 utils,
@@ -26,7 +25,8 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 bonuses,
                 troopers,
                 destination,
-                false
+                prevActions,
+                mapIsStatic
         ).getPlan();
     }
 
@@ -303,6 +303,21 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 12
+        );
+    }
+
+    @Test
+    void rememberPath() {
+        setMap(
+                ".FS@",
+                ".#.."
+        );
+
+        setPrevActions(MyMove.MOVE_EAST);
+
+        check(
+                FIELD_MEDIC,
+                4
         );
     }
 }
