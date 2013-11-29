@@ -34,6 +34,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean[][] canDamageIfBefore = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean enemyInitiallyKnowsWhereWeAre;
+    int[][][][] actionsEnemyMustSpendToHide;
 
     public TacticPlanComputer(
             char[][] map,
@@ -64,7 +65,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             enemyIndex[enemy.getX()][enemy.getY()] = i;
         }
 
-        if(checkEnemyInitiallyKnowsWhereWeAre(startCell)) {
+        if (checkEnemyInitiallyKnowsWhereWeAre(startCell)) {
             enemyInitiallyKnowsWhereWeAre = true;
         }
 
@@ -161,6 +162,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             Arrays.fill(numberOfTeammatesWhoCanReachEnemy[i], -1);
             Arrays.fill(numberOfTeammatesMedicCanReach[i], -1);
         }
+        actionsEnemyMustSpendToHide = new int[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    Arrays.fill(actionsEnemyMustSpendToHide[enemyIndex][i][j], -1);
+                }
+            }
+        }
         prepareMaxDamageEnemyCanDeal();
     }
 
@@ -186,7 +195,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 mapWithoutEnemies[i][j] = map[i][j];
-                if(Utils.isEnemyChar(map[i][j])) {
+                if (Utils.isEnemyChar(map[i][j])) {
                     mapWithoutEnemies[i][j] = '.';
                 }
             }
@@ -209,7 +218,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     if (dist[shooterX][shooterY] > 6) {
                         continue;
                     }
-                    if (isWall(shooterX,shooterY)) {
+                    if (isWall(shooterX, shooterY)) {
                         continue;
                     }
 
@@ -388,12 +397,61 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.numberOfTeammatesWhoCanReachEnemy = getNumberOfTeammatesWhoCanReachEnemy();
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
         cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
+        cur.actionsEnemyMustSpendToHide = actionsEnemyMustSpendToHide();
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
             Utils.log(cur);
             best = new TacticState(cur);
         }
+    }
+
+    private int actionsEnemyMustSpendToHide() {
+        int r = 0;
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            int mi = getNumberOfActionsEnemyMustSpendToHide(enemyIndex);
+            r += mi;
+        }
+        return r;
+    }
+
+    private int getNumberOfActionsEnemyMustSpendToHide(int enemyIndex) {
+        if(actionsEnemyMustSpendToHide[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] == -1) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
+            int[][] dist = enemyBfs.get(enemyIndex);
+            int mi = Integer.MAX_VALUE;
+            for (int hideX = 0; hideX < n; hideX++) {
+                for (int hideY = 0; hideY < m; hideY++) {
+                    if (dist[hideX][hideY] == Utils.UNREACHABLE) {
+                        continue;
+                    }
+                    if (isWall(hideX, hideY)) {
+                        continue;
+                    }
+                    for (int hideStance = 0; hideStance < Utils.NUMBER_OF_STANCES; hideStance++) {
+                        if (!canShoot(cur.x, cur.y, hideX, hideY, cur.stance.ordinal(), hideStance, selfType)) {
+                            int d = getActionsToMove(dist[hideX][hideY], enemy.getStance().ordinal(), hideStance);
+                            mi = Math.min(mi, d);
+                        }
+                    }
+                }
+            }
+            actionsEnemyMustSpendToHide[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] = mi;
+        }
+        return actionsEnemyMustSpendToHide[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+    }
+
+    private int getActionsToMove(int dist, int fromStance, int toStance) {
+        int r = Integer.MAX_VALUE;
+        for (int moveStance = Math.max(fromStance, toStance); moveStance < Utils.NUMBER_OF_STANCES; moveStance++) {
+            int t = dist * utils.getMoveCost(moveStance) + (moveStance - fromStance + moveStance - toStance) * game.getStanceChangeCost();
+            r = Math.min(r, t);
+        }
+        return r;
     }
 
     private boolean checkEnemyKnowsWhereWeAre() {
@@ -425,7 +483,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
 
-        if(!cur.enemyKnowsWhereWeAre) {
+        if (!cur.enemyKnowsWhereWeAre) {
             return;
         }
 
@@ -733,8 +791,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         dealDamage(ex, ey, damage);
     }
 
-    private boolean canShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType type) {
-        int shootRange = utils.getShootRange(type, shooterStance);
+    private boolean canShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType shooterType) {
+        int shootRange = utils.getShootRange(shooterType, shooterStance);
         return reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange);
     }
 

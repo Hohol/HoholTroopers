@@ -16,6 +16,7 @@ class TacticState extends AbstractState<TacticState> {
     boolean someOfTeammatesCanBeKilled;
     int numberOfTeammatesMedicCanReach;
     public boolean enemyKnowsWhereWeAre;
+    int actionsEnemyMustSpendToHide;
 
     protected TacticState(TacticState cur) {
         super(cur);
@@ -34,6 +35,7 @@ class TacticState extends AbstractState<TacticState> {
         this.someOfTeammatesCanBeKilled = cur.someOfTeammatesCanBeKilled;
         this.numberOfTeammatesMedicCanReach = cur.numberOfTeammatesMedicCanReach;
         this.enemyKnowsWhereWeAre = cur.enemyKnowsWhereWeAre;
+        this.actionsEnemyMustSpendToHide = cur.actionsEnemyMustSpendToHide;
     }
 
     public TacticState(MutableTrooper self) {
@@ -97,7 +99,7 @@ class TacticState extends AbstractState<TacticState> {
             return holdingGrenade;
         }
 
-        int msb = medicSpecificCompare(old);
+        int msb = medicSpecificBetter(old);
         int nmsb = nonMedicSpecificBetter(old);
 
         if (selfType == TrooperType.FIELD_MEDIC) {
@@ -107,7 +109,6 @@ class TacticState extends AbstractState<TacticState> {
             if (nmsb != 0) {
                 return nmsb < 0;
             }
-
         } else {
             if (nmsb != 0) {
                 return nmsb < 0;
@@ -137,7 +138,7 @@ class TacticState extends AbstractState<TacticState> {
         return false;
     }
 
-    int medicSpecificCompare(TacticState old) {
+    int medicSpecificBetter(TacticState old) {
         if (minHp != old.minHp) {
             return old.minHp - minHp;
         }
@@ -154,6 +155,9 @@ class TacticState extends AbstractState<TacticState> {
 
         if (helpFactor != old.helpFactor) {
             return old.helpFactor - helpFactor;
+        }
+        if (actionsEnemyMustSpendToHide != old.actionsEnemyMustSpendToHide) {
+            return old.actionsEnemyMustSpendToHide - actionsEnemyMustSpendToHide;
         }
         return 0;
     }
@@ -173,6 +177,8 @@ class TacticState extends AbstractState<TacticState> {
                 ", numberOfTeammatesWhoCanReachEnemy=" + numberOfTeammatesWhoCanReachEnemy +
                 ", someOfTeammatesCanBeKilled=" + someOfTeammatesCanBeKilled +
                 ", numberOfTeammatesMedicCanReach=" + numberOfTeammatesMedicCanReach +
+                ", enemyKnowsWhereWeAre=" + enemyKnowsWhereWeAre +
+                ", actionsEnemyMustSpendToHide=" + actionsEnemyMustSpendToHide +
                 '}';
     }
 }

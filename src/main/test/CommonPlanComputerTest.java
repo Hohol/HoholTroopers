@@ -629,4 +629,31 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.MOVE_SOUTH
         );
     }
+
+    @Test
+    void maximizeNumberOfStepsEnemyMustMakeToHideFromYou() {
+        setMap(
+                "........1",
+                "R2.....1f"
+        );
+        check(
+                SNIPER,
+                8,
+                MyMove.MOVE_NORTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_SOUTH
+        );
+
+        //---------------------
+
+        setMap(
+                "........1",
+                "R2.....1f"
+        );
+        check(
+                SNIPER,
+                8,
+                MyMove.MOVE_NORTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_SOUTH
+        );
+    }
+
+
 }

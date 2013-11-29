@@ -225,6 +225,18 @@ public class Utils {
         throw new RuntimeException();
     }
 
+    public int getMoveCost(int stance) {
+        switch (stance) {
+            case 0:
+                return game.getProneMoveCost();
+            case 1:
+                return game.getKneelingMoveCost();
+            case 2:
+                return game.getStandingMoveCost();
+        }
+        throw new RuntimeException();
+    }
+
     public static TrooperStance stanceAfterRaising(TrooperStance stance) {
         switch (stance) {
             case PRONE:
