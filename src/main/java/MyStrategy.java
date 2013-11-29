@@ -306,7 +306,7 @@ public final class MyStrategy implements Strategy {
 
     @SuppressWarnings("unused")
     boolean stopOn(int moveIndex, TrooperType type, int actionsPoints) {
-        return stopOn(moveIndex, type) && self.getActionPoints() == actionsPoints;
+        return stopOn(moveIndex, type) && self.getActionPoints() >= actionsPoints;
     }
 
     private boolean shouldFightOrHeal() {
@@ -383,6 +383,7 @@ public final class MyStrategy implements Strategy {
 
 
     static boolean enemyKnowsWhereWeAre;
+
     private List<MyMove> getTacticPlan() {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy() && medicIsAlive();
@@ -414,7 +415,7 @@ public final class MyStrategy implements Strategy {
             enemyKnowsWhereWeAre = true;
         }
 
-           return r;
+        return r;
     }
 
     private boolean checkEnemyKnowsWhereWeAre() {
@@ -687,8 +688,8 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : teammates) {
             System.out.print(trooper.getType() + ": " + trooper.getHitpoints() + " hp");
-            if(trooper.getId() == self.getId()) {
-                System.out.println(" [self]");
+            if (trooper.getId() == self.getId()) {
+                System.out.print(" [self]");
             }
             System.out.println();
         }

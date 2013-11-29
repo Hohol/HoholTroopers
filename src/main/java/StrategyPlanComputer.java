@@ -124,10 +124,8 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
-        //cur.newSeenCellsCnt = getSeenCellsCnt();
 
         if (cur.better(best, selfType)) {
-            Utils.log(cur);
             best = new StrategyState(cur);
         }
     }

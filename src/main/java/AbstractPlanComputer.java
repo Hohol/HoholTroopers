@@ -283,7 +283,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         return r;
     }
 
-    private boolean isWall(int i, int j) {
+    protected boolean isWall(int i, int j) {
         if (map[i][j] == '#' || Character.isDigit(map[i][j])) {
             return true;
         }

@@ -182,9 +182,18 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private void prepareMaxDamageEnemyCanDeal() {
         maxDamageEnemyCanDeal = new DamageAndAP[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+        char[][] mapWithoutEnemies = new char[n][m];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                mapWithoutEnemies[i][j] = map[i][j];
+                if(Utils.isEnemyChar(map[i][j])) {
+                    mapWithoutEnemies[i][j] = '.';
+                }
+            }
+        }
         enemyBfs = new ArrayList<>();
         for (MutableTrooper enemy : enemies) {
-            enemyBfs.add(Utils.bfsByMap(map, enemy.getX(), enemy.getY()));
+            enemyBfs.add(Utils.bfsByMap(mapWithoutEnemies, enemy.getX(), enemy.getY()));
         }
     }
 
@@ -200,7 +209,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     if (dist[shooterX][shooterY] > 6) {
                         continue;
                     }
-                    if (!isFree(shooterX, shooterY) && (shooterX != enemy.getX() || shooterY != enemy.getY())) {
+                    if (isWall(shooterX,shooterY)) {
                         continue;
                     }
 
@@ -263,6 +272,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 return a;
             }
             return b;
+        }
+
+        @Override
+        public String toString() {
+            return "DamageAndAP{" +
+                    "damage=" + damage +
+                    ", ap=" + ap +
+                    '}';
         }
     }
 
@@ -374,6 +391,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
+            Utils.log(cur);
             best = new TacticState(cur);
         }
     }

@@ -615,4 +615,18 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
+
+    @Test
+    void assumeEnemiesDontBlockEachOther() {
+        setMap(
+                ".......1.#",
+                "S......1fs",
+                ".......#.#"
+        );
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_SOUTH
+        );
+    }
 }
