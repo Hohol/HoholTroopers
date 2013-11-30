@@ -5,10 +5,11 @@ import static model.TrooperType.*;
 
 public class StrategyState extends AbstractState<StrategyState> {
 
-    public int distToDestination;
-    public int maxDistToTeammate; //if self is leader, it is max of dist to teammates. otherwise it is dist to leader
-    public int distToLeader;
-    public int leadersDistToDestination;
+    int distToDestination;
+    int maxDistToTeammate; //if self is leader, it is max of dist to teammates. otherwise it is dist to leader
+    int distToLeader;
+    int leadersDistToDestination;
+    boolean stayingInDangerArea;
 
     public StrategyState(MutableTrooper self) {
         super(self);
@@ -20,6 +21,7 @@ public class StrategyState extends AbstractState<StrategyState> {
         maxDistToTeammate = cur.maxDistToTeammate;
         distToLeader = cur.distToLeader;
         leadersDistToDestination = cur.leadersDistToDestination;
+        stayingInDangerArea = cur.stayingInDangerArea;
     }
 
     @Override
@@ -58,6 +60,10 @@ public class StrategyState extends AbstractState<StrategyState> {
 
         if (distToLeader != old.distToLeader) {
             return distToLeader < old.distToLeader;
+        }
+
+        if(stayingInDangerArea != old.stayingInDangerArea) {
+            return !stayingInDangerArea;
         }
 
         if (distToDestination != old.distToDestination) {

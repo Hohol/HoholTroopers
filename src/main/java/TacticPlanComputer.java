@@ -833,11 +833,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         dealDamage(ex, ey, damage);
     }
 
-    private boolean canShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType shooterType) {
-        int shootRange = utils.getShootRange(shooterType, shooterStance);
-        return reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange);
-    }
-
     private void tryShoot() {
         int shootCost = utils.getShootCost(selfType);
         if (cur.actionPoints < shootCost) {

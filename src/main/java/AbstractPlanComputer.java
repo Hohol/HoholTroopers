@@ -339,4 +339,9 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
             markVisibleInitially(ally);
         }
     }
+
+    protected boolean canShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType shooterType) {
+        int shootRange = utils.getShootRange(shooterType, shooterStance);
+        return reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange);
+    }
 }

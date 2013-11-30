@@ -71,7 +71,10 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 2,
                 MyMove.MOVE_EAST
         );
+    }
 
+    @Test
+    void testMoveToDestination2() {
         setMap(
                 "S..",
                 "#..",
@@ -193,7 +196,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
 
         check(
                 SOLDIER,
-                3,
+                4,
                 MyMove.RAISE_STANCE
         );
     }
@@ -318,6 +321,20 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 4
+        );
+    }
+
+    @Test
+    void avoidDangerArea() {
+        setMap(
+                "##.",
+                "##.",
+                "S.@"
+        );
+        setVisible(2, 0, 1, 2, PRONE);
+        check(
+                SOLDIER,
+                2
         );
     }
 }

@@ -4,6 +4,8 @@ import model.BonusType;
 import model.Move;
 import model.TrooperType;
 
+import static model.TrooperType.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,11 +16,11 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     Cell destination;
     int[][] distToDestination;
-    //List<int[][]> distToTeammates;
     List<int[][]> distWithoutTeammates;
     MutableTrooper leader;
     private int[][] distToLeader;
-    int[][] leadersDistToDestination; //[self.x][self.y]
+    int[][] leadersDistToDestination;
+    List<Cell3D>[][][] dangerArea;
 
     public StrategyPlanComputer(
             char[][] map,
@@ -43,6 +45,33 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
         distWithoutTeammates = getDistWithoutTeammates();
         chooseLeader();
+        prepareDangerArea();
+    }
+
+    private void prepareDangerArea() {
+        dangerArea = new List[n][m][Utils.NUMBER_OF_STANCES];
+        for (int shooterX = 0; shooterX < n; shooterX++) {
+            for (int shooterY = 0; shooterY < m; shooterY++) {
+                if (isWall(shooterX, shooterY)) {
+                    continue;
+                }
+                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                    if (visibleCnt[shooterX][shooterY] != 0) {
+                        continue;
+                    }
+                    for (int targetX = 0; targetX < n; targetX++) {
+                        for (int targetY = 0; targetY < m; targetY++) {
+                            if (canShoot(shooterX, shooterY, targetX, targetY, stance, stance, FIELD_MEDIC)) {
+                                if (dangerArea[targetX][targetY][stance] == null) {
+                                    dangerArea[targetX][targetY][stance] = new ArrayList<>();
+                                }
+                                dangerArea[targetX][targetY][stance].add(new Cell3D(shooterX, shooterY, stance));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void chooseLeader() {
@@ -124,10 +153,24 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
+        cur.stayingInDangerArea = checkDangerArea();
+        ;
 
         if (cur.better(best, selfType)) {
             best = new StrategyState(cur);
         }
+    }
+
+    private boolean checkDangerArea() {
+        if (dangerArea[cur.x][cur.y][cur.stance.ordinal()] == null) {
+            return false;
+        }
+        for (Cell3D cell : dangerArea[cur.x][cur.y][cur.stance.ordinal()]) {
+            if (visibleCnt[cell.x][cell.y] == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int getDistToLeader() {
