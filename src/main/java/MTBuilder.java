@@ -33,7 +33,7 @@ public class MTBuilder {
     private boolean holdingMedikit;
     private boolean holdingFieldRation;
     private int lastSeenTime;
-    
+
     public MutableTrooper build() {
         return new MutableTrooper(
                 id, x, y, playerId, teammateIndex, teammate, type, stance, hitpoints, maximalHitpoints, actionPoints, initialActionPoints,
@@ -41,6 +41,7 @@ public class MTBuilder {
                 shootingRange, shootCost, standingDamage, kneelingDamage, proneDamage, damage, holdingGrenade, holdingMedikit, holdingFieldRation
         );
     }
+
     public MTBuilder hp(int hp) {
         hitpoints = hp;
         return this;
@@ -67,7 +68,7 @@ public class MTBuilder {
     }
 
     public MTBuilder stance(TrooperStance stance) {
-        if(stance == null) { //todo remove
+        if (stance == null) { //todo remove
             stance = TrooperStance.STANDING;
         }
         this.stance = stance;
@@ -91,6 +92,11 @@ public class MTBuilder {
 
     public MTBuilder type(TrooperType type) {
         this.type = type;
+        return this;
+    }
+
+    public MTBuilder id(int id) {
+        this.id = id;
         return this;
     }
 }

@@ -2,6 +2,7 @@ import static model.TrooperType.*;
 
 import static model.TrooperStance.*;
 
+import com.sun.xml.internal.ws.encoding.soap.streaming.SOAP12NamespaceConstants;
 import org.testng.annotations.Test;
 
 @Test
@@ -319,21 +320,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SOLDIER,
                 2,
                 MyMove.MOVE_WEST
-        );
-    }
-
-    @Test
-    void testBug2() {
-        setMap(
-                "..f",
-                "...",
-                "S1s"
-        );
-        enemy(SOLDIER).hp(1);
-        check(
-                SOLDIER,
-                6,
-                MyMove.shoot(2, 2)
         );
     }
 
@@ -666,6 +652,26 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SOLDIER,
                 4,
                 MyMove.MOVE_NORTH, MyMove.MOVE_SOUTH
+        );
+    }
+
+
+
+    @Test
+    void deadDontSee() {
+        setMap(
+                "Fr",
+                "1#",
+                "s."
+        );
+        enemy(SOLDIER).grenade();
+        enemy(SNIPER).hp(10);
+        ally(FIELD_MEDIC).stance(PRONE).hp(41);
+
+        check(
+                FIELD_MEDIC,
+                6,
+                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.shoot(1, 0)
         );
     }
 }

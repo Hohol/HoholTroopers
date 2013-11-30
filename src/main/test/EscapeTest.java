@@ -145,19 +145,6 @@ public class EscapeTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testDoNotEscapeIfYouWasteMoveButTheyStillCanEasilyReachYou() {
-        setMap(
-                ".....",
-                "S...c"
-        );
-        check(
-                SOLDIER,
-                4,
-                MyMove.shoot(4, 1)
-        );
-    }
-
-    @Test
     void testCounterTestToPrevious() {
         setMap(
                 ".#.",

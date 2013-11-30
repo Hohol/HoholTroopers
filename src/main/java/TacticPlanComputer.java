@@ -14,6 +14,7 @@ import static model.TrooperStance.*;
 public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     protected static final int MAX_DIST_MEDIC_SHOULD_TRY_HEAL = 7;
+    private static final double INVISIBLE_DAMAGE_QUOTIENT = 0.5;
     private final List<MutableTrooper> enemies;
     private int[][] sqrDistSum;
     List<int[][]> distToTeammatesForHealing;
@@ -35,6 +36,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean[][] canDamageIfAfter = new boolean[Utils.NUMBER_OF_TROOPER_TYPES][Utils.NUMBER_OF_TROOPER_TYPES];
     boolean enemyInitiallyKnowsWhereWeAre;
     int[][][][] actionsEnemyMustSpendToHide;
+    boolean[][][][] visibleByEnemy;
 
     public TacticPlanComputer(
             char[][] map,
@@ -182,6 +184,23 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             }
         }
         prepareMaxDamageEnemyCanDeal();
+        prepareVisibleByEnemy();
+    }
+
+    private void prepareVisibleByEnemy() {
+        visibleByEnemy = new boolean[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            MutableTrooper enemy = enemies.get(enemyIndex);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                        if (canSee(enemy, i, j, stance)) {
+                            visibleByEnemy[enemyIndex][i][j][stance] = true;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void prepareDistForHealing() {
@@ -431,7 +450,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private int getNumberOfActionsEnemyMustSpendToHide(int enemyIndex) {
-        if(actionsEnemyMustSpendToHide[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] == -1) {
+        if (actionsEnemyMustSpendToHide[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] == -1) {
             MutableTrooper enemy = enemies.get(enemyIndex);
             int[][] dist = enemyBfs.get(enemyIndex);
             int mi = Integer.MAX_VALUE;
@@ -485,8 +504,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return false;
     }
 
-    private boolean canSee(MutableTrooper enemy, int x, int y, int stance) {
-        return reachable(enemy.getX(), enemy.getY(), x, y, Math.min(enemy.getStance().ordinal(), stance), (int) enemy.getVisionRange());
+    private boolean canSee(MutableTrooper trooper, int targetX, int targetY, int targetStance) {
+        return reachable(trooper.getX(), trooper.getY(), targetX, targetY, Math.min(trooper.getStance().ordinal(), targetStance), (int) trooper.getVisionRange());
     }
 
     private void updateMaxDamageEnemyCanDeal() {  //todo it is not actually correct. max damage value and canKill may correspond to different move orders
@@ -539,7 +558,19 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (damage == 0) {
             return DamageAndAP.ZERO;
         }
+        if (!getEnemyCanSee(x, y, stance.ordinal())) {
+            damage = (int) (damage * INVISIBLE_DAMAGE_QUOTIENT + 0.5);
+        }
         return new DamageAndAP(damage, ap);
+    }
+
+    private boolean getEnemyCanSee(int x, int y, int stance) {
+        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+            if (enemies.get(enemyIndex).isAlive() && visibleByEnemy[enemyIndex][x][y][stance]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int getHelpDist() {
