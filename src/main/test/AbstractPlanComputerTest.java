@@ -1,4 +1,5 @@
 import model.BonusType;
+import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public abstract class AbstractPlanComputerTest {
     int m;
     int n;
     MTBuilder[][] builders;
+    protected boolean[] vision;
 
     protected void initBuilders() {
         builders = new MTBuilder[n][m];
@@ -60,9 +62,8 @@ public abstract class AbstractPlanComputerTest {
         map = Utils.toCharAndTranspose(smap);
         n = this.map.length;
         m = this.map[0].length;
+        findVision();
         bonuses = new BonusType[this.map.length][this.map[0].length];
-        n = this.map.length;
-        m = this.map[0].length;
         initBuilders();
         prevActions = new ArrayList<>();
         addBonuses();
@@ -134,17 +135,30 @@ public abstract class AbstractPlanComputerTest {
         return false;
     }
 
-    protected boolean[] getVisibilities() {
+    protected void setVisible(int viewerX, int viewerY, int objectX, int objectY, TrooperStance stance) {
         int width = map.length;
         int height = map[0].length;
         int stanceCount = Utils.NUMBER_OF_STANCES;
-        boolean[] r = new boolean[width * height * width * height * stanceCount];
+        for (int stanceIndex = stance.ordinal(); stanceIndex < stanceCount; stanceIndex++) {
+            vision[viewerX * height * width * height * stanceCount
+                    + viewerY * width * height * stanceCount
+                    + objectX * height * stanceCount
+                    + objectY * stanceCount
+                    + stanceIndex] = true;
+        }
+    }
+
+    private void findVision() {
+        int width = map.length;
+        int height = map[0].length;
+        int stanceCount = Utils.NUMBER_OF_STANCES;
+        vision = new boolean[width * height * width * height * stanceCount];
         for (int viewerX = 0; viewerX < width; viewerX++) {
             for (int viewerY = 0; viewerY < height; viewerY++) {
                 for (int objectX = 0; objectX < width; objectX++) {
                     for (int objectY = 0; objectY < height; objectY++) {
                         for (int stance = 0; stance < stanceCount; stance++) {
-                            r[viewerX * height * width * height * stanceCount
+                            vision[viewerX * height * width * height * stanceCount
                                     + viewerY * width * height * stanceCount
                                     + objectX * height * stanceCount
                                     + objectY * stanceCount
@@ -154,7 +168,6 @@ public abstract class AbstractPlanComputerTest {
                 }
             }
         }
-        return r;
     }
 
     protected void prepareTroopers(TrooperType selfType) {

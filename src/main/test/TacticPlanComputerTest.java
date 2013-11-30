@@ -63,7 +63,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 map,
                 utils,
                 bonuses,
-                getVisibilities(),
+                vision,
                 false,
                 false,
                 troopers,

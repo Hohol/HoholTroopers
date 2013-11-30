@@ -21,7 +21,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 utils,
                 teammates,
                 self,
-                getVisibilities(),
+                vision,
                 bonuses,
                 troopers,
                 destination,

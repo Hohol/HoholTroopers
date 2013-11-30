@@ -3,6 +3,7 @@ import static model.TrooperType.*;
 import static model.TrooperStance.*;
 
 import com.sun.xml.internal.ws.encoding.soap.streaming.SOAP12NamespaceConstants;
+import model.TrooperStance;
 import org.testng.annotations.Test;
 
 @Test
