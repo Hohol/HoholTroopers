@@ -52,6 +52,9 @@ public class StrategyState extends AbstractState<StrategyState> {
         if (holdingGrenade != old.holdingGrenade) {
             return holdingGrenade;
         }
+        if (fieldRationsUsed != old.fieldRationsUsed) {
+            return fieldRationsUsed < old.fieldRationsUsed;
+        }
 
         if (distToLeader != old.distToLeader) {
             return distToLeader < old.distToLeader;
@@ -59,10 +62,6 @@ public class StrategyState extends AbstractState<StrategyState> {
 
         if (distToDestination != old.distToDestination) {
             return distToDestination < old.distToDestination;
-        }
-
-        if (fieldRationsUsed != old.fieldRationsUsed) {
-            return fieldRationsUsed < old.fieldRationsUsed;
         }
 
         if(selfType == SNIPER) {
