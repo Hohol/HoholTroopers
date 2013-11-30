@@ -37,6 +37,7 @@ public final class MyStrategy implements Strategy {
     private BonusType[][] bonuses;
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
     static boolean[][][] wasSeenOnCurrentBigMove;
+    static double[][][] wasSeenMinDist;
     static boolean[][][] damagedArea;
     boolean[][][] canSeeRightNow;  //todo it seems this array is not needed at all
     static List<Cell> suspiciousCells = new ArrayList<>();
@@ -657,13 +658,20 @@ public final class MyStrategy implements Strategy {
             wasSeenOnCurrentBigMove = new boolean[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
         }
         canSeeRightNow = new boolean[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
-        for (Trooper trooper : teammates) {
-            for (int i = 0; i < world.getWidth(); i++) {
-                for (int j = 0; j < world.getHeight(); j++) {
-                    for (TrooperStance targetStance : TrooperStance.values()) {
-                        if (world.isVisible(trooper.getVisionRange(), trooper.getX(), trooper.getY(), trooper.getStance(), i, j, targetStance)) {
+        wasSeenMinDist = new double[world.getWidth()][world.getHeight()][Utils.NUMBER_OF_STANCES];
+
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                for (TrooperStance targetStance : TrooperStance.values()) {
+                    for (Trooper ally : teammates) {
+                        wasSeenMinDist[i][j][targetStance.ordinal()] = 1000;
+                        if (world.isVisible(ally.getVisionRange(), ally.getX(), ally.getY(), ally.getStance(), i, j, targetStance)) {
                             canSeeRightNow[i][j][targetStance.ordinal()] = true;
                             wasSeenOnCurrentBigMove[i][j][targetStance.ordinal()] = true;
+                            wasSeenMinDist[i][j][targetStance.ordinal()] = Math.min(
+                                    wasSeenMinDist[i][j][targetStance.ordinal()],
+                                    Utils.dist(i, j, ally.getX(), ally.getY())
+                            );
                         }
                     }
                 }
@@ -724,7 +732,7 @@ public final class MyStrategy implements Strategy {
                 it.remove();
                 continue;
             }
-            if (!seeRightNowIds.contains(mt.getId()) && canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()]) {
+            if (disappeared(seeRightNowIds, mt)) {
                 if (!movePhantomEnemy(mt, false)) {
                     it.remove();
                 }
@@ -739,6 +747,24 @@ public final class MyStrategy implements Strategy {
                 enemies.add(mt);
             }
         }
+    }
+
+    private boolean disappeared(Set<Long> seeRightNowIds, MutableTrooper mt) {
+        if (seeRightNowIds.contains(mt.getId())) {
+            return false;
+        }
+        if (!canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()]) {
+            return false;
+        }
+        double distWeCouldSeeHim = self.getVisionRange();
+        if (mt.getType() == SNIPER) {
+            if (mt.getStance() == PRONE) {
+                distWeCouldSeeHim -= game.getSniperProneStealthBonus();
+            } else if (mt.getStance() == KNEELING) {
+                distWeCouldSeeHim -= game.getSniperKneelingStealthBonus();
+            }
+        }
+        return wasSeenMinDist[mt.getX()][mt.getY()][mt.getStance().ordinal()] <= distWeCouldSeeHim + 1e-6;
     }
 
     private boolean movePhantomEnemy(MutableTrooper mt, boolean reasonIsDamage) {
