@@ -35,11 +35,13 @@ public class MTBuilder {
     private int lastSeenTime;
 
     public MutableTrooper build() {
-        return new MutableTrooper(
+        MutableTrooper r = new MutableTrooper(
                 id, x, y, playerId, teammateIndex, teammate, type, stance, hitpoints, maximalHitpoints, actionPoints, initialActionPoints,
                 TrooperParameters.HARDCODED_TROOPER_PARAMETERS.getVisionRange(type),
                 shootingRange, shootCost, standingDamage, kneelingDamage, proneDamage, damage, holdingGrenade, holdingMedikit, holdingFieldRation
         );
+        r.updateLastSeenTime(lastSeenTime);
+        return r;
     }
 
     public MTBuilder hp(int hp) {
@@ -102,6 +104,11 @@ public class MTBuilder {
 
     public MTBuilder playerId(long playerId) {
         this.playerId = playerId;
+        return this;
+    }
+
+    public MTBuilder lastSeenTime(int time) {
+        this.lastSeenTime = time;
         return this;
     }
 }

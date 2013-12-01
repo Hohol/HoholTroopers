@@ -1,10 +1,7 @@
 import static model.TrooperType.*;
 import static model.TrooperStance.*;
 
-import model.TrooperType;
 import org.testng.annotations.Test;
-
-import java.util.Set;
 
 @Test
 public class CommonPlanComputerTest extends TacticPlanComputerTest {
@@ -799,6 +796,52 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 SOLDIER,
                 2
+        );
+    }
+
+    void preferAttackNonPhantomEnemies() {
+        setMap(
+                "c..",
+                "#..",
+                "S.s"
+        );
+        enemy(COMMANDER).lastSeenTime(-10);
+        ally(SOLDIER).grenade();
+        check(
+                SOLDIER,
+                8,
+                MyMove.grenade(2,2)
+        );
+    }
+    @Test
+    void preferAttackWellScoutedEnemy() {
+        setMap(
+                "R.........sf"
+        );
+        ally(SNIPER).stance(PRONE);
+        setMediumMoveIndex(5);
+        enemy(SOLDIER).lastSeenTime(5);
+        enemy(FIELD_MEDIC).lastSeenTime(0);
+        check(
+                SNIPER,
+                9,
+                MyMove.shoot(10,0)
+        );
+    }
+
+    @Test
+    void preferAttackWellScoutedEnemy2() {
+        setMap(
+                "R.........sf"
+        );
+        ally(SNIPER).stance(PRONE);
+        setMediumMoveIndex(5);
+        enemy(SOLDIER).lastSeenTime(0);
+        enemy(FIELD_MEDIC).lastSeenTime(5);
+        check(
+                SNIPER,
+                9,
+                MyMove.shoot(11,0)
         );
     }
 }

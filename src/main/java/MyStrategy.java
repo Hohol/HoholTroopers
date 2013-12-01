@@ -51,8 +51,10 @@ public final class MyStrategy implements Strategy {
     static int lastTimeEnemyKnewWhereWeAre = -5;
     Cell3D startCell;
     static Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
+
     static List<Cell> enemyKnowsHistoryCells = new ArrayList<>();
     static List<Integer> enemyKnowsHistoryTime = new ArrayList<>();
+    Map<TrooperType, Integer> orderIndex = new EnumMap<>(TrooperType.class);
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -413,6 +415,7 @@ public final class MyStrategy implements Strategy {
                 startCell,
                 killedEnemies,
                 getEnemyKnowsPositions(),
+                mediumMoveIndex,
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -515,6 +518,7 @@ public final class MyStrategy implements Strategy {
             startCell = new Cell3D(self.getX(), self.getY(), self.getStance().ordinal());
             firstSubmove = false;
         }
+
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
         smallMoveIndex++;
@@ -529,6 +533,9 @@ public final class MyStrategy implements Strategy {
             if (moveOrder.indexOf(ch) == -1) {
                 moveOrder += ch;
             }
+            orderIndex.put(self.getType(), mediumMoveIndex);
+        } else {
+            mediumMoveIndex = world.getMoveIndex() * initialTeamSize + orderIndex.get(self.getType());
         }
         occupiedByTrooper = getOccupiedByTrooper();
         bonuses = getBonuses();
@@ -572,11 +579,11 @@ public final class MyStrategy implements Strategy {
         prevScore = getMyScore();
         prevActions.add(MyMove.of(move));
         if (isLastSubMove()) {
-            mediumMoveIndex++;
             wasSeenOnCurrentBigMove = null;
             prevActions.clear();
             previousTeammatesSize = teammates.size();
             firstSubmove = true;
+            mediumMoveIndex++;
         }
         dealDamage();
     }
@@ -741,7 +748,7 @@ public final class MyStrategy implements Strategy {
                     enemies.remove(mt);
                     markKilled(mt);
                 } else {
-                    mt.updateLastSeenTime(world.getMoveIndex());
+                    mt.updateLastSeenTime(mediumMoveIndex);
                 }
             }
         }
@@ -765,7 +772,7 @@ public final class MyStrategy implements Strategy {
         }
         for (Trooper trooper : world.getTroopers()) {
             if (!trooper.isTeammate()) {
-                MutableTrooper mt = new MutableTrooper(trooper, world.getMoveIndex());
+                MutableTrooper mt = new MutableTrooper(trooper, mediumMoveIndex);
                 if (enemies.contains(mt)) {
                     enemies.remove(mt);
                 }
@@ -847,7 +854,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean expired(MutableTrooper mt) {
-        return world.getMoveIndex() - mt.getLastSeenTime() > 2;
+        return mediumMoveIndex - mt.getLastSeenTime() > 2 * initialTeamSize;
     }
 
     char[][] createCharMap() {

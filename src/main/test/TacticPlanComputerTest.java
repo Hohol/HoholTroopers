@@ -12,6 +12,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
     protected Set<Cell> enemyKnowsPosition;
+    private int mediumMoveIndex;
 
     @Override
     protected void setMap(String... smap) {
@@ -19,6 +20,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         enemyKnowsWhereWeAre = true;
         startCell = null;
         enemyKnowsPosition = new HashSet<>();
+        mediumMoveIndex = 0;
     }
 
     protected void enemyDoesntKnowWhereWeAre() {
@@ -58,6 +60,10 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         return builders[x][y];
     }
 
+    protected void setMediumMoveIndex(int index) {
+        mediumMoveIndex = index;
+    }
+
     @Override
     protected List<MyMove> getActual(String moveOrder, MutableTrooper self) {
         if (startCell == null) {
@@ -81,6 +87,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 startCell,
                 killedEnemies,
                 enemyKnowsPosition,
+                mediumMoveIndex,
                 mapIsStatic
         ).getPlan();
     }

@@ -38,6 +38,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean[][][][] visibleByEnemy;
     int initialTeamSize;
     Set<Cell> enemyKnowsPosition;
+    int mediumMoveIndex;
     String moveOrder;
 
     public TacticPlanComputer(
@@ -57,6 +58,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             Cell3D startCell,
             Map<Long, Set<TrooperType>> killedEnemies,
             Set<Cell> enemyKnowsPosition,
+            int mediumMoveIndex,
             boolean mapIsStatic
     ) {
         super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
@@ -67,6 +69,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.enemyInitiallyKnowsWhereWeAre = enemyKnowsWhereWeAre;
         this.enemyKnowsPosition = enemyKnowsPosition;
         initialTeamSize = moveOrder.length();
+        this.mediumMoveIndex = mediumMoveIndex;
         this.moveOrder = moveOrder;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
@@ -716,7 +719,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             DamageAndAP p = getDamageAndAP(enemyIndex, x, y, stance.ordinal());
             damage += p.damage;
             ap += p.ap;
-            if(p.damage == 0) {
+            if (p.damage == 0) {
                 ap += 100;
             }
         }
@@ -951,6 +954,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
         MutableTrooper enemy = troopers[ex][ey];
 
+        damage = getDamageConsiderPhantom(enemy, damage);
+
         if (enemy.getHitpoints() > 0) {
             if (damage >= enemy.getHitpoints()) {
                 cur.killCnt++;
@@ -965,6 +970,24 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return (troopers[ex][ey] != null && !troopers[ex][ey].isTeammate());
     }
 
+    private int getDamageConsiderPhantom(MutableTrooper enemy, int damage) {
+        if (isPhantom(enemy, mediumMoveIndex, moveOrder)) {
+            damage /= 2;
+        }
+        return damage;
+    }
+
+    static boolean isPhantom(MutableTrooper enemy, int mediumMoveIndex, String moveOrder) {
+        int enemyIndex;
+        for (int i = enemy.getLastSeenTime(); ; i++) {
+            if (moveOrder.charAt(i % moveOrder.length()) == Utils.getCharForTrooperType(enemy.getType())) {
+                enemyIndex = i;
+                break;
+            }
+        }
+        return enemyIndex >= enemy.getLastSeenTime() && enemyIndex < mediumMoveIndex;
+    }
+
     private void undealDamage(int ex, int ey, int damage) {
         if (!inField(ex, ey)) {
             return;
@@ -974,6 +997,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         }
 
         MutableTrooper enemy = troopers[ex][ey];
+
+        damage = getDamageConsiderPhantom(enemy, damage);
 
         if (enemy.getHitpoints() + damage > 0) {
             if (enemy.getHitpoints() <= 0) {
