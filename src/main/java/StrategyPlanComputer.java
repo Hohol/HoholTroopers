@@ -6,9 +6,7 @@ import model.TrooperType;
 
 import static model.TrooperType.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
@@ -32,9 +30,10 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             MutableTrooper[][] troopers,
             Cell destination,
             List<MyMove> prevActions,
+            Map<Long, Set<TrooperType>> killedEnemies,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
         this.destination = destination;
         cur = new StrategyState(self);
     }

@@ -5,9 +5,7 @@ import static model.TrooperType.*;
 
 import model.TrooperType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static model.TrooperStance.*;
 
@@ -53,9 +51,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             MutableTrooper self,
             List<MyMove> prevActions,
             Cell3D startCell,
+            Map<Long, Set<TrooperType>> killedEnemies,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
         this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
@@ -268,7 +267,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                         if (canShoot && minShooterStance == -1) {
                             minShooterStance = shooterStance;
                         }
-                        int actionPoints = utils.getInitialActionPointsWithCommanderBonus(enemyType);
+                        int actionPoints = getMaxInitialAP(enemy);
                         if (enemy.isHoldingFieldRation()) {
                             actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
                         }
@@ -283,6 +282,22 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance] = r;
         }
         return maxDamageEnemyCanDeal[enemyIndex][targetX][targetY][targetStance];
+    }
+
+    private int getMaxInitialAP(MutableTrooper enemy) {
+        TrooperType enemyType = enemy.getType();
+        int r = utils.getInitialActionPoints(enemyType);
+        if (enemyType != COMMANDER && enemyType != SCOUT && commanderIsAlive(enemy)) {
+            r += game.getCommanderAuraBonusActionPoints();
+        }
+        return r;
+    }
+
+    private boolean commanderIsAlive(MutableTrooper enemy) {
+        if (!killedEnemies.containsKey(enemy.getPlayerId())) {
+            return true;
+        }
+        return !killedEnemies.get(enemy.getPlayerId()).contains(COMMANDER);
     }
 
     private boolean canThrowGrenade(int shooterX, int shooterY, int targetX, int targetY) {

@@ -4,9 +4,7 @@ import model.Game;
 import model.Move;
 import model.TrooperType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static model.ActionType.LOWER_STANCE;
 import static model.ActionType.MOVE;
@@ -33,9 +31,10 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     MutableTrooper self;    //for immutable fields only
     boolean mapIsStatic;
     List<MyMove> prevActions;
+    Map<Long, Set<TrooperType>> killedEnemies;
     private int[][] scoutingValue;
 
-    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic, List<MyMove> prevActions) {
+    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic, List<MyMove> prevActions, Map<Long, Set<TrooperType>> killedEnemies) {
         m = map[0].length;
         n = map.length;
         this.map = map;
@@ -48,6 +47,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         this.self = self;
         this.mapIsStatic = mapIsStatic;
         this.prevActions = prevActions;
+        this.killedEnemies = killedEnemies;
     }
 
     protected void addAction(MyMove action) {

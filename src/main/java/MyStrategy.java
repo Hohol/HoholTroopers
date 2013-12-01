@@ -50,6 +50,7 @@ public final class MyStrategy implements Strategy {
     static int previousTeammatesSize;
     static int lastTimeEnemyKnewWhereWeAre = -5;
     Cell3D startCell;
+    Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -408,6 +409,7 @@ public final class MyStrategy implements Strategy {
                 new MutableTrooper(self, -1), //todo remove lastSeenTime from MutableTrooper
                 prevActions,
                 startCell,
+                killedEnemies,
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -441,6 +443,7 @@ public final class MyStrategy implements Strategy {
                 getTroopers2d(),
                 destination,
                 prevActions,
+                killedEnemies,
                 true
         ).getPlan();
     }
@@ -569,29 +572,30 @@ public final class MyStrategy implements Strategy {
         enemiesDamagedOnPreviousMove.clear();
         expectedScoreChange = 0;
         while (it.hasNext()) {
-            MutableTrooper trooper = it.next();
-            int oldHp = trooper.getHitpoints();
-            int d = Utils.manhattanDist(trooper.getX(), trooper.getY(), move.getX(), move.getY());
+            MutableTrooper enemy = it.next();
+            int oldHp = enemy.getHitpoints();
+            int d = Utils.manhattanDist(enemy.getX(), enemy.getY(), move.getX(), move.getY());
             if (move.getAction() == THROW_GRENADE) {
                 if (d == 0) {
-                    trooper.decHp(game.getGrenadeDirectDamage());
+                    enemy.decHp(game.getGrenadeDirectDamage());
                 } else if (d == 1) {
-                    trooper.decHp(game.getGrenadeCollateralDamage());
+                    enemy.decHp(game.getGrenadeCollateralDamage());
                 }
             } else if (move.getAction() == SHOOT && d == 0) {
-                trooper.decHp(Math.min(utils.getShootDamage(self.getType(), self.getStance()), trooper.getHitpoints()));
+                enemy.decHp(Math.min(utils.getShootDamage(self.getType(), self.getStance()), enemy.getHitpoints()));
             }
-            expectedScoreChange += (oldHp - trooper.getHitpoints()) * game.getTrooperDamageScoreFactor();
-            if (trooper.getHitpoints() <= 0) {
+            expectedScoreChange += (oldHp - enemy.getHitpoints()) * game.getTrooperDamageScoreFactor();
+            if (enemy.getHitpoints() <= 0) {
                 expectedScoreChange += game.getTrooperEliminationScore();
+                markKilled(enemy);
                 it.remove();
             } else {
-                if (trooper.getHitpoints() != oldHp) {
+                if (enemy.getHitpoints() != oldHp) {
                     scoreMustChange = true;
-                    enemiesDamagedOnPreviousMove.add(trooper);
+                    enemiesDamagedOnPreviousMove.add(enemy);
                 }
                 if (isLastSubMove()) {
-                    trooper.setHp(Math.min(trooper.getHitpoints() + 50, Utils.INITIAL_TROOPER_HP));
+                    enemy.setHp(Math.min(enemy.getHitpoints() + 50, Utils.INITIAL_TROOPER_HP));
                 }
             }
         }
@@ -716,6 +720,7 @@ public final class MyStrategy implements Strategy {
             } else {
                 if (getMyScore() - prevScore > expectedScoreChange) {
                     enemies.remove(mt);
+                    markKilled(mt);
                 } else {
                     mt.updateLastSeenTime(world.getMoveIndex());
                 }
@@ -724,6 +729,7 @@ public final class MyStrategy implements Strategy {
         Set<Long> seeRightNowIds = new HashSet<>();
         for (Trooper trooper : world.getTroopers()) {
             seeRightNowIds.add(trooper.getId());
+            unkill(trooper);   //we could previously mistakenly suppose him to be dead
         }
         Iterator<MutableTrooper> it = enemies.iterator();
         while (it.hasNext()) {
@@ -747,6 +753,23 @@ public final class MyStrategy implements Strategy {
                 enemies.add(mt);
             }
         }
+    }
+
+    private void unkill(Trooper trooper) {
+        Set<TrooperType> set = killedEnemies.get(trooper.getPlayerId());
+        if (set == null) {
+            return;
+        }
+        set.remove(trooper.getType());
+    }
+
+    private void markKilled(MutableTrooper mt) {
+        Set<TrooperType> set = killedEnemies.get(mt.getPlayerId());
+        if (set == null) {
+            set = EnumSet.noneOf(TrooperType.class);
+            killedEnemies.put(mt.getPlayerId(), set);
+        }
+        set.add(mt.getType());
     }
 
     private boolean disappeared(Set<Long> seeRightNowIds, MutableTrooper mt) {

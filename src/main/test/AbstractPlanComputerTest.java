@@ -2,9 +2,7 @@ import model.BonusType;
 import model.TrooperStance;
 import model.TrooperType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.testng.Assert.assertEquals;
 
@@ -21,6 +19,7 @@ public abstract class AbstractPlanComputerTest {
     int n;
     MTBuilder[][] builders;
     protected boolean[] vision;
+    protected Map<Long, Set<TrooperType>> killedEnemies;
 
     protected void initBuilders() {
         builders = new MTBuilder[n][m];
@@ -67,6 +66,7 @@ public abstract class AbstractPlanComputerTest {
         initBuilders();
         prevActions = new ArrayList<>();
         addBonuses();
+        killedEnemies = new HashMap<>();
     }
 
     protected MTBuilder ally(TrooperType type) {
@@ -196,7 +196,7 @@ public abstract class AbstractPlanComputerTest {
         }
     }
 
-    protected void check(TrooperType selfType, int actionPoints, String moveOrder, MyMove ...expectedAr) {
+    protected void check(TrooperType selfType, int actionPoints, String moveOrder, MyMove... expectedAr) {
         MTBuilder selfBuilder = ally(selfType)
                 .actionPoints(actionPoints);
 
@@ -219,9 +219,9 @@ public abstract class AbstractPlanComputerTest {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 char ch = map[i][j];
-                if(Utils.isLetter(ch)) {
+                if (Utils.isLetter(ch)) {
                     ch = Character.toUpperCase(ch);
-                    if(!r.contains(Character.toString(ch))) {
+                    if (!r.contains(Character.toString(ch))) {
                         r += ch;
                     }
                 }
@@ -240,5 +240,18 @@ public abstract class AbstractPlanComputerTest {
 
     protected void setPrevActions(MyMove... actions) {
         prevActions = Arrays.asList(actions);
+    }
+
+    protected void theyDontHave(TrooperType type) {
+        theyDontHave(0, type);
+    }
+
+    protected void theyDontHave(long playerId, TrooperType type) {
+        Set<TrooperType> set = killedEnemies.get(playerId);
+        if (set == null) {
+            set = EnumSet.noneOf(TrooperType.class);
+            killedEnemies.put(playerId, set);
+        }
+        set.add(type);
     }
 }

@@ -261,14 +261,6 @@ public class Utils {
         return null;
     }
 
-    public int getInitialActionPointsWithCommanderBonus(TrooperType type) {
-        int r = getInitialActionPoints(type);
-        if (type != TrooperType.COMMANDER && type != TrooperType.SCOUT) {
-            r += game.getCommanderAuraBonusActionPoints();
-        }
-        return r;
-    }
-
     public static double dist(int x1, int y1, int x2, int y2) {
         return Math.sqrt(sqrDist(x1, y1, x2, y2));
     }

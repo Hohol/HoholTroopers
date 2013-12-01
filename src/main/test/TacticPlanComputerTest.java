@@ -74,6 +74,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 self,
                 prevActions,
                 startCell,
+                killedEnemies,
                 mapIsStatic
         ).getPlan();
     }

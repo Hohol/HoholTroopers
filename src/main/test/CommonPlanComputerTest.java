@@ -4,6 +4,7 @@ import static model.TrooperStance.*;
 
 import com.sun.xml.internal.ws.encoding.soap.streaming.SOAP12NamespaceConstants;
 import model.TrooperStance;
+import model.TrooperType;
 import org.testng.annotations.Test;
 
 @Test
@@ -657,7 +658,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     }
 
 
-
     @Test
     void deadDontSee() {
         setMap(
@@ -675,4 +675,46 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.shoot(1, 0)
         );
     }
+
+    @Test
+    void testSniperBug() {
+        setMap(
+                "R2......1f"
+        );
+        ally(SNIPER).stance(KNEELING);
+        check(
+                SNIPER,
+                10,
+                MyMove.RAISE_STANCE
+        );
+    }
+
+    @Test
+    void weCanKnowTheirCommanderIsDead() {
+        setMap(
+                ".#r",
+                ".F."
+        );
+        theyDontHave(COMMANDER);
+        check(
+                FIELD_MEDIC,
+                6,
+                MyMove.MOVE_EAST, MyMove.shoot(2, 0), MyMove.MOVE_WEST
+        );
+    }
+
+    @Test
+    void weCanKnowTheirCommanderIsDeadButCheckPlayerId() {
+        setMap(
+                ".#r",
+                ".F."
+        );
+        theyDontHave(1, COMMANDER);
+        check(
+                FIELD_MEDIC,
+                6,
+                MyMove.MOVE_WEST, MyMove.MOVE_NORTH
+        );
+    }
+
 }
