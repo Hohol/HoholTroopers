@@ -1,19 +1,24 @@
 import model.TrooperStance;
 import model.TrooperType;
 
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
+    protected Set<Cell> enemyKnowsPosition;
 
     @Override
     protected void setMap(String... smap) {
         super.setMap(smap);
         enemyKnowsWhereWeAre = true;
         startCell = null;
+        enemyKnowsPosition = new HashSet<>();
     }
 
     protected void enemyDoesntKnowWhereWeAre() {
@@ -75,7 +80,24 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 prevActions,
                 startCell,
                 killedEnemies,
+                enemyKnowsPosition,
                 mapIsStatic
         ).getPlan();
+    }
+
+    protected void enemyKnowsPositionOf(TrooperType type) {
+        int x = -1, y = -1;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if(map[i][j] == Utils.getCharForTrooperType(type)) {
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        if(x == -1) {
+            throw new RuntimeException();
+        }
+        enemyKnowsPosition.add(new Cell(x,y));
     }
 }

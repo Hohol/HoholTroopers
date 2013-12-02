@@ -1,9 +1,14 @@
 import static model.TrooperType.*;
 import static model.TrooperStance.*;
+
+import model.TrooperType;
 import org.testng.annotations.Test;
+
+import java.util.Set;
 
 @Test
 public class CommonPlanComputerTest extends TacticPlanComputerTest {
+
     @Test
     void testEmpty() {
         setMap("F");
@@ -723,6 +728,19 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 SNIPER,
                 3
+        );
+    }
+
+    @Test
+    void enemyCanKnowPositionOfOurTroopersEvenIfDoesNotSeeThem() {
+        setMap(
+                "S.1......1r"
+        );
+        enemyKnowsPositionOf(SOLDIER);
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_EAST
         );
     }
 }

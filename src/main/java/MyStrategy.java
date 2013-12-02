@@ -51,6 +51,8 @@ public final class MyStrategy implements Strategy {
     static int lastTimeEnemyKnewWhereWeAre = -5;
     Cell3D startCell;
     static Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
+    static List<Cell> enemyKnowsHistoryCells = new ArrayList<>();
+    static List<Integer> enemyKnowsHistoryTime = new ArrayList<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -239,13 +241,15 @@ public final class MyStrategy implements Strategy {
 
     private List<Trooper> getDamagedTeammates() {
         List<Trooper> damagedTeammates = new ArrayList<>();
-        for (Trooper trooper : teammates) {
-            List<Integer> history = hpHistory.get(trooper.getType());
+        for (Trooper ally : teammates) {
+            List<Integer> history = hpHistory.get(ally.getType());
             if (history.size() < 2) {
                 continue;
             }
-            if (trooper.getHitpoints() < history.get(history.size() - 2)) { //todo newHp != odlHp + previousMoveHealValue
-                damagedTeammates.add(trooper);
+            if (ally.getHitpoints() < history.get(history.size() - 2)) { //todo newHp != odlHp + previousMoveHealValue
+                damagedTeammates.add(ally);
+                enemyKnowsHistoryCells.add(new Cell(ally.getX(), ally.getY()));
+                enemyKnowsHistoryTime.add(mediumMoveIndex);
             }
         }
         return damagedTeammates;
@@ -408,6 +412,7 @@ public final class MyStrategy implements Strategy {
                 prevActions,
                 startCell,
                 killedEnemies,
+                getEnemyKnowsPositions(),
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -416,6 +421,19 @@ public final class MyStrategy implements Strategy {
             enemyKnowsWhereWeAre = true;
         }
 
+        return r;
+    }
+
+    private Set<Cell> getEnemyKnowsPositions() {
+        Set<Cell> r = new HashSet<>();
+        for(int i = enemyKnowsHistoryCells.size()-1; i >= 0; i--) {
+            Cell cell = enemyKnowsHistoryCells.get(i);
+            int time = enemyKnowsHistoryTime.get(i);
+            if(mediumMoveIndex - time >= initialTeamSize) {
+                break;
+            }
+            r.add(cell);
+        }
         return r;
     }
 
@@ -674,7 +692,7 @@ public final class MyStrategy implements Strategy {
                                     wasSeenMinDist[i][j][targetStance.ordinal()],
                                     Utils.dist(i, j, ally.getX(), ally.getY())
                             );
-                            if(ally.getType() == SCOUT) {
+                            if (ally.getType() == SCOUT) {
                                 wasSeenMinDist[i][j][targetStance.ordinal()] = 0; //hack!
                             }
                         }

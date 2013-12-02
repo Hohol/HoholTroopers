@@ -37,6 +37,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     int[][][][] actionsEnemyMustSpendToHide;
     boolean[][][][] visibleByEnemy;
     int initialTeamSize;
+    Set<Cell> enemyKnowsPosition;
 
     public TacticPlanComputer(
             char[][] map,
@@ -54,6 +55,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             List<MyMove> prevActions,
             Cell3D startCell,
             Map<Long, Set<TrooperType>> killedEnemies,
+            Set<Cell> enemyKnowsPosition,
             boolean mapIsStatic
     ) {
         super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
@@ -62,6 +64,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.bonusUseForbidden = bonusUseForbidden;
         this.enemies = enemies;
         this.enemyInitiallyKnowsWhereWeAre = enemyKnowsWhereWeAre;
+        this.enemyKnowsPosition = enemyKnowsPosition;
         initialTeamSize = moveOrder.length();
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
@@ -682,7 +685,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (damage == 0) {
             return DamageAndAP.ZERO;
         }
-        if (!getEnemyCanSee(x, y, stance.ordinal())) {
+        if (!getEnemyCanSee(x, y, stance.ordinal()) && !enemyKnowsPosition.contains(new Cell(x, y))) {
             damage = (int) (damage * INVISIBLE_DAMAGE_QUOTIENT + 0.5);
         }
         return new DamageAndAP(damage, ap);
