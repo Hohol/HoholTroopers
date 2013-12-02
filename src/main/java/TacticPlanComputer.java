@@ -263,7 +263,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
                     int minShooterStance = -1;
                     for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
-                        boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, targetStance, shooterStance, enemyType);
+                        boolean canShoot = canShoot(shooterX, shooterY, targetX, targetY, shooterStance, targetStance, enemyType);
                         if (canShoot && minShooterStance == -1) {
                             minShooterStance = shooterStance;
                         }

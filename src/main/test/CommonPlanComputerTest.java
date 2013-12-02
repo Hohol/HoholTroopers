@@ -716,4 +716,16 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.MOVE_WEST, MyMove.MOVE_NORTH
         );
     }
+
+    @Test
+    void testBug2() {
+        setMap(
+                "R1.........r"
+        );
+        check(
+                SNIPER,
+                2,
+                MyMove.LOWER_STANCE
+        );
+    }
 }
