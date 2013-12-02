@@ -637,9 +637,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
 
-        if (!cur.enemyKnowsWhereWeAre) {
+        /*if (!cur.enemyKnowsWhereWeAre) {
             return;
-        }
+        }/**/
 
         DamageAndAP damage = DamageAndAP.max(
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
