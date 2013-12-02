@@ -126,11 +126,11 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     public static int leaderPriority(TrooperType type) {
         switch (type) {
             case SOLDIER:
-                return 5;
-            case COMMANDER:
                 return 4;
-            case SCOUT:
+            case COMMANDER:
                 return 3;
+            case SCOUT:
+                return 5;
             case FIELD_MEDIC:
                 return 2;
             case SNIPER:
@@ -138,6 +138,8 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         }
         throw new RuntimeException();
     }
+
+
 
     @Override
     protected void tryAllActions() {
