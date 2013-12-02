@@ -50,7 +50,7 @@ public final class MyStrategy implements Strategy {
     static int previousTeammatesSize;
     static int lastTimeEnemyKnewWhereWeAre = -5;
     Cell3D startCell;
-    Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
+    static Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
 
     static {
         for (TrooperType type : TrooperType.values()) {
