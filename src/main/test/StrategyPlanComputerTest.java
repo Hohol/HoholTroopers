@@ -198,7 +198,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                MyMove.RAISE_STANCE, MyMove.LOWER_STANCE
+                MyMove.RAISE_STANCE
         );
     }
 
@@ -350,6 +350,19 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 SOLDIER,
                 10,
                 MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_SOUTH, MyMove.MOVE_SOUTH, MyMove.MOVE_EAST
+        );
+    }
+
+
+
+    @Test
+    void testBug4() {
+        setMap(
+                "@1.S.2."
+        );
+        check(
+                SOLDIER,
+                12
         );
     }
 }

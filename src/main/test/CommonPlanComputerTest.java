@@ -1,10 +1,5 @@
 import static model.TrooperType.*;
-
 import static model.TrooperStance.*;
-
-import com.sun.xml.internal.ws.encoding.soap.streaming.SOAP12NamespaceConstants;
-import model.TrooperStance;
-import model.TrooperType;
 import org.testng.annotations.Test;
 
 @Test
@@ -486,6 +481,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "..s.S"
         );
         ally(SNIPER).stance(PRONE);
+        theyDontHave(SNIPER);
         check(
                 SNIPER,
                 2,
@@ -624,18 +620,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "........1",
                 "R2.....1f"
         );
-        check(
-                SNIPER,
-                8,
-                MyMove.MOVE_NORTH, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_SOUTH
-        );
-
-        //---------------------
-
-        setMap(
-                "........1",
-                "R2.....1f"
-        );
+        theyDontHave(SNIPER);
         check(
                 SNIPER,
                 8,
@@ -726,6 +711,18 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SNIPER,
                 2,
                 MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void thereMayBeSniperEvenIfWeDontSeeHim() {
+        setMap(
+                "R.1......1f"
+        );
+        ally(SNIPER).stance(PRONE);
+        check(
+                SNIPER,
+                3
         );
     }
 }

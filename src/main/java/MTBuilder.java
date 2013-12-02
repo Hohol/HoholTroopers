@@ -99,4 +99,9 @@ public class MTBuilder {
         this.id = id;
         return this;
     }
+
+    public MTBuilder playerId(long playerId) {
+        this.playerId = playerId;
+        return this;
+    }
 }

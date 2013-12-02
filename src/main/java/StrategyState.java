@@ -90,12 +90,12 @@ public class StrategyState extends AbstractState<StrategyState> {
     @Override
     public String toString() {
         return "StrategyState{" +
-                "actions = " + actions +
-                ", distToDestination=" + distToDestination +
+                "distToDestination=" + distToDestination +
+                ", actions=" + actions +
                 ", maxDistToTeammate=" + maxDistToTeammate +
                 ", distToLeader=" + distToLeader +
                 ", leadersDistToDestination=" + leadersDistToDestination +
-                ", newSeenCellsCnt=" + newSeenCellsCnt +
+                ", stayingInDangerArea=" + stayingInDangerArea +
                 '}';
     }
 }

@@ -155,7 +155,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
         cur.stayingInDangerArea = checkDangerArea();
-        ;
 
         if (cur.better(best, selfType)) {
             best = new StrategyState(cur);
@@ -167,7 +166,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             return false;
         }
         for (Cell3D cell : dangerArea[cur.x][cur.y][cur.stance.ordinal()]) {
-            if (visibleCnt[cell.x][cell.y][0] == 0) {
+            if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 return true;
             }
         }
