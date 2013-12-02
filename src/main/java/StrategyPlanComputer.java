@@ -49,28 +49,28 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     private void prepareDangerArea() {
         dangerArea = new List[n][m][Utils.NUMBER_OF_STANCES];
-        for (int shooterX = 0; shooterX < n; shooterX++) {
-            for (int shooterY = 0; shooterY < m; shooterY++) {
-                if (isWall(shooterX, shooterY)) {
-                    continue;
-                }
-                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+    }
+
+    private List<Cell3D> getDangerCells(int targetX, int targetY, int stance) {
+        if(dangerArea[targetX][targetY][stance] == null) {
+            List<Cell3D> r = new ArrayList<>();
+            for (int shooterX = 0; shooterX < n; shooterX++) {
+                for (int shooterY = 0; shooterY < m; shooterY++) {
+                    if (isWall(shooterX, shooterY)) {
+                        continue;
+                    }
                     if (visibleCnt[shooterX][shooterY][0] != 0) {
                         continue;
                     }
-                    for (int targetX = 0; targetX < n; targetX++) {
-                        for (int targetY = 0; targetY < m; targetY++) {
-                            if (canShoot(shooterX, shooterY, targetX, targetY, stance, stance, FIELD_MEDIC)) {
-                                if (dangerArea[targetX][targetY][stance] == null) {
-                                    dangerArea[targetX][targetY][stance] = new ArrayList<>();
-                                }
-                                dangerArea[targetX][targetY][stance].add(new Cell3D(shooterX, shooterY, stance));
-                            }
-                        }
+
+                    if (canShoot(shooterX, shooterY, targetX, targetY, stance, stance, FIELD_MEDIC)) {
+                        r.add(new Cell3D(shooterX, shooterY, stance));
                     }
                 }
             }
+            dangerArea[targetX][targetY][stance] = r;
         }
+        return dangerArea[targetX][targetY][stance];
     }
 
     private void chooseLeader() {
@@ -140,7 +140,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     }
 
 
-
     @Override
     protected void tryAllActions() {
         tryMove();
@@ -162,10 +161,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     }
 
     private boolean checkDangerArea() {
-        if (dangerArea[cur.x][cur.y][cur.stance.ordinal()] == null) {
-            return false;
-        }
-        for (Cell3D cell : dangerArea[cur.x][cur.y][cur.stance.ordinal()]) {
+        for (Cell3D cell : getDangerCells(cur.x,cur.y,cur.stance.ordinal())) {
             if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 return true;
             }
