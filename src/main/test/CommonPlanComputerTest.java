@@ -716,5 +716,4 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.MOVE_WEST, MyMove.MOVE_NORTH
         );
     }
-
 }

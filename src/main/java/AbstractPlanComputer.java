@@ -26,8 +26,8 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     long recursiveCallsCnt;
     BonusType[][] bonuses;
     MutableTrooper[][] troopers;
-    int[][] visibleCnt;
-    static List<Cell>[][][] cellsVisibleFrom;
+    int[][][] visibleCnt;
+    static List<Cell3D>[][][] cellsVisibleFrom;
     MutableTrooper self;    //for immutable fields only
     boolean mapIsStatic;
     List<MyMove> prevActions;
@@ -170,12 +170,12 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         if (cur.actionPoints == 0) {
             return;
         }
-        for (Cell cell : cellsVisibleFrom[cur.x][cur.y][cur.stance.ordinal()]) {
-            if (visibleCnt[cell.x][cell.y] == 0) {
+        for (Cell3D cell : cellsVisibleFrom[cur.x][cur.y][cur.stance.ordinal()]) {
+            if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 cur.newSeenCellsCnt += scoutingValue[cell.x][cell.y];
             }
-            visibleCnt[cell.x][cell.y] += d;
-            if (visibleCnt[cell.x][cell.y] == 0) {
+            visibleCnt[cell.x][cell.y][cell.stance] += d;
+            if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 cur.newSeenCellsCnt -= scoutingValue[cell.x][cell.y];
             }
         }
@@ -200,7 +200,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         scoutingValue = new int[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                scoutingValue[i][j] = getScoutingValue(i,j);
+                scoutingValue[i][j] = getScoutingValue(i, j);
             }
         }
     }
@@ -268,19 +268,21 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         markVisibleInitially(x, y, stance, visionRange);
     }
 
-    private void markVisibleInitially(int x, int y, int stance, int visionRange) {
+    private void markVisibleInitially(int x, int y, int viewerStance, int visionRange) {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                if (reachable(x, y, i, j, stance, visionRange)) {
-                    visibleCnt[i][j] = 1;
+                for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
+                    if (reachable(x, y, i, j, Math.min(viewerStance, targetStance), visionRange)) {
+                        visibleCnt[i][j][targetStance] = 1;
+                    }
                 }
             }
         }
     }
 
-    protected List<Cell> getCellsVisibleFrom(int x, int y, int stance) {
+    protected List<Cell3D> getCellsVisibleFrom(int x, int y, int viewerStance) {
         int range = utils.getVisionRange(selfType);
-        List<Cell> r = new ArrayList<>();
+        List<Cell3D> r = new ArrayList<>();
         int minI = Math.max(0, x - range);
         int maxI = Math.min(n - 1, x + range);
         int minJ = Math.max(0, y - range);
@@ -290,8 +292,10 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
                 if (isWall(i, j)) {
                     continue;
                 }
-                if (reachable(x, y, i, j, stance, range)) {
-                    r.add(new Cell(i, j));
+                for (int targetStance = 0; targetStance < Utils.NUMBER_OF_STANCES; targetStance++) {
+                    if (reachable(x, y, i, j, Math.min(viewerStance, targetStance), range)) {
+                        r.add(new Cell3D(i, j, targetStance));
+                    }
                 }
             }
         }
@@ -320,7 +324,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected void prepareVisibleInitially() {
-        visibleCnt = new int[n][m];
+        visibleCnt = new int[n][m][Utils.NUMBER_OF_STANCES];
         int x = cur.x, y = cur.y, stance = cur.stance.ordinal();
         for (int i = prevActions.size() - 1; i >= 0; i--) {
             Move move = prevActions.get(i).getMove();

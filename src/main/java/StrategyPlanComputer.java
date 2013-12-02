@@ -55,7 +55,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
                     continue;
                 }
                 for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                    if (visibleCnt[shooterX][shooterY] != 0) {
+                    if (visibleCnt[shooterX][shooterY][0] != 0) {
                         continue;
                     }
                     for (int targetX = 0; targetX < n; targetX++) {
@@ -167,7 +167,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             return false;
         }
         for (Cell3D cell : dangerArea[cur.x][cur.y][cur.stance.ordinal()]) {
-            if (visibleCnt[cell.x][cell.y] == 0) {
+            if (visibleCnt[cell.x][cell.y][0] == 0) {
                 return true;
             }
         }
