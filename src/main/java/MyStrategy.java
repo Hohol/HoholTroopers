@@ -676,6 +676,9 @@ public final class MyStrategy implements Strategy {
                                     wasSeenMinDist[i][j][targetStance.ordinal()],
                                     Utils.dist(i, j, ally.getX(), ally.getY())
                             );
+                            if(ally.getType() == SCOUT) {
+                                wasSeenMinDist[i][j][targetStance.ordinal()] = 0; //hack!
+                            }
                         }
                     }
                 }
