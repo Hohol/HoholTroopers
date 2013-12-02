@@ -187,6 +187,28 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         }
         prepareMaxDamageEnemyCanDeal();
         prepareVisibleByEnemy();
+        printMap();
+    }
+
+    private void printMap() {
+        if (!MyStrategy.local) {
+            return;
+        }
+        char[][] mapToPrint = new char[n][m];
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(map[i], 0, mapToPrint[i], 0, m);
+        }
+        mapToPrint[cur.x][cur.y] = Utils.getCharForTrooperType(selfType);
+        for (MutableTrooper enemy : enemiesWithImaginary) {
+            mapToPrint[enemy.getX()][enemy.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(enemy.getType()));
+        }
+        for (int j = 0; j < m; j++) {
+            for (int i = 0; i < n; i++) {
+                System.out.print(mapToPrint[i][j]);
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 
     private List<MutableTrooper> createImaginarySnipers() {

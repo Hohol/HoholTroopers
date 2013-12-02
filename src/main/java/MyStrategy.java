@@ -390,8 +390,6 @@ public final class MyStrategy implements Strategy {
         boolean healForbidden = (self.getType() == FIELD_MEDIC && teammates.size() == 1);
         boolean bonusUseForbidden = !seeSomeEnemy() && medicIsAlive();
 
-        boolean oldEnemyKnowsWhereWeAre = enemyKnowsWhereWeAre;
-
         enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
 
         TacticPlanComputer computer = new TacticPlanComputer(
