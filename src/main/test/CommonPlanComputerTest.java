@@ -743,4 +743,20 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.MOVE_EAST
         );
     }
+
+    @Test
+    void testImaginarySniper() {
+        setMap(
+                "S##",
+                ".f."
+        );
+        ally(SOLDIER).stance(PRONE).hp(95);
+        enemy(FIELD_MEDIC).hp(1);
+        check(
+                SOLDIER,
+                10,
+                "SFCR",
+                MyMove.RAISE_STANCE, MyMove.RAISE_STANCE, MyMove.MOVE_SOUTH, MyMove.MOVE_NORTH
+        );
+    }
 }

@@ -297,9 +297,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void prepareVisibleByEnemy() {
-        visibleByEnemy = new boolean[enemies.size()][n][m][Utils.NUMBER_OF_STANCES];
-        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-            MutableTrooper enemy = enemies.get(enemyIndex);
+        visibleByEnemy = new boolean[enemiesWithImaginary.size()][n][m][Utils.NUMBER_OF_STANCES];
+        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
+            MutableTrooper enemy = enemiesWithImaginary.get(enemyIndex);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < m; j++) {
                     for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
@@ -615,7 +615,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (enemyInitiallyKnowsWhereWeAre) {
             return true;
         }
-        for (MutableTrooper enemy : enemies) {
+        for (MutableTrooper enemy : enemiesWithImaginary) {
             if (!enemy.isAlive()) {
                 continue;
             }
@@ -692,8 +692,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private boolean getEnemyCanSee(int x, int y, int stance) {
-        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-            if (enemies.get(enemyIndex).isAlive() && visibleByEnemy[enemyIndex][x][y][stance]) {
+        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
+            if (enemiesWithImaginary.get(enemyIndex).isAlive() && visibleByEnemy[enemyIndex][x][y][stance]) {
                 return true;
             }
         }
