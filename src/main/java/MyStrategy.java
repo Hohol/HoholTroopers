@@ -683,8 +683,8 @@ public final class MyStrategy implements Strategy {
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
                 for (TrooperStance targetStance : TrooperStance.values()) {
+                    wasSeenMinDist[i][j][targetStance.ordinal()] = 1000;
                     for (Trooper ally : teammates) {
-                        wasSeenMinDist[i][j][targetStance.ordinal()] = 1000;
                         if (world.isVisible(ally.getVisionRange(), ally.getX(), ally.getY(), ally.getStance(), i, j, targetStance)) {
                             canSeeRightNow[i][j][targetStance.ordinal()] = true;
                             wasSeenOnCurrentBigMove[i][j][targetStance.ordinal()] = true;
