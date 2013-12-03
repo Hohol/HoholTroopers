@@ -176,7 +176,7 @@ public class AttackTest extends TacticPlanComputerTest {
                 ".1."
         );
         enemy(COMMANDER).hp(1);
-
+        theyDontHave(FIELD_MEDIC);
         check(
                 FIELD_MEDIC,
                 12,
@@ -239,6 +239,7 @@ public class AttackTest extends TacticPlanComputerTest {
         );
         enemy(COMMANDER).hp(25);
         enemy(FIELD_MEDIC).hp(25);
+        theyDontHave(SOLDIER);
 
         ally(SOLDIER).fieldRation();
         check(
@@ -256,6 +257,7 @@ public class AttackTest extends TacticPlanComputerTest {
 
         enemy(COMMANDER).hp(9);
         enemy(SOLDIER).hp(9);
+        theyDontHave(FIELD_MEDIC);
 
         ally(FIELD_MEDIC).fieldRation();
 
@@ -321,6 +323,7 @@ public class AttackTest extends TacticPlanComputerTest {
         enemy(FIELD_MEDIC).hp(25);
 
         ally(SOLDIER).stance(KNEELING);
+        theyDontHave(SOLDIER);
 
         check(
                 SOLDIER,
@@ -337,6 +340,7 @@ public class AttackTest extends TacticPlanComputerTest {
         enemy(FIELD_MEDIC).hp(25);
 
         ally(SOLDIER).fieldRation().stance(KNEELING);
+        theyDontHave(SOLDIER);
 
         check(
                 SOLDIER,
@@ -506,6 +510,7 @@ public class AttackTest extends TacticPlanComputerTest {
                 "S..C..#",
                 "c......"
         );
+        theyDontHave(SOLDIER);
         check(
                 COMMANDER,
                 5,

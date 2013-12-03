@@ -200,6 +200,8 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "F.S...",
                 "......"
         );
+        theyDontHave(SOLDIER);
+        theyDontHave(COMMANDER);
 
         check(
                 FIELD_MEDIC,
@@ -276,7 +278,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "3F3...",
                 "S....."
         );
-
+        theyDontHave(COMMANDER);
         check(
                 FIELD_MEDIC,
                 2
@@ -332,6 +334,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "........f"
         );
         ally(SOLDIER).fieldRation().stance(PRONE);
+        theyDontHave(SOLDIER);
         check(
                 SOLDIER,
                 12,
@@ -700,6 +703,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 ".F."
         );
         theyDontHave(1, COMMANDER);
+        theyDontHave(FIELD_MEDIC);
         check(
                 FIELD_MEDIC,
                 6,
@@ -727,7 +731,8 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         ally(SNIPER).stance(PRONE);
         check(
                 SNIPER,
-                3
+                3,
+                "RFSC"
         );
     }
 
@@ -757,6 +762,43 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 10,
                 "SFCR",
                 MyMove.RAISE_STANCE, MyMove.RAISE_STANCE, MyMove.MOVE_SOUTH, MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testImaginaryNotOnlySniper() {
+        setMap(
+                "S1...#f"
+        );
+        theyDontHave(SNIPER);
+        check(
+                SOLDIER,
+                4,
+                "RFCST",
+                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void imaginaryEnemiesMustBeNearByBfsDist() {
+        setMap(
+                "S.....f....",
+                ".##########",
+                "######.####"
+        );
+        enemy(FIELD_MEDIC).hp(1);
+        ally(SOLDIER).hp(95);
+        enemyKnowsPositionOf(SOLDIER);
+
+        theyDontHave(COMMANDER);
+        theyDontHave(SOLDIER);
+        theyDontHave(SCOUT);
+
+        check(
+                SOLDIER,
+                4,
+                "SFRTC",
+                MyMove.MOVE_SOUTH
         );
     }
 }

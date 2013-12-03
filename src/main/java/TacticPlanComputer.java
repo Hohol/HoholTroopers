@@ -38,6 +38,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean[][][][] visibleByEnemy;
     int initialTeamSize;
     Set<Cell> enemyKnowsPosition;
+    String moveOrder;
 
     public TacticPlanComputer(
             char[][] map,
@@ -66,6 +67,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.enemyInitiallyKnowsWhereWeAre = enemyKnowsWhereWeAre;
         this.enemyKnowsPosition = enemyKnowsPosition;
         initialTeamSize = moveOrder.length();
+        this.moveOrder = moveOrder;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);
@@ -214,19 +216,35 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         System.out.println();
     }
 
-    private List<MutableTrooper> createImaginarySnipers() {
-        List<MutableTrooper> r = new ArrayList<>();
-        if (initialTeamSize == 3) {
+    private List<MutableTrooper> createImaginaryEnemies() {
+        if (initialTeamSize <= 3) { // in first round, enemies could already be killed, so dont add anybody
+            return new ArrayList<>();
+        }
+        if (initialTeamSize <= 4) { // in second round, enemies still could be killed by someone, but sniper is just too dangerous
+            return createImaginary(SNIPER);
+        }/**/
+        if (initialTeamSize <= 5) { // in finals no one could kill them but us =(
+            List<MutableTrooper> r = new ArrayList<>();
+            for (int i = 0; i < moveOrder.length(); i++) {
+                TrooperType type = Utils.getTrooperTypeByChar(moveOrder.charAt(i));
+                r.addAll(createImaginary(type));
+            }
             return r;
         }
+        throw new RuntimeException();
+    }
+
+    private List<MutableTrooper> createImaginary(TrooperType type) {
         Set<Long> playerIds = new HashSet<>();
         for (MutableTrooper enemy : enemies) {
             playerIds.add(enemy.getPlayerId());
         }
+        List<MutableTrooper> r = new ArrayList<>();
         for (Long playerId : playerIds) {
-            if (!sniperPositionIsKnown(playerId) && sniperIsAlive(playerId)) {
-                MutableTrooper trooper = createImaginarySniper(playerId);
+            if (!positionIsKnown(playerId, type) && isAlive(playerId, type)) {
+                MutableTrooper trooper = createImaginary(playerId, type);
                 if (trooper != null) {
+                    map[trooper.getX()][trooper.getY()] = Character.toLowerCase(Utils.getCharForTrooperType(trooper.getType()));
                     r.add(trooper);
                 }
             }
@@ -234,17 +252,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return r;
     }
 
-    private boolean sniperPositionIsKnown(long playerId) {
+    private boolean positionIsKnown(long playerId, TrooperType type) {
         for (MutableTrooper enemy : enemies) {
-            if (enemy.getPlayerId() == playerId && enemy.getType() == SNIPER) {
+            if (enemy.getPlayerId() == playerId && enemy.getType() == type) {
                 return true;
             }
         }
         return false;
     }
 
-    private MutableTrooper createImaginarySniper(long playerId) {
-        Cell bestPos = getSupposedPosition(playerId);
+    private MutableTrooper createImaginary(long playerId, TrooperType type) {
+        Cell bestPos = getSupposedImaginaryEnemyPosition(playerId);
         if (bestPos == null) {
             return null;
         }
@@ -254,15 +272,15 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 .x(bestPos.x)
                 .y(bestPos.y)
                 .playerId(playerId)
-                .type(SNIPER)
+                .type(type)
                 .stance(PRONE)
                 .build();
         return mt;
     }
 
-    private Cell getSupposedPosition(Long playerId) { //todo dont place few imaginary enemies to one cell
+    private Cell getSupposedImaginaryEnemyPosition(Long playerId) {
         Cell bestPos = null;
-        int minDist = 100;
+        int minDist = Integer.MAX_VALUE;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 if (!isFree(i, j)) {
@@ -272,11 +290,12 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     if (visibleCnt[i][j][stance] != 0) {
                         continue;
                     }
-                    for (MutableTrooper enemy : enemies) {
+                    for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
+                        MutableTrooper enemy = enemies.get(enemyIndex);
                         if (enemy.getPlayerId() != playerId) {
                             continue;
                         }
-                        int dist = Utils.manhattanDist(enemy.getX(), enemy.getY(), i, j);
+                        int dist = enemyBfs.get(enemyIndex)[i][j] * 100 + Utils.manhattanDist(enemy.getX(), enemy.getY(), i, j);
                         if (dist < minDist) {
                             minDist = dist;
                             bestPos = new Cell(i, j);
@@ -288,12 +307,12 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return bestPos;
     }
 
-    private boolean sniperIsAlive(Long playerId) {
+    private boolean isAlive(Long playerId, TrooperType type) {
         Set<TrooperType> killed = killedEnemies.get(playerId);
         if (killed == null) {
             return true;
         }
-        return !killed.contains(SNIPER);
+        return !killed.contains(type);
     }
 
     private void prepareVisibleByEnemy() {
@@ -329,10 +348,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void prepareMaxDamageEnemyCanDeal() {
-        enemiesWithImaginary = new ArrayList<>(enemies);
-        enemiesWithImaginary.addAll(createImaginarySnipers());
-
-        maxDamageEnemyCanDeal = new DamageAndAP[enemiesWithImaginary.size()][n][m][Utils.NUMBER_OF_STANCES];
+        enemyBfs = new ArrayList<>();
         char[][] mapWithoutEnemies = new char[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
@@ -342,10 +358,29 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 }
             }
         }
-        enemyBfs = new ArrayList<>();
-        for (MutableTrooper enemy : enemiesWithImaginary) {
+
+        for (MutableTrooper enemy : enemies) {
             enemyBfs.add(Utils.bfsByMap(mapWithoutEnemies, enemy.getX(), enemy.getY()));
         }
+
+        enemiesWithImaginary = new ArrayList<>(enemies);
+        enemiesWithImaginary.addAll(createImaginaryEnemies());
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                mapWithoutEnemies[i][j] = map[i][j];
+                if (Utils.isEnemyChar(map[i][j])) {
+                    mapWithoutEnemies[i][j] = '.';
+                }
+            }
+        }
+
+        for (int i = enemies.size(); i < enemiesWithImaginary.size(); i++) {
+            MutableTrooper enemy = enemiesWithImaginary.get(i);
+            enemyBfs.add(Utils.bfsByMap(mapWithoutEnemies, enemy.getX(), enemy.getY()));
+        }
+
+        maxDamageEnemyCanDeal = new DamageAndAP[enemiesWithImaginary.size()][n][m][Utils.NUMBER_OF_STANCES];
     }
 
     private DamageAndAP getDamageAndAP(int enemyIndex, int targetX, int targetY, int targetStance) {
@@ -907,7 +942,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (!inField(ex, ey)) {
             return;
         }
-        if (!Utils.isEnemyChar(map[ex][ey])) {
+        if (!enemyInCell(ex, ey)) {
             return;
         }
 
@@ -923,11 +958,15 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         enemy.decHp(damage);
     }
 
+    private boolean enemyInCell(int ex, int ey) {
+        return (troopers[ex][ey] != null && !troopers[ex][ey].isTeammate());
+    }
+
     private void undealDamage(int ex, int ey, int damage) {
         if (!inField(ex, ey)) {
             return;
         }
-        if (!Utils.isEnemyChar(map[ex][ey])) {
+        if (!enemyInCell(ex, ey)) {
             return;
         }
 

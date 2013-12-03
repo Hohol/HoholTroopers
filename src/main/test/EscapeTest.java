@@ -258,6 +258,7 @@ public class EscapeTest extends TacticPlanComputerTest {
         );
 
         enemy(SOLDIER).stance(PRONE);
+        theyDontHave(FIELD_MEDIC);
 
         check(
                 SOLDIER,
