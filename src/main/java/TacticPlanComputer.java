@@ -220,10 +220,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (initialTeamSize <= 3) { // in first round, enemies could already be killed, so dont add anybody
             return new ArrayList<>();
         }
-        if (initialTeamSize <= 4) { // in second round, enemies still could be killed by someone, but sniper is just too dangerous
+        if (initialTeamSize == 4) { // in second round, enemies still could be killed by someone, but sniper is just too dangerous
             return createImaginary(SNIPER);
         }/**/
-        if (initialTeamSize <= 5) { // in finals no one could kill them but us =(
+        if (initialTeamSize == 5) { // in finals no one could kill them but us =(
             List<MutableTrooper> r = new ArrayList<>();
             for (int i = 0; i < moveOrder.length(); i++) {
                 TrooperType type = Utils.getTrooperTypeByChar(moveOrder.charAt(i));
@@ -716,6 +716,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             DamageAndAP p = getDamageAndAP(enemyIndex, x, y, stance.ordinal());
             damage += p.damage;
             ap += p.ap;
+            if(p.damage == 0) {
+                ap += 100;
+            }
         }
         if (damage == 0) {
             return DamageAndAP.ZERO;

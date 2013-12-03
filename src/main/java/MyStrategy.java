@@ -312,7 +312,7 @@ public final class MyStrategy implements Strategy {
 
     @SuppressWarnings("unused")
     boolean stopOn(int moveIndex, TrooperType type, int actionsPoints) {
-        return stopOn(moveIndex, type) && self.getActionPoints() >= actionsPoints;
+        return stopOn(moveIndex, type) && self.getActionPoints() <= actionsPoints;
     }
 
     private boolean shouldFightOrHeal() {

@@ -450,20 +450,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testBug3() {
-        setMap(
-                ".F...s#f"
-        );
-        ally(FIELD_MEDIC).hp(1);
-        enemy(FIELD_MEDIC).grenade();
-        check(
-                FIELD_MEDIC,
-                2,
-                MyMove.shoot(5, 0)
-        );
-    }
-
-    @Test
     void dontFuckingSuicide() {
         setMap(
                 "####C#",
@@ -799,6 +785,20 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 4,
                 "SFRTC",
                 MyMove.MOVE_SOUTH
+        );
+    }
+
+    @Test
+    void dunnoHowToNameIt() {
+        setMap(
+                "s.........",
+                "s........s",
+                "####.S####"
+        );
+        ally(SOLDIER).hp(1);
+        check(
+                SOLDIER,
+                2
         );
     }
 }
