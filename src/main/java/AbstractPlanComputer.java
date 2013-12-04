@@ -13,7 +13,7 @@ import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
 
 public abstract class AbstractPlanComputer<S extends AbstractState> {
-    protected static final long MAX_RECURSIVE_CALLS = 1000000;
+    protected static final long MAX_RECURSIVE_CALLS = 500000;
     protected final int m;
     protected final int n;
     protected final char[][] map;
