@@ -515,19 +515,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         int shootCost = utils.getShootCost(type);
         for (int shootStance = minStance; shootStance <= maxStance; shootStance++) {
             int oneShotDamage = canShoot ? utils.getShootDamage(type, TrooperStance.values()[shootStance]) : 0;
-            for (int walkStance = Math.max(curStance, shootStance); walkStance <= maxStance; walkStance++) {
-                int stanceChangeCnt = walkStance - curStance + walkStance - shootStance;
-                int remainingActionPoints = actionPoints
-                        - stanceChangeCnt * game.getStanceChangeCost()
-                        - dist * utils.getMoveCost(TrooperStance.values()[walkStance]);
-                int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, shootCost, canThrowGrenade, grenadeDamage);
-                if (damage > maxDamage) {
-                    maxDamage = damage;
-                    bestAp = actionPoints - remainingActionPoints;
-                }
-
-                maxDamage = Math.max(maxDamage, damage);
+            int remainingActionPoints = actionPoints - getApToMove(dist, curStance, shootStance);
+            int damage = getMaxDamage(remainingActionPoints, canShoot, oneShotDamage, shootCost, canThrowGrenade, grenadeDamage);
+            if (damage > maxDamage) {
+                maxDamage = damage;
+                bestAp = actionPoints - remainingActionPoints;
             }
+
+            maxDamage = Math.max(maxDamage, damage);
         }
         return new DamageAndAP(maxDamage, bestAp);
     }
