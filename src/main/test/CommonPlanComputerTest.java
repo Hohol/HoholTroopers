@@ -878,4 +878,17 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.MOVE_SOUTH, MyMove.MOVE_SOUTH, MyMove.MOVE_EAST
         );
     }
+
+    @Test
+    void comeCloserToThrowGrenade() {
+        setMap(
+                "S.....#s"
+        );
+        ally(SOLDIER).grenade();
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_EAST
+        );
+    }
 }

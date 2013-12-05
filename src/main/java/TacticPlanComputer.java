@@ -560,7 +560,8 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     int minStance = -1;
                     int maxStance = -1;
                     for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        if (canShoot(i, j, enemy.getX(), enemy.getY(), stance, enemy.getStance().ordinal(), selfType)) {
+                        if (canShoot(i, j, enemy.getX(), enemy.getY(), stance, enemy.getStance().ordinal(), selfType)
+                                || cur.holdingGrenade && canThrowGrenade(i, j, enemy.getX(), enemy.getY())) {
                             if (minStance == -1) {
                                 minStance = stance;
                             }
