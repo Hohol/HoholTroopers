@@ -59,10 +59,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
                     if (isWall(shooterX, shooterY)) {
                         continue;
                     }
-                    if (visibleCnt[shooterX][shooterY][0] != 0) {
-                        continue;
-                    }
-
                     if (canShoot(shooterX, shooterY, targetX, targetY, stance, stance, FIELD_MEDIC)) {
                         r.add(new Cell3D(shooterX, shooterY, stance));
                     }
