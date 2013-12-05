@@ -45,6 +45,10 @@ public class StrategyState extends AbstractState<StrategyState> {
         }
         //--
 
+        if(stayingInDangerArea != old.stayingInDangerArea) {
+            return !stayingInDangerArea;
+        }
+
         if (holdingMedikit != old.holdingMedikit) {
             return holdingMedikit;
         }
@@ -60,10 +64,6 @@ public class StrategyState extends AbstractState<StrategyState> {
 
         if (distToLeader != old.distToLeader) {
             return distToLeader < old.distToLeader;
-        }
-
-        if(stayingInDangerArea != old.stayingInDangerArea) {
-            return !stayingInDangerArea;
         }
 
         if (distToDestination != old.distToDestination) {

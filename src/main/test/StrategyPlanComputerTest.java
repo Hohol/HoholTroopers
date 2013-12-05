@@ -116,9 +116,8 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     void followLeader() {
         setMap(
                 "F....",
-                ".#...",
-                ".S..@",
-                "....."
+                ".#C..",
+                ".S..@"
         );
         check(
                 FIELD_MEDIC,
@@ -146,14 +145,13 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void followSomeoneElseToAvoidCurvedPath() {
         setMap(
-                ".....",
-                ".#...",
-                ".#...",
-                ".#...",
-                ".#...",
-                ".#...",
-                "FRS.@",
-                ".#..."
+                "....",
+                ".#..",
+                ".#.R",
+                ".#..",
+                ".#..",
+                ".#..",
+                "FRS@"
         );
         check(
                 FIELD_MEDIC,
@@ -177,7 +175,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     @Test
     void simpleScouting() {
         setMap(
-                ".#....",
+                ".#####",
                 ".FS..@"
         );
         check(
@@ -198,7 +196,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 4,
-                MyMove.RAISE_STANCE
+                MyMove.RAISE_STANCE, MyMove.LOWER_STANCE
         );
     }
 
@@ -314,7 +312,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     void rememberPath() {
         setMap(
                 ".FS@",
-                ".#.."
+                ".###"
         );
 
         setPrevActions(MyMove.MOVE_EAST);
@@ -329,7 +327,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     void avoidDangerArea() {
         setMap(
                 "##.",
-                "##.",
+                "##1",
                 "S.@"
         );
         setVisible(2, 0, 1, 2, PRONE);
@@ -353,16 +351,17 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         );
     }
 
-
-
     @Test
-    void testBug4() {
+    void newDangerArea() {
         setMap(
-                "@1.S.2."
+            "..........",
+            "1111111111",
+            "S........@"
         );
         check(
                 SOLDIER,
-                12
+                12,
+                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
 }

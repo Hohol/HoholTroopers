@@ -1,7 +1,4 @@
-import static model.ActionType.*;
-
 import model.BonusType;
-import model.Move;
 import model.TrooperType;
 
 import static model.TrooperType.*;
@@ -51,22 +48,51 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         dangerArea = new List[n][m][Utils.NUMBER_OF_STANCES];
     }
 
-    private List<Cell3D> getDangerCells(int targetX, int targetY, int stance) {
-        if(dangerArea[targetX][targetY][stance] == null) {
+    private List<Cell3D> getDangerCells(int targetX, int targetY, int targetStance) {
+        if (dangerArea[targetX][targetY][targetStance] == null) {
             List<Cell3D> r = new ArrayList<>();
             for (int shooterX = 0; shooterX < n; shooterX++) {
                 for (int shooterY = 0; shooterY < m; shooterY++) {
-                    if (isWall(shooterX, shooterY)) {
-                        continue;
-                    }
-                    if (canShoot(shooterX, shooterY, targetX, targetY, stance, stance, FIELD_MEDIC)) {
-                        r.add(new Cell3D(shooterX, shooterY, stance));
+                    for (int shooterStance = 0; shooterStance < Utils.NUMBER_OF_STANCES; shooterStance++) {
+                        if (isWall(shooterX, shooterY)) {
+                            continue;
+                        }
+                        int shootRange = 4;
+                        if (!reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange)) {
+                            continue;
+                        }
+                        boo(r, shooterX, shooterY, shooterStance);
+                        boo(r, shooterX + 1, shooterY, shooterStance);
+                        boo(r, shooterX - 1, shooterY, shooterStance);
+                        boo(r, shooterX, shooterY + 1, shooterStance);
+                        boo(r, shooterX, shooterY - 1, shooterStance);
+                        boo(r, shooterX, shooterY, shooterStance - 1);
                     }
                 }
             }
-            dangerArea[targetX][targetY][stance] = r;
+            dangerArea[targetX][targetY][targetStance] = r;
         }
-        return dangerArea[targetX][targetY][stance];
+        return dangerArea[targetX][targetY][targetStance];
+    }
+
+    private void boo(List<Cell3D> r, int shooterX, int shooterY, int shooterStance) {
+        if (!inField(shooterX, shooterY)) {
+            return;
+        }
+        if (shooterStance < 0) {
+            return;
+        }
+        if (isWall(shooterX, shooterY)) {
+            return;
+        }
+        r.add(new Cell3D(shooterX, shooterY, shooterStance));
+    }
+
+    private boolean checkCanShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType fieldMedic) {
+        if (!inField(shooterX, shooterY) || shooterStance < 0 || shooterStance >= Utils.NUMBER_OF_STANCES) {
+            return false;
+        }
+        return canShoot(shooterX, shooterY, targetX, targetY, shooterStance, targetStance, FIELD_MEDIC);
     }
 
     private void chooseLeader() {
@@ -149,15 +175,20 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
+        if (stopOn(MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_SOUTH, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE)) {
+            int x = 0;
+            x++;
+        }
         cur.stayingInDangerArea = checkDangerArea();
 
         if (cur.better(best, selfType)) {
+            Utils.log(cur);
             best = new StrategyState(cur);
         }
     }
 
     private boolean checkDangerArea() {
-        for (Cell3D cell : getDangerCells(cur.x,cur.y,cur.stance.ordinal())) {
+        for (Cell3D cell : getDangerCells(cur.x, cur.y, cur.stance.ordinal())) {
             if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 return true;
             }
