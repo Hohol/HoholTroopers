@@ -234,23 +234,6 @@ public class EscapeTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testGoToFightIfTeammateCanBeKilled() {
-        setMap(
-                ".C......s",
-                "S#......."
-        );
-
-        ally(SOLDIER).hp(1);
-        ally(COMMANDER).hp(1);
-
-        check(
-                SOLDIER,
-                2,
-                MyMove.MOVE_NORTH
-        );
-    }
-
-    @Test
     void testBugWithEnemyStance() {
         setMap(
                 ".......",
@@ -315,7 +298,7 @@ public class EscapeTest extends TacticPlanComputerTest {
     void testConsiderMoveOrder() {
         setMap(
                 "S.....cs",
-                ".C#....."
+                ".C1....."
         );
         check(
                 COMMANDER,

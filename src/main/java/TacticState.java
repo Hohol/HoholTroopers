@@ -17,7 +17,8 @@ class TacticState extends AbstractState<TacticState> {
     int numberOfTeammatesMedicCanReach;
     public boolean enemyKnowsWhereWeAre;
     int actionsEnemyMustSpendToHide;
-    boolean enemyCanSeeOrKnowsPosition;
+    int apEnemyNeedsToSeeMe;
+    boolean enemyCanKillMe;
 
     protected TacticState(TacticState cur) {
         super(cur);
@@ -37,7 +38,8 @@ class TacticState extends AbstractState<TacticState> {
         this.numberOfTeammatesMedicCanReach = cur.numberOfTeammatesMedicCanReach;
         this.enemyKnowsWhereWeAre = cur.enemyKnowsWhereWeAre;
         this.actionsEnemyMustSpendToHide = cur.actionsEnemyMustSpendToHide;
-        this.enemyCanSeeOrKnowsPosition = cur.enemyCanSeeOrKnowsPosition;
+        this.apEnemyNeedsToSeeMe = cur.apEnemyNeedsToSeeMe;
+        this.enemyCanKillMe = cur.enemyCanKillMe;
     }
 
     public TacticState(MutableTrooper self) {
@@ -62,6 +64,16 @@ class TacticState extends AbstractState<TacticState> {
 
         if (killDiff != oldKillDiff) {
             return killDiff > oldKillDiff;
+        }
+
+        if (enemyCanKillMe != old.enemyCanKillMe) {
+            return !enemyCanKillMe;
+        }
+
+        if (enemyCanKillMe) {
+            if (apEnemyNeedsToSeeMe != old.apEnemyNeedsToSeeMe) {
+                return apEnemyNeedsToSeeMe > old.apEnemyNeedsToSeeMe;
+            }
         }
 
         if (enemyKnowsWhereWeAre != old.enemyKnowsWhereWeAre) {
@@ -119,10 +131,6 @@ class TacticState extends AbstractState<TacticState> {
             if (msb != 0) {
                 return msb < 0;
             }
-        }
-
-        if (enemyCanSeeOrKnowsPosition != old.enemyCanSeeOrKnowsPosition) {
-            return !enemyCanSeeOrKnowsPosition;
         }
 
         if (focusFireParameter != old.focusFireParameter) {
@@ -185,6 +193,8 @@ class TacticState extends AbstractState<TacticState> {
                 ", numberOfTeammatesMedicCanReach=" + numberOfTeammatesMedicCanReach +
                 ", enemyKnowsWhereWeAre=" + enemyKnowsWhereWeAre +
                 ", actionsEnemyMustSpendToHide=" + actionsEnemyMustSpendToHide +
+                ", enemyCanKillMe=" + enemyCanKillMe +
+                ", apEnemyNeedsToSeeMe=" + apEnemyNeedsToSeeMe +
                 '}';
     }
 }

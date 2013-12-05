@@ -36,6 +36,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean enemyInitiallyKnowsWhereWeAre;
     int[][][][] actionsEnemyMustSpendToHide;
     boolean[][][][] visibleByEnemy;
+    int[][][][] apEnemyNeedsToSeeMe;
     int initialTeamSize;
     Set<Cell> enemyKnowsPosition;
     int mediumMoveIndex;
@@ -195,7 +196,21 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         }
         prepareMaxDamageEnemyCanDeal();
         prepareVisibleByEnemy();
+        prepareStepsEnemyMustMakeToSeeMe();
         printMap();
+    }
+
+    private void prepareStepsEnemyMustMakeToSeeMe() {
+        apEnemyNeedsToSeeMe = new int[enemiesWithImaginary.size()][n][m][Utils.NUMBER_OF_STANCES];
+        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                        apEnemyNeedsToSeeMe[enemyIndex][i][j][stance] = -1;
+                    }
+                }
+            }
+        }
     }
 
     private void printMap() {
@@ -443,7 +458,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return r;
     }
 
-    private boolean commanderIsAlive(MutableTrooper enemy) {
+    private boolean commanderIsAlive(MutableTrooper enemy) { //todo check if just killed
         if (!killedEnemies.containsKey(enemy.getPlayerId())) {
             return true;
         }
@@ -593,12 +608,80 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
         cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
         cur.actionsEnemyMustSpendToHide = actionsEnemyMustSpendToHide();
-        cur.enemyCanSeeOrKnowsPosition = getEnemyCanSeeOrKnowsPosition(cur.x, cur.y, cur.stance.ordinal());
+        cur.apEnemyNeedsToSeeMe = getApEnemyNeedsToSeeMe();
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
             Utils.log(cur);
             best = new TacticState(cur);
+        }
+    }
+
+    private int getApEnemyNeedsToSeeMe() {
+        int mi = Integer.MAX_VALUE;
+        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
+            if (!enemiesWithImaginary.get(enemyIndex).isAlive()) {
+                continue;
+            }
+            mi = Math.min(mi, getApEnemyNeedsToSeeMe(enemyIndex));
+        }
+        return mi;
+    }
+
+    private int getApEnemyNeedsToSeeMe(int enemyIndex) { //todo consider move order
+        if (apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] == -1) {
+            int mi = Integer.MAX_VALUE;
+            MutableTrooper enemy = enemiesWithImaginary.get(enemyIndex);
+            int[][] dist = enemyBfs.get(enemyIndex);
+            for (int viewX = 0; viewX < n; viewX++) {
+                for (int viewY = 0; viewY < m; viewY++) {
+                    if (dist[viewX][viewY] > 6) {
+                        continue;
+                    }
+                    if (isWall(viewX, viewY)) {
+                        continue;
+                    }
+                    for (int viewStance = 0; viewStance < Utils.NUMBER_OF_STANCES; viewStance++) {
+                        if (!canSee(viewX, viewY, viewStance, cur.x, cur.y, cur.stance.ordinal(), enemy)) {
+                            continue;
+                        }
+                        int hasActionPoints = getMaxInitialAP(enemy);
+                        int needActionPoints = getApToMove(dist[viewX][viewY], enemy.getStance().ordinal(), viewStance);
+                        if (needActionPoints > hasActionPoints) {
+                            continue;
+                        }
+                        mi = Math.min(mi, needActionPoints);
+                    }
+                }
+            }
+            apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] = mi;
+        }
+        return apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+    }
+
+    private boolean canSee(int viewX, int viewY, int viewStance, int targetX, int targetY, int targetStance, MutableTrooper viewer) { // if change this, change another canSee
+        return reachable(viewX, viewY, targetX, targetY, Math.min(viewStance, targetStance), viewer.getVisionRange());
+    }
+
+    static int getApToMove(int dist, int fromStance, int toStance) {
+        /*if (true) {
+            return dist * 2;
+        }/**/
+        int minStance = Math.min(fromStance, toStance);
+        int maxStance = Math.max(fromStance, toStance);
+        if (dist <= 1) {
+            return dist * moveCost(maxStance) + (maxStance - minStance) * 2;
+        }
+        return dist * 2 + (2 - maxStance + 2 - minStance) * 2;
+    }
+
+    static int moveCost(int stance) {
+        if (stance == 2) {
+            return 2;
+        } else if (stance == 1) {
+            return 4;
+        } else {
+            return 6;
         }
     }
 
@@ -678,6 +761,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
         cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
+        cur.enemyCanKillMe = false;
 
         DamageAndAP damage = DamageAndAP.max(
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
@@ -685,6 +769,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         );
         if (damage.damage >= cur.selfHp) {
             cur.someOfTeammatesCanBeKilled = true;
+            cur.enemyCanKillMe = true;
         }
         damage.damage = Math.min(damage.damage, cur.selfHp);
         cur.maxDamageEnemyCanDeal = DamageAndAP.max(cur.maxDamageEnemyCanDeal, damage);
