@@ -758,6 +758,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.someOfTeammatesCanBeKilled = false;
         cur.enemyCanKillMe = false;
 
+        if (finals() && teammates.size()+1 - aliveEnemyCnt() >= 2) {
+            return;
+        }
+
         DamageAndAP damage = DamageAndAP.max(
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfAfter)
@@ -780,6 +784,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             damage.damage = Math.min(damage.damage, ally.getHitpoints());
             cur.maxDamageEnemyCanDeal = DamageAndAP.max(cur.maxDamageEnemyCanDeal, damage);
         }
+    }
+
+    private boolean finals() {
+        return initialTeamSize == 5;
+    }
+
+    private int aliveEnemyCnt() {
+        return enemiesWithImaginary.size() - cur.killCnt;
     }
 
     private DamageAndAP getMaxDamageEnemyCanDeal(int x, int y, TrooperType targetType, TrooperStance stance, boolean[][] canDamage) {
