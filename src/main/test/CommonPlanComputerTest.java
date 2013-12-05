@@ -844,4 +844,34 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.shoot(11,0)
         );
     }
+
+    @Test
+    void dontFuckingSuicide2() {
+        setMap(
+                ".S......r"
+        );
+        ally(SOLDIER).hp(1);
+        enemy(SNIPER).stance(PRONE);
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_WEST
+        );
+    }
+
+    @Test
+    void dontFuckingSuicide3() {
+        setMap(
+                "Ts",
+                ".#",
+                ".."
+        );
+        ally(SCOUT).hp(1);
+        enemy(SOLDIER).grenade();
+        check(
+                SCOUT,
+                6,
+                MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_EAST
+        );
+    }
 }

@@ -593,6 +593,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.numberOfTeammatesMedicCanReach = getNumberOfTeammatesMedicCanReach();
         cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
         cur.actionsEnemyMustSpendToHide = actionsEnemyMustSpendToHide();
+        cur.enemyCanSeeOrKnowsPosition = getEnemyCanSeeOrKnowsPosition(cur.x, cur.y, cur.stance.ordinal());
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
@@ -678,10 +679,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.maxDamageEnemyCanDeal = DamageAndAP.ZERO;
         cur.someOfTeammatesCanBeKilled = false;
 
-        /*if (!cur.enemyKnowsWhereWeAre) {
-            return;
-        }/**/
-
         DamageAndAP damage = DamageAndAP.max(
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfBefore),
                 getMaxDamageEnemyCanDeal(cur.x, cur.y, selfType, cur.stance, canDamageIfAfter)
@@ -726,13 +723,16 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (damage == 0) {
             return DamageAndAP.ZERO;
         }
-        if (!getEnemyCanSee(x, y, stance.ordinal()) && !enemyKnowsPosition.contains(new Cell(x, y))) {
+        if (!getEnemyCanSeeOrKnowsPosition(x, y, stance.ordinal())) {
             damage = (int) (damage * INVISIBLE_DAMAGE_QUOTIENT + 0.5);
         }
         return new DamageAndAP(damage, ap);
     }
 
-    private boolean getEnemyCanSee(int x, int y, int stance) {
+    private boolean getEnemyCanSeeOrKnowsPosition(int x, int y, int stance) {
+        if (enemyKnowsPosition.contains(new Cell(x, y))) {
+            return true;
+        }
         for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
             if (enemiesWithImaginary.get(enemyIndex).isAlive() && visibleByEnemy[enemyIndex][x][y][stance]) {
                 return true;

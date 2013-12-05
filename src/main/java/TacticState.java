@@ -17,6 +17,7 @@ class TacticState extends AbstractState<TacticState> {
     int numberOfTeammatesMedicCanReach;
     public boolean enemyKnowsWhereWeAre;
     int actionsEnemyMustSpendToHide;
+    boolean enemyCanSeeOrKnowsPosition;
 
     protected TacticState(TacticState cur) {
         super(cur);
@@ -36,6 +37,7 @@ class TacticState extends AbstractState<TacticState> {
         this.numberOfTeammatesMedicCanReach = cur.numberOfTeammatesMedicCanReach;
         this.enemyKnowsWhereWeAre = cur.enemyKnowsWhereWeAre;
         this.actionsEnemyMustSpendToHide = cur.actionsEnemyMustSpendToHide;
+        this.enemyCanSeeOrKnowsPosition = cur.enemyCanSeeOrKnowsPosition;
     }
 
     public TacticState(MutableTrooper self) {
@@ -117,6 +119,10 @@ class TacticState extends AbstractState<TacticState> {
             if (msb != 0) {
                 return msb < 0;
             }
+        }
+
+        if (enemyCanSeeOrKnowsPosition != old.enemyCanSeeOrKnowsPosition) {
+            return !enemyCanSeeOrKnowsPosition;
         }
 
         if (focusFireParameter != old.focusFireParameter) {
