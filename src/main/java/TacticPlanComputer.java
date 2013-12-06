@@ -207,7 +207,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void investigate() {
-        if(damagedTeammateType == null) {
+        if (damagedTeammateType == null) {
             return;
         }
         TrooperType suspectedType1 = typeByMoveIndex(mediumMoveIndex);
@@ -906,6 +906,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (enemyInitiallyKnowsWhereWeAre) {
             return true;
         }
+        if (finalsAndHavingBigAdvantage()) {
+            return true;
+        }
         for (MutableTrooper enemy : enemiesWithImaginary) {
             if (!enemy.isAlive()) {
                 continue;
@@ -932,7 +935,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.someOfTeammatesCanBeKilled = false;
         cur.enemyCanKillMe = false;
 
-        if (finals() && teammates.size() + 1 - aliveEnemyCnt() >= 2) {
+        if (finalsAndHavingBigAdvantage()) {
             return;
         }
 
@@ -958,6 +961,13 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             damage.damage = Math.min(damage.damage, ally.getHitpoints());
             cur.maxDamageEnemyCanDeal = DamageAndAP.max(cur.maxDamageEnemyCanDeal, damage);
         }
+    }
+
+    private boolean finalsAndHavingBigAdvantage() {
+        if (finals() && teammates.size() + 1 - aliveEnemyCnt() >= 2) {
+            return true;
+        }
+        return false;
     }
 
     private boolean finals() {
