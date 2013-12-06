@@ -26,7 +26,7 @@ public final class MyStrategy implements Strategy {
     static boolean[] vision;
 
     List<Trooper> teammates;
-    static Set<MutableTrooper> enemies = new HashSet<>();
+    static List<MutableTrooper> enemies = new ArrayList<>();
     static int smallMoveIndex;
     static int mediumMoveIndex;
 
@@ -411,7 +411,7 @@ public final class MyStrategy implements Strategy {
                 bonusUseForbidden,
                 getTroopers2d(),
                 teammatesWithoutSelf(),
-                new ArrayList<>(enemies),
+                enemies,
                 moveOrder,
                 enemyKnowsWhereWeAre,
                 new MutableTrooper(self, -1), //todo remove lastSeenTime from MutableTrooper
