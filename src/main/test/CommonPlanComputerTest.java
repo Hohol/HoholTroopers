@@ -3,8 +3,6 @@ import static model.TrooperStance.*;
 
 import org.testng.annotations.Test;
 
-import javax.annotation.processing.ProcessingEnvironment;
-
 @Test
 public class CommonPlanComputerTest extends TacticPlanComputerTest {
 
@@ -889,6 +887,34 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SOLDIER,
                 2,
                 MyMove.MOVE_EAST
+        );
+    }
+
+    @Test
+    void testInvestigation() {
+        setMap(
+                "S..",
+                "##."
+        );
+        teammateWasDamaged(SOLDIER);
+        ally(SOLDIER).grenade();
+        check(
+                SOLDIER,
+                8,
+                MyMove.grenade(2,1)
+        );
+    }
+
+    @Test
+    void testInvestigation2() {
+        setMap(
+                "F1................"
+        );
+        teammateWasDamaged(FIELD_MEDIC);
+        check(
+                FIELD_MEDIC,
+                12,
+                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
 }

@@ -50,7 +50,7 @@ public final class MyStrategy implements Strategy {
     static int previousTeammatesSize;
     static int lastTimeEnemyKnewWhereWeAre = -5;
     Cell3D startCell;
-    static Map<Long, Set<TrooperType>> killedEnemies = new HashMap<>();
+    static Map<Long, Set<TrooperType>> killedEnemies;
 
     static List<Cell> enemyKnowsHistoryCells = new ArrayList<>();
     static List<Integer> enemyKnowsHistoryTime = new ArrayList<>();
@@ -416,6 +416,7 @@ public final class MyStrategy implements Strategy {
                 killedEnemies,
                 getEnemyKnowsPositions(),
                 mediumMoveIndex,
+                damagedTeammates.isEmpty() ? null : damagedTeammates.get(0).getType(),
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -429,10 +430,10 @@ public final class MyStrategy implements Strategy {
 
     private Set<Cell> getEnemyKnowsPositions() {
         Set<Cell> r = new HashSet<>();
-        for(int i = enemyKnowsHistoryCells.size()-1; i >= 0; i--) {
+        for (int i = enemyKnowsHistoryCells.size() - 1; i >= 0; i--) {
             Cell cell = enemyKnowsHistoryCells.get(i);
             int time = enemyKnowsHistoryTime.get(i);
-            if(mediumMoveIndex - time >= initialTeamSize) {
+            if (mediumMoveIndex - time >= initialTeamSize) {
                 break;
             }
             r.add(cell);
@@ -514,6 +515,12 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
+        if (killedEnemies == null) {
+            killedEnemies = new HashMap<>();
+            for (Player player : world.getPlayers()) {
+                killedEnemies.put(player.getId(), new HashSet<TrooperType>());
+            }
+        }
         if (firstSubmove) {
             startCell = new Cell3D(self.getX(), self.getY(), self.getStance().ordinal());
             firstSubmove = false;

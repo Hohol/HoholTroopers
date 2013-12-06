@@ -11,8 +11,10 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
-    protected Set<Cell> enemyKnowsPosition;
-    private int mediumMoveIndex;
+    private Set<Cell> enemyKnowsPosition;
+    protected int mediumMoveIndex;
+    private TrooperType damagedTeammate;
+    protected MutableTrooper investigationResult;
 
     @Override
     protected void setMap(String... smap) {
@@ -21,6 +23,8 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         startCell = null;
         enemyKnowsPosition = new HashSet<>();
         mediumMoveIndex = 0;
+        damagedTeammate = null;
+        moveOrder = null;
     }
 
     protected void enemyDoesntKnowWhereWeAre() {
@@ -70,7 +74,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
             startCell = new Cell3D(self.getX(), self.getY(), self.getStance().ordinal());
         }
         final boolean mapIsStatic = false;
-        return new TacticPlanComputer(
+        TacticPlanComputer computer = new TacticPlanComputer(
                 map,
                 utils,
                 bonuses,
@@ -88,8 +92,12 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 killedEnemies,
                 enemyKnowsPosition,
                 mediumMoveIndex,
+                damagedTeammate,
                 mapIsStatic
-        ).getPlan();
+        );
+        List<MyMove> result = computer.getPlan();
+        investigationResult = computer.getInvestigationResult();
+        return result;
     }
 
     protected void enemyKnowsPositionOf(TrooperType type) {
@@ -106,5 +114,13 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
             throw new RuntimeException();
         }
         enemyKnowsPosition.add(new Cell(x,y));
+    }
+
+    protected void teammateWasDamaged(TrooperType type) {
+        damagedTeammate = type;
+    }
+
+    protected void setMoveOrder(String moveOrder) {
+        this.moveOrder = moveOrder;
     }
 }

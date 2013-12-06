@@ -14,6 +14,7 @@ public abstract class AbstractPlanComputerTest {
     protected List<MutableTrooper> teammates;
     protected List<MutableTrooper> enemies;
     protected List<MyMove> prevActions = new ArrayList<>();
+    protected String moveOrder;
     char[][] map;
     int m;
     int n;
@@ -67,6 +68,7 @@ public abstract class AbstractPlanComputerTest {
         prevActions = new ArrayList<>();
         addBonuses();
         killedEnemies = new HashMap<>();
+        killedEnemies.put(0L, new HashSet<TrooperType>());
     }
 
     protected MTBuilder ally(TrooperType type) {
@@ -200,6 +202,7 @@ public abstract class AbstractPlanComputerTest {
         MTBuilder selfBuilder = ally(selfType)
                 .actionPoints(actionPoints);
 
+        this.moveOrder = moveOrder;
         MutableTrooper self = selfBuilder.build();
 
         prepareTroopers(selfType);
@@ -215,6 +218,9 @@ public abstract class AbstractPlanComputerTest {
     }
 
     protected String getDefaultMoveOrder() {
+        if (moveOrder != null) {
+            return moveOrder;
+        }
         String r = "";
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
