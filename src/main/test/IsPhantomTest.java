@@ -31,9 +31,14 @@ public class IsPhantomTest {
         check("FSC", 0, FIELD_MEDIC, 0, false);
     }
 
-    void check(String moveOrder, int mediumMoveIndex, TrooperType type, int lastSeenTime, boolean expected) {
+    @Test
+    void test5() {
+        check("TCRSF", 121, COMMANDER, 120, true);
+    }
+
+    void check(String moveOrder, int mediumMoveIndex, TrooperType enemyType, int lastSeenTime, boolean expected) {
         MutableTrooper enemy = new MTBuilder()
-                .type(type)
+                .type(enemyType)
                 .lastSeenTime(lastSeenTime)
                 .build();
         assertEquals(TacticPlanComputer.isPhantom(enemy, mediumMoveIndex, moveOrder), expected);

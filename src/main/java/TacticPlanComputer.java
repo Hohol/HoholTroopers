@@ -784,6 +784,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
         cur.actionsEnemyMustSpendToHide = actionsEnemyMustSpendToHide();
         cur.apEnemyNeedsToSeeMe = getApEnemyNeedsToSeeMe();
+        if (stopOn(MyMove.LOWER_STANCE)) {
+            int x = 0;
+            x++;
+        }
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
@@ -1253,6 +1257,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     static boolean isPhantom(MutableTrooper enemy, int mediumMoveIndex, String moveOrder) {
+        if (enemy.getLastSeenTime() == mediumMoveIndex) {
+            return false;
+        }
         int enemyIndex;
         for (int i = enemy.getLastSeenTime(); ; i++) {
             if (moveOrder.charAt((i + moveOrder.length()) % moveOrder.length()) == Utils.getCharForTrooperType(enemy.getType())) {
@@ -1260,7 +1267,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 break;
             }
         }
-        return enemyIndex >= enemy.getLastSeenTime() && enemyIndex < mediumMoveIndex;
+        return enemyIndex >= enemy.getLastSeenTime() && enemyIndex <= mediumMoveIndex;
     }
 
     private void undealDamage(int ex, int ey, int damage, boolean grenade) {
