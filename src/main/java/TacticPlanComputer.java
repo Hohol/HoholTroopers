@@ -304,7 +304,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                                 if (needActions > hasActions) {
                                     continue;
                                 }
-                                int d = minManhDistToOtherNearestEnemy(playerId, fromX, fromY, suspectedType);
+                                int d = minManhattanDistToOtherEnemy(playerId, fromX, fromY, suspectedType);
                                 if (d < minDist) {
                                     minDist = d;
                                     bestPos = new Cell3D(fromX, fromY, fromStance);
@@ -335,7 +335,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return Utils.getTrooperTypeByChar(moveOrder.charAt(enemyMoveIndex % moveOrder.length()));
     }
 
-    private int minManhDistToOtherNearestEnemy(long playerId, int fromX, int fromY, TrooperType type) {
+    private int minManhattanDistToOtherEnemy(long playerId, int fromX, int fromY, TrooperType type) {
         int dist = 10000;
         if (lastSeenEnemyPos != null && enemies.isEmpty()) {
             dist = Utils.manhattanDist(fromX, fromY, lastSeenEnemyPos.x, lastSeenEnemyPos.y);
@@ -1225,7 +1225,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         tryHealSelfWithAbility();
     }
 
-    void dealDamage(int ex, int ey, int damage) {
+    void dealDamage(int ex, int ey, int damage, boolean grenade) {
         if (!inField(ex, ey)) {
             return;
         }
@@ -1235,7 +1235,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
         MutableTrooper enemy = troopers[ex][ey];
 
-        damage = getDamageConsiderPhantom(enemy, damage);
+        damage = getDamageConsiderPhantom(enemy, damage, grenade);
 
         if (enemy.getHitpoints() > 0) {
             if (damage >= enemy.getHitpoints()) {
@@ -1251,9 +1251,13 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return (troopers[ex][ey] != null && !troopers[ex][ey].isTeammate());
     }
 
-    private int getDamageConsiderPhantom(MutableTrooper enemy, int damage) {
+    private int getDamageConsiderPhantom(MutableTrooper enemy, int damage, boolean grenade) {
         if (isPhantom(enemy, mediumMoveIndex, moveOrder)) {
-            damage /= 2;
+            if(grenade) {
+                damage = 0;
+            } else {
+                damage /= 2;
+            }
         }
         return damage;
     }
@@ -1269,7 +1273,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return enemyIndex >= enemy.getLastSeenTime() && enemyIndex < mediumMoveIndex;
     }
 
-    private void undealDamage(int ex, int ey, int damage) {
+    private void undealDamage(int ex, int ey, int damage, boolean grenade) {
         if (!inField(ex, ey)) {
             return;
         }
@@ -1279,7 +1283,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
         MutableTrooper enemy = troopers[ex][ey];
 
-        damage = getDamageConsiderPhantom(enemy, damage);
+        damage = getDamageConsiderPhantom(enemy, damage, grenade);
 
         if (enemy.getHitpoints() + damage > 0) {
             if (enemy.getHitpoints() <= 0) {
@@ -1295,7 +1299,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         int damage = utils.getShootDamage(selfType, cur.stance);
         cur.actionPoints += utils.getShootCost(selfType);
 
-        undealDamage(ex, ey, damage);
+        undealDamage(ex, ey, damage, false);
 
         popAction();
     }
@@ -1305,7 +1309,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
         int damage = utils.getShootDamage(selfType, cur.stance);
         cur.actionPoints -= utils.getShootCost(selfType);
-        dealDamage(ex, ey, damage);
+        dealDamage(ex, ey, damage, false);
     }
 
     private void tryShoot() {
@@ -1326,22 +1330,22 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         popAction();
         cur.actionPoints += game.getGrenadeThrowCost();
         cur.holdingGrenade = true;
-        undealDamage(ex, ey, game.getGrenadeDirectDamage());
-        undealDamage(ex + 1, ey, game.getGrenadeCollateralDamage());
-        undealDamage(ex - 1, ey, game.getGrenadeCollateralDamage());
-        undealDamage(ex, ey + 1, game.getGrenadeCollateralDamage());
-        undealDamage(ex, ey - 1, game.getGrenadeCollateralDamage());
+        undealDamage(ex, ey, game.getGrenadeDirectDamage(), true);
+        undealDamage(ex + 1, ey, game.getGrenadeCollateralDamage(), true);
+        undealDamage(ex - 1, ey, game.getGrenadeCollateralDamage(), true);
+        undealDamage(ex, ey + 1, game.getGrenadeCollateralDamage(), true);
+        undealDamage(ex, ey - 1, game.getGrenadeCollateralDamage(), true);
     }
 
     private void throwGrenade(int ex, int ey) {
         addAction(MyMove.grenade(ex, ey));
         cur.actionPoints -= game.getGrenadeThrowCost();
         cur.holdingGrenade = false;
-        dealDamage(ex, ey, game.getGrenadeDirectDamage());
-        dealDamage(ex + 1, ey, game.getGrenadeCollateralDamage());
-        dealDamage(ex - 1, ey, game.getGrenadeCollateralDamage());
-        dealDamage(ex, ey + 1, game.getGrenadeCollateralDamage());
-        dealDamage(ex, ey - 1, game.getGrenadeCollateralDamage());
+        dealDamage(ex, ey, game.getGrenadeDirectDamage(), true);
+        dealDamage(ex + 1, ey, game.getGrenadeCollateralDamage(), true);
+        dealDamage(ex - 1, ey, game.getGrenadeCollateralDamage(), true);
+        dealDamage(ex, ey + 1, game.getGrenadeCollateralDamage(), true);
+        dealDamage(ex, ey - 1, game.getGrenadeCollateralDamage(), true);
     }
 
     private boolean forbidden(int x, int y) {

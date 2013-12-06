@@ -917,4 +917,17 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
+
+    @Test
+    void dontWasteGrenadeOnPhantomEnemy() {
+        setMap(
+                "S.#.s"
+        );
+        enemy(SOLDIER).stance(PRONE).lastSeenTime(-10);
+        ally(SOLDIER).grenade();
+        check(
+                SOLDIER,
+                8
+        );
+    }
 }
