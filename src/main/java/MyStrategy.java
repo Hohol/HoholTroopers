@@ -35,7 +35,6 @@ public final class MyStrategy implements Strategy {
     static Map<TrooperType, List<Cell>> positionHistory = new EnumMap<>(TrooperType.class);
 
     Trooper medic, sniper, soldier, commander, scout;
-    private BonusType[][] bonuses;
     static Map<TrooperType, List<Integer>> hpHistory = new EnumMap<>(TrooperType.class);
     static boolean[][][] wasSeenOnCurrentBigMove;
     static double[][][] wasSeenMinDist;
@@ -57,6 +56,7 @@ public final class MyStrategy implements Strategy {
     static List<Integer> enemyKnowsHistoryTime = new ArrayList<>();
     Map<TrooperType, Integer> orderIndex = new EnumMap<>(TrooperType.class);
     static boolean wasGrenade;
+    static BonusType[][] bonuses;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -465,7 +465,7 @@ public final class MyStrategy implements Strategy {
                 teammatesWithoutSelf(),
                 new MutableTrooper(self, -1),
                 vision,
-                getBonuses(),
+                bonuses,
                 getTroopers2d(),
                 destination,
                 prevActions,
@@ -495,14 +495,6 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private BonusType[][] getBonuses() {
-        BonusType[][] bonuses = new BonusType[world.getWidth()][world.getHeight()];
-        for (Bonus bonus : world.getBonuses()) {
-            bonuses[bonus.getX()][bonus.getY()] = bonus.getType();
-        }
-        return bonuses;
-    }
-
     private void print(char[][] map) {
         if (!local) {
             return;
@@ -521,6 +513,9 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
+        if(bonuses == null) {
+            bonuses = new BonusType[world.getWidth()][world.getHeight()];
+        }
         if (killedEnemies == null) {
             killedEnemies = new HashMap<>();
             for (Player player : world.getPlayers()) {
@@ -554,7 +549,6 @@ public final class MyStrategy implements Strategy {
             mediumMoveIndex = world.getMoveIndex() * initialTeamSize + orderIndex.get(self.getType());
         }
         occupiedByTrooper = getOccupiedByTrooper();
-        bonuses = getBonuses();
 
         if (lastSeen == null) {
             lastSeen = createIntMap(0);
@@ -573,8 +567,24 @@ public final class MyStrategy implements Strategy {
         updateHpHistory();
         updateLastSeen();
         damagedTeammates = getDamagedTeammates();
+        updateBonuses();
         printHp();
         printMap();
+    }
+
+    private void updateBonuses() {
+        boolean[][] seeBonusRightNow = new boolean[world.getWidth()][world.getHeight()];
+        for (Bonus bonus : world.getBonuses()) {
+            bonuses[bonus.getX()][bonus.getY()] = bonus.getType();
+            seeBonusRightNow[bonus.getX()][bonus.getY()] = true;
+        }
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if(canSeeRightNow[i][j][0] && !seeBonusRightNow[i][j]) {
+                    bonuses[i][j] = null;
+                }
+            }
+        }
     }
 
     private int getMyScore() {

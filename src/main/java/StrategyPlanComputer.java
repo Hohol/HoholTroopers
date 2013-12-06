@@ -16,6 +16,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     private int[][] distToLeader;
     int[][] leadersDistToDestination;
     List<Cell3D>[][][] dangerArea;
+    private BonusType targetBonus;
 
     public StrategyPlanComputer(
             char[][] map,
@@ -38,10 +39,51 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     @Override
     protected void prepare() {
         super.prepare();
-        distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
         distWithoutTeammates = getDistWithoutTeammates();
+        chooseBonus();
+        distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
         chooseLeader();
         prepareDangerArea();
+    }
+
+    private void chooseBonus() {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                BonusType bonus = bonuses[i][j];
+                if (bonus == null) {
+                    continue;
+                }
+                if (someoneNeeds(bonus)) {
+                    targetBonus = bonus;
+                    destination = new Cell(i, j);
+                    return;
+                }
+            }
+        }
+    }
+
+    private boolean someoneNeeds(BonusType bonus) {
+        if (!isHolding(self, bonus)) {
+            return true;
+        }
+        for (MutableTrooper ally : teammates) {
+            if (!isHolding(ally, bonus)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isHolding(MutableTrooper ally, BonusType bonus) {
+        switch (bonus) {
+            case GRENADE:
+                return ally.isHoldingGrenade();
+            case MEDIKIT:
+                return ally.isHoldingMedikit();
+            case FIELD_RATION:
+                return ally.isHoldingFieldRation();
+        }
+        throw new RuntimeException();
     }
 
     private void prepareDangerArea() {
@@ -114,6 +156,9 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         if (selfIsLeader()) {
             return 0;
         }
+        if (cur.x == destination.x && cur.y == destination.y) {
+            return Utils.UNREACHABLE;
+        }
         if (leadersDistToDestination[i][j] == -1) {
             char buf = map[i][j];
             map[i][j] = Utils.getCharForTrooperType(selfType);
@@ -126,13 +171,13 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     private int getLeaderIndex(int maxDist) { //returns -1 if self is leader
         int best = -1;
-        int maxPriority = leaderPriority(selfType);
+        int maxPriority = leaderPriorityIncludingBonus(self);
         for (int i = 0; i < teammates.size(); i++) {
             MutableTrooper ally = teammates.get(i);
             if (distWithoutTeammates.get(i)[cur.x][cur.y] > maxDist) {
                 continue;
             }
-            int prior = leaderPriority(ally.getType());
+            int prior = leaderPriorityIncludingBonus(ally);
             if (prior > maxPriority) {
                 best = i;
                 maxPriority = prior;
@@ -145,7 +190,15 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         return leader == null;
     }
 
-    public static int leaderPriority(TrooperType type) {
+    public int leaderPriorityIncludingBonus(MutableTrooper trooper) {
+        int r = leaderPriority(trooper.getType());
+        if (targetBonus != null && !isHolding(trooper, targetBonus)) {
+            r += 10;
+        }
+        return r;
+    }
+
+    private static int leaderPriority(TrooperType type) {
         switch (type) {
             case SOLDIER:
                 return 4;
@@ -175,10 +228,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
-        if (stopOn(MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_SOUTH, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE)) {
-            int x = 0;
-            x++;
-        }
         cur.stayingInDangerArea = checkDangerArea();
 
         if (cur.better(best, selfType)) {

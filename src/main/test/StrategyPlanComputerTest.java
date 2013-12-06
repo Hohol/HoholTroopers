@@ -256,18 +256,6 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void collectBonus() {
-        setMap(
-                "S@.F+"
-        );
-        check(
-                FIELD_MEDIC,
-                6,
-                MyMove.MOVE_EAST, MyMove.MOVE_WEST, MyMove.MOVE_WEST
-        );
-    }
-
-    @Test
     void testDoNotMoveFarFromTeammates2() {
         setMap(
                 ".........R.....F.....",
@@ -362,6 +350,21 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 SOLDIER,
                 12,
                 MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void moveToBonus() {
+        setMap(
+                "S.....@",
+                ".......",
+                ".......",
+                "*......"
+        );
+        check(
+                SOLDIER,
+                2,
+                MyMove.MOVE_SOUTH
         );
     }
 }
