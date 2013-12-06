@@ -218,16 +218,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (index < 0) {
             index += moveOrder.length();
         }
-
         TrooperType suspectedType2 = typeByMoveIndex(index);
-
         if (isVisibleAndNotPhantom(suspectedType1) || isVisibleAndNotPhantom(suspectedType2)) {
             return;
         }
-        investigationResult = getSuspected(suspectedType1);
-        if (investigationResult == null) {
-            investigationResult = getSuspected(suspectedType2);
+
+        List<TrooperType> suspectedTypes = new ArrayList<>();
+        suspectedTypes.add(suspectedType1);
+        if (suspectedType2 != suspectedType1) {
+            suspectedTypes.add(suspectedType2);
         }
+        investigationResult = getSuspected(suspectedTypes);
         if (investigationResult == null) {
             return;
         }
@@ -254,7 +255,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         troopers[enemy.getX()][enemy.getY()] = null;
     }
 
-    private MutableTrooper getSuspected(TrooperType suspectedType) {
+    private MutableTrooper getSuspected(List<TrooperType> suspectedTypes) {
         MutableTrooper damagedTeammate = null;
         if (damagedTeammateType == selfType) {
             damagedTeammate = self;
@@ -269,47 +270,51 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             throw new RuntimeException();
         }
         long playerId = anyEnemyId();
-        if (!isAlive(playerId, suspectedType)) {
-            return null;
-        }
         char[][] mapWithoutEnemies = getMapWithoutEnemies();
         int[][][][] bfs = new int[n][m][][];
         Cell3D bestPos = null;
         int minDist = Integer.MAX_VALUE;
         HashSet<Cell> set = new HashSet<>();
-        for (int toX = 0; toX < n; toX++) {
-            for (int toY = 0; toY < m; toY++) {
-                if (isWall(toX, toY)) {
-                    continue;
-                }
-                for (int toStance = Utils.NUMBER_OF_STANCES - 1; toStance >= 0; toStance--) {
-                    if (!canShoot(toX, toY, damagedTeammate.getX(), damagedTeammate.getY(), toStance, damagedTeammate.getStance().ordinal(), suspectedType)) {
+        TrooperType bestType = null;
+        for (TrooperType suspectedType : suspectedTypes) {
+            if (!isAlive(playerId, suspectedType)) {
+                continue;
+            }
+            for (int toX = 0; toX < n; toX++) {
+                for (int toY = 0; toY < m; toY++) {
+                    if (isWall(toX, toY)) {
                         continue;
                     }
-                    for (int fromX = 0; fromX < n; fromX++) {
-                        for (int fromY = 0; fromY < m; fromY++) {
-                            if (isWall(fromX, fromY)) {
-                                continue;
-                            }
-                            if (Utils.isLetter(map[fromX][fromY])) {
-                                continue;
-                            }
-                            for (int fromStance = Utils.NUMBER_OF_STANCES - 1; fromStance >= 0; fromStance--) {
-                                if (visibleCnt[fromX][fromY][fromStance] != 0) {
+                    for (int toStance = Utils.NUMBER_OF_STANCES - 1; toStance >= 0; toStance--) {
+                        if (!canShoot(toX, toY, damagedTeammate.getX(), damagedTeammate.getY(), toStance, damagedTeammate.getStance().ordinal(), suspectedType)) {
+                            continue;
+                        }
+                        for (int fromX = 0; fromX < n; fromX++) {
+                            for (int fromY = 0; fromY < m; fromY++) {
+                                if (isWall(fromX, fromY)) {
                                     continue;
                                 }
-                                int[][] dist = bfs[fromX][fromY] == null ? bfs[fromX][fromY] = Utils.bfsByMap(mapWithoutEnemies, fromX, fromY) : bfs[fromX][fromY];
-                                int hasActions = getMaxInitialAP(suspectedType, playerId);
-                                int needActions = getActionsToMove(dist[toX][toY], fromStance, toStance) * 2 + utils.getShootCost(suspectedType);
-                                if (needActions > hasActions) {
+                                if (Utils.isLetter(map[fromX][fromY])) {
                                     continue;
                                 }
-                                int d = minManhattanDistToOtherEnemy(playerId, fromX, fromY, suspectedType);
-                                if (d < minDist) {
-                                    minDist = d;
-                                    bestPos = new Cell3D(fromX, fromY, fromStance);
+                                for (int fromStance = Utils.NUMBER_OF_STANCES - 1; fromStance >= 0; fromStance--) {
+                                    if (visibleCnt[fromX][fromY][fromStance] != 0) {
+                                        continue;
+                                    }
+                                    int[][] dist = bfs[fromX][fromY] == null ? bfs[fromX][fromY] = Utils.bfsByMap(mapWithoutEnemies, fromX, fromY) : bfs[fromX][fromY];
+                                    int hasActions = getMaxInitialAP(suspectedType, playerId);
+                                    int needActions = getActionsToMove(dist[toX][toY], fromStance, toStance) * 2 + utils.getShootCost(suspectedType);
+                                    if (needActions > hasActions) {
+                                        continue;
+                                    }
+                                    int d = minManhattanDistToOtherEnemy(playerId, fromX, fromY, suspectedType);
+                                    if (d < minDist) {
+                                        minDist = d;
+                                        bestPos = new Cell3D(fromX, fromY, fromStance);
+                                        bestType = suspectedType;
+                                    }
+                                    set.add(new Cell(fromX, fromY));
                                 }
-                                set.add(new Cell(fromX, fromY));
                             }
                         }
                     }
@@ -325,7 +330,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 .x(bestPos.x)
                 .y(bestPos.y)
                 .stance(TrooperStance.values()[bestPos.stance])
-                .type(suspectedType)
+                .type(bestType)
                 .playerId(playerId)
                 .lastSeenTime(set.size() == 1 ? mediumMoveIndex : mediumMoveIndex - moveOrder.length())
                 .build();
