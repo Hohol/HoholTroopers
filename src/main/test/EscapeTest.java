@@ -81,25 +81,12 @@ public class EscapeTest extends TacticPlanComputerTest {
         setMap(
                 ".FS......s"
         );
-        ally(SOLDIER).hp(1);
+        ally(SOLDIER).hp(26);
         ally(FIELD_MEDIC).medikit();
         check(
                 FIELD_MEDIC,
                 2,
                 MyMove.USE_MEDIKIT_EAST
-        );
-    }
-
-    @Test
-    void testSoldierShootingRangeIsGreaterThanVisionRange() {
-        setMap(
-                ".S.......s"
-        );
-        ally(SOLDIER).medikit();
-        check(
-                SOLDIER,
-                4,
-                MyMove.shoot(9, 0)
         );
     }
 

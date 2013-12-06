@@ -36,7 +36,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     boolean enemyInitiallyKnowsWhereWeAre;
     int[][][][] actionsEnemyMustSpendToHide;
     boolean[][][][] visibleByEnemy;
-    int[][][][] apEnemyNeedsToSeeMe;
+    int[][][] apEnemyNeedsToSeeMe;
     int initialTeamSize;
     Set<Cell> enemyKnowsPosition;
     int mediumMoveIndex;
@@ -366,13 +366,11 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void prepareStepsEnemyMustMakeToSeeMe() {
-        apEnemyNeedsToSeeMe = new int[enemiesWithImaginary.size()][n][m][Utils.NUMBER_OF_STANCES];
-        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < m; j++) {
-                    for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                        apEnemyNeedsToSeeMe[enemyIndex][i][j][stance] = -1;
-                    }
+        apEnemyNeedsToSeeMe = new int[n][m][Utils.NUMBER_OF_STANCES];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
+                    apEnemyNeedsToSeeMe[i][j][stance] = -1;
                 }
             }
         }
@@ -611,6 +609,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                             actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
                         }
                         DamageAndAP p = getMaxDamage(enemy.getType(), actionPoints, dist[shooterX][shooterY], initialEnemyStance, minShooterStance, canShoot, canThrowGrenadeDirectly, canThrowGrenadeCollateral);
+                        if (!getEnemyCanSeeOrKnowsPosition(targetX, targetY, targetStance) && getApEnemyNeedsToSee(targetX, targetY, targetStance) > 2) {
+                            p.damage = (int) (p.damage * INVISIBLE_DAMAGE_QUOTIENT + 0.5);
+                        }
                         if (r == null) {
                             r = p;
                         }
@@ -792,45 +793,40 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private int getApEnemyNeedsToSeeMe() {
-        int mi = Integer.MAX_VALUE;
-        for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
-            if (!enemiesWithImaginary.get(enemyIndex).isAlive()) {
-                continue;
-            }
-            mi = Math.min(mi, getApEnemyNeedsToSeeMe(enemyIndex));
-        }
-        return mi;
+        return getApEnemyNeedsToSee(cur.x, cur.y, cur.stance.ordinal());
     }
 
-    private int getApEnemyNeedsToSeeMe(int enemyIndex) { //todo consider move order
-        if (apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] == -1) {
+    private int getApEnemyNeedsToSee(int x, int y, int stance) { //todo consider move order
+        if (apEnemyNeedsToSeeMe[x][y][stance] == -1) {
             int mi = Integer.MAX_VALUE;
-            MutableTrooper enemy = enemiesWithImaginary.get(enemyIndex);
-            int[][] dist = enemyBfs.get(enemyIndex);
-            for (int viewX = 0; viewX < n; viewX++) {
-                for (int viewY = 0; viewY < m; viewY++) {
-                    if (dist[viewX][viewY] > 6) {
-                        continue;
-                    }
-                    if (isWall(viewX, viewY)) {
-                        continue;
-                    }
-                    for (int viewStance = 0; viewStance < Utils.NUMBER_OF_STANCES; viewStance++) {
-                        if (!canSee(viewX, viewY, viewStance, cur.x, cur.y, cur.stance.ordinal(), enemy)) {
+            for (int enemyIndex = 0; enemyIndex < enemiesWithImaginary.size(); enemyIndex++) {
+                MutableTrooper enemy = enemiesWithImaginary.get(enemyIndex);
+                int[][] dist = enemyBfs.get(enemyIndex);
+                for (int viewX = 0; viewX < n; viewX++) {
+                    for (int viewY = 0; viewY < m; viewY++) {
+                        if (dist[viewX][viewY] > 6) {
                             continue;
                         }
-                        int hasActionPoints = getMaxInitialAP(enemy.getType(), enemy.getPlayerId());
-                        int needActionPoints = getApToMove(dist[viewX][viewY], enemy.getStance().ordinal(), viewStance);
-                        if (needActionPoints > hasActionPoints) {
+                        if (isWall(viewX, viewY)) {
                             continue;
                         }
-                        mi = Math.min(mi, needActionPoints);
+                        for (int viewStance = 0; viewStance < Utils.NUMBER_OF_STANCES; viewStance++) {
+                            if (!canSee(viewX, viewY, viewStance, x, y, stance, enemy)) {
+                                continue;
+                            }
+                            int hasActionPoints = getMaxInitialAP(enemy.getType(), enemy.getPlayerId());
+                            int needActionPoints = getApToMove(dist[viewX][viewY], enemy.getStance().ordinal(), viewStance);
+                            if (needActionPoints > hasActionPoints) {
+                                continue;
+                            }
+                            mi = Math.min(mi, needActionPoints);
+                        }
                     }
                 }
             }
-            apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()] = mi;
+            apEnemyNeedsToSeeMe[x][y][stance] = mi;
         }
-        return apEnemyNeedsToSeeMe[enemyIndex][cur.x][cur.y][cur.stance.ordinal()];
+        return apEnemyNeedsToSeeMe[x][y][stance];
     }
 
     private boolean canSee(int viewX, int viewY, int viewStance, int targetX, int targetY, int targetStance, MutableTrooper viewer) { // if change this, change another canSee
@@ -838,9 +834,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     static int getApToMove(int dist, int fromStance, int toStance) {
-        /*if (true) {
-            return dist * 2;
-        }/**/
         int minStance = Math.min(fromStance, toStance);
         int maxStance = Math.max(fromStance, toStance);
         if (dist <= 1) {
@@ -1003,9 +996,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         }
         if (damage == 0) {
             return DamageAndAP.ZERO;
-        }
-        if (!getEnemyCanSeeOrKnowsPosition(x, y, stance.ordinal())) {
-            damage = (int) (damage * INVISIBLE_DAMAGE_QUOTIENT + 0.5);
         }
         return new DamageAndAP(damage, ap);
     }
@@ -1253,7 +1243,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private int getDamageConsiderPhantom(MutableTrooper enemy, int damage, boolean grenade) {
         if (isPhantom(enemy, mediumMoveIndex, moveOrder)) {
-            if(grenade) {
+            if (grenade) {
                 damage = 0;
             } else {
                 damage /= 2;

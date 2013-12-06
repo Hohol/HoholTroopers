@@ -129,7 +129,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 FIELD_MEDIC,
                 10,
-                MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
+                MyMove.MOVE_EAST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
         );
     }
 
@@ -633,25 +633,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         );
     }
 
-
-    @Test
-    void deadDontSee() {
-        setMap(
-                "Fr",
-                "1#",
-                "s."
-        );
-        enemy(SOLDIER).grenade();
-        enemy(SNIPER).hp(10);
-        ally(FIELD_MEDIC).stance(PRONE).hp(41);
-
-        check(
-                FIELD_MEDIC,
-                6,
-                MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.HEAL_SELF, MyMove.shoot(1, 0)
-        );
-    }
-
     @Test
     void testSniperBug() {
         setMap(
@@ -928,6 +909,21 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         check(
                 SOLDIER,
                 8
+        );
+    }
+
+    @Test
+    void enemyCanEasilyScoutYou() {
+        setMap(
+                "ST......1rt"
+        );
+        ally(SCOUT).hp(80);
+        enemy(SNIPER).stance(PRONE);
+        enemy(SCOUT).stance(PRONE);
+        check(
+                SCOUT,
+                12,
+                MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
 }
