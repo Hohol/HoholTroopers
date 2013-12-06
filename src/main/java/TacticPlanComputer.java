@@ -207,6 +207,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private void investigate() {
+        if(damagedTeammateType == null) {
+            return;
+        }
         TrooperType suspectedType1 = typeByMoveIndex(mediumMoveIndex);
         int index = mediumMoveIndex - 1;
         if (index < 0) {
@@ -249,9 +252,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private MutableTrooper getSuspected(TrooperType suspectedType) {
-        if (damagedTeammateType == null) {
-            return null;
-        }
         MutableTrooper damagedTeammate = null;
         if (damagedTeammateType == selfType) {
             damagedTeammate = self;

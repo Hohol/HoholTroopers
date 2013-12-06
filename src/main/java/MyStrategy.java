@@ -11,6 +11,7 @@ public final class MyStrategy implements Strategy {
     //static final boolean local = false;
 
     public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
+    private static final String MY_NAME = "Hohol";
 
     final Random rnd = new Random(322);
 
@@ -518,6 +519,9 @@ public final class MyStrategy implements Strategy {
         if (killedEnemies == null) {
             killedEnemies = new HashMap<>();
             for (Player player : world.getPlayers()) {
+                if (player.getName().equals(MY_NAME)) {
+                    continue;
+                }
                 killedEnemies.put(player.getId(), new HashSet<TrooperType>());
             }
         }
@@ -861,7 +865,12 @@ public final class MyStrategy implements Strategy {
     }
 
     private boolean expired(MutableTrooper mt) {
-        return mediumMoveIndex - mt.getLastSeenTime() > 2 * initialTeamSize;
+        int expirationTime = finals() ? 5 : 2;
+        return mediumMoveIndex - mt.getLastSeenTime() > expirationTime * initialTeamSize;
+    }
+
+    private boolean finals() {
+        return initialTeamSize == 5;
     }
 
     char[][] createCharMap() {
