@@ -56,6 +56,7 @@ public final class MyStrategy implements Strategy {
     static List<Cell> enemyKnowsHistoryCells = new ArrayList<>();
     static List<Integer> enemyKnowsHistoryTime = new ArrayList<>();
     Map<TrooperType, Integer> orderIndex = new EnumMap<>(TrooperType.class);
+    static boolean wasGrenade;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -537,7 +538,7 @@ public final class MyStrategy implements Strategy {
         bfsCache.clear();
         bfsCacheAvoidNarrowPath.clear();
         smallMoveIndex++;
-        Utils.log("SmallStepNumber = " + smallMoveIndex);
+        Utils.log("BigStepNumber = " + world.getMoveIndex());
         cells = world.getCells();
         teammates = getTeammates();
         if (initialTeamSize == -1) {
@@ -610,6 +611,7 @@ public final class MyStrategy implements Strategy {
         scoreMustChange = false;
         enemiesDamagedOnPreviousMove.clear();
         expectedScoreChange = 0;
+        wasGrenade = (move.getAction() == THROW_GRENADE);
         while (it.hasNext()) {
             MutableTrooper enemy = it.next();
             int oldHp = enemy.getHitpoints();
@@ -760,7 +762,7 @@ public final class MyStrategy implements Strategy {
                     enemies.remove(mt);
                 }
             } else {
-                if (getMyScore() - prevScore != expectedScoreChange) {
+                if (getMyScore() - prevScore != expectedScoreChange && !wasGrenade) {
                     enemies.remove(mt);
                     markKilled(mt);
                 } else {
