@@ -153,7 +153,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         setMap(
                 "S.......",
                 "#######.",
-                "s......."
+                "######s."
         );
         enemy(SOLDIER).lastSeenTime(0);
         setMediumMoveIndex(100);
@@ -221,6 +221,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 2, 1, STANDING, true
         );
     }
+
     @Test
     void ifNoEnemyIsSeenPlaceHimNearLastSeenEnemyPos2() {
         setMap(
@@ -232,6 +233,20 @@ public class InvestigationTest extends TacticPlanComputerTest {
         checkInvestigation(
                 SOLDIER,
                 0, 1, STANDING, true
+        );
+    }
+
+    @Test
+    void enemyCanThrowGrenade() {
+        setMap(
+                "R.............",
+                "##.###########",
+                ".............."
+        );
+        teammateWasDamaged(SNIPER);
+        setLastSeenEnemyPosition(0, 2);
+        checkInvestigation(
+                SNIPER, 0, 2, STANDING, true
         );
     }
 

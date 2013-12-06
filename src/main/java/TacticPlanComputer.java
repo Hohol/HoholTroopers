@@ -286,7 +286,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                         continue;
                     }
                     for (int toStance = Utils.NUMBER_OF_STANCES - 1; toStance >= 0; toStance--) {
-                        if (!canShoot(toX, toY, damagedTeammate.getX(), damagedTeammate.getY(), toStance, damagedTeammate.getStance().ordinal(), suspectedType)) {
+                        boolean shoot = canShoot(toX, toY, damagedTeammate.getX(), damagedTeammate.getY(), toStance, damagedTeammate.getStance().ordinal(), suspectedType);
+                        boolean grenade = canDamageWithGrenade(toX, toY, damagedTeammate.getX(), damagedTeammate.getY());
+                        if (!shoot && !grenade) {
                             continue;
                         }
                         for (int fromX = 0; fromX < n; fromX++) {
@@ -303,8 +305,16 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                                     }
                                     int[][] dist = bfs[fromX][fromY] == null ? bfs[fromX][fromY] = Utils.bfsByMap(mapWithoutEnemies, fromX, fromY) : bfs[fromX][fromY];
                                     int hasActions = getMaxInitialAP(suspectedType, playerId);
-                                    int needActions = getActionsToMove(dist[toX][toY], fromStance, toStance) * 2 + utils.getShootCost(suspectedType);
-                                    if (needActions > hasActions) {
+                                    int actionsToMove = getActionsToMove(dist[toX][toY], fromStance, toStance) * 2;
+                                    int needActionsToShoot = actionsToMove + utils.getShootCost(suspectedType);
+                                    if (!shoot) {
+                                        needActionsToShoot = Integer.MAX_VALUE;
+                                    }
+                                    int needActionsToThrowGrenade = actionsToMove + game.getGrenadeThrowCost();
+                                    if (!grenade) {
+                                        needActionsToThrowGrenade = Integer.MAX_VALUE;
+                                    }
+                                    if (needActionsToShoot > hasActions && needActionsToThrowGrenade > hasActions) {
                                         continue;
                                     }
                                     int d = minManhattanDistToOtherEnemy(playerId, fromX, fromY, suspectedType);
@@ -334,6 +344,14 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 .playerId(playerId)
                 .lastSeenTime(set.size() == 1 ? mediumMoveIndex : mediumMoveIndex - moveOrder.length())
                 .build();
+    }
+
+    private boolean canDamageWithGrenade(int toX, int toY, int x, int y) {
+        return canThrowGrenade(toX, toY, x, y) ||
+                canThrowGrenade(toX, toY, x + 1, y) ||
+                canThrowGrenade(toX, toY, x - 1, y) ||
+                canThrowGrenade(toX, toY, x, y + 1) ||
+                canThrowGrenade(toX, toY, x, y - 1);
     }
 
     private TrooperType typeByMoveIndex(int enemyMoveIndex) {
