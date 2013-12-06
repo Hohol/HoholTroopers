@@ -760,7 +760,7 @@ public final class MyStrategy implements Strategy {
                     enemies.remove(mt);
                 }
             } else {
-                if (getMyScore() - prevScore > expectedScoreChange) {
+                if (getMyScore() - prevScore != expectedScoreChange) {
                     enemies.remove(mt);
                     markKilled(mt);
                 } else {
