@@ -1270,11 +1270,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private int getDamageConsiderPhantom(MutableTrooper enemy, int damage, boolean grenade) {
         if (isPhantom(enemy, mediumMoveIndex, moveOrder)) {
-            if (grenade) {
-                damage = 0;
-            } else {
-                damage /= 2;
-            }
+            damage /= 2;
         }
         return damage;
     }

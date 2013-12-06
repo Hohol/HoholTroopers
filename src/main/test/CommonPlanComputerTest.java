@@ -900,19 +900,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void dontWasteGrenadeOnPhantomEnemy() {
-        setMap(
-                "S.#.s"
-        );
-        enemy(SOLDIER).stance(PRONE).lastSeenTime(-10);
-        ally(SOLDIER).grenade();
-        check(
-                SOLDIER,
-                8
-        );
-    }
-
-    @Test
     void enemyCanEasilyScoutYou() {
         setMap(
                 "ST......1rt"
