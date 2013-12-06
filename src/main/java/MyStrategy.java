@@ -322,6 +322,9 @@ public final class MyStrategy implements Strategy {
         if (seeSomeEnemy()) {
             return true;
         }
+        if (!damagedTeammates.isEmpty()) {
+            return true;
+        }
         if (self.getType() == FIELD_MEDIC && teammates.size() == 1) {
             return false;
         }
