@@ -42,7 +42,7 @@ public final class MyStrategy implements Strategy {
     static boolean[][][] damagedArea;
     boolean[][][] canSeeRightNow;  //todo it seems this array is not needed at all
     static List<Cell> suspiciousCells = new ArrayList<>();
-    static Cell lastSeenEnemyPos;
+    static Cell lastSeenEnemyPos, lastSeenEnemyPos2;
     static int prevScore;
     static boolean scoreMustChange;
     static List<MutableTrooper> enemiesDamagedOnPreviousMove = new ArrayList<>();
@@ -89,8 +89,8 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        detectInvisibleShooters();
-        printSuspiciousCells();
+        //detectInvisibleShooters();
+        //printSuspiciousCells();
 
         if (tryFightOrHeal()) {
             return;
@@ -421,6 +421,7 @@ public final class MyStrategy implements Strategy {
                 getEnemyKnowsPositions(),
                 mediumMoveIndex,
                 damagedTeammates.isEmpty() ? null : damagedTeammates.get(0).getType(),
+                lastSeenEnemyPos2,
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -589,6 +590,7 @@ public final class MyStrategy implements Strategy {
         if (!enemies.isEmpty()) {
             MutableTrooper t = enemies.iterator().next();
             lastSeenEnemyPos = new Cell(t.getX(), t.getY());
+            lastSeenEnemyPos2 = lastSeenEnemyPos;
         }
         prevScore = getMyScore();
         prevActions.add(MyMove.of(move));

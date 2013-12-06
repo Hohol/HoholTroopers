@@ -43,6 +43,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     String moveOrder;
     MutableTrooper investigationResult;
     TrooperType damagedTeammateType;
+    Cell lastSeenEnemyPos;
 
     public TacticPlanComputer(
             char[][] map,
@@ -63,6 +64,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             Set<Cell> enemyKnowsPosition,
             int mediumMoveIndex,
             TrooperType damagedTeammateType,
+            Cell lastSeenEnemyPos,
             boolean mapIsStatic
     ) {
         super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
@@ -76,6 +78,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.mediumMoveIndex = mediumMoveIndex;
         this.moveOrder = moveOrder;
         this.damagedTeammateType = damagedTeammateType;
+        this.lastSeenEnemyPos = lastSeenEnemyPos;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);
@@ -334,8 +337,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
 
     private int minManhDistToOtherNearestEnemy(long playerId, int fromX, int fromY, TrooperType type) {
         int dist = 10000;
-        for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {
-            MutableTrooper enemy = enemies.get(enemyIndex);
+        if (lastSeenEnemyPos != null && enemies.isEmpty()) {
+            dist = Utils.manhattanDist(fromX, fromY, lastSeenEnemyPos.x, lastSeenEnemyPos.y);
+        }
+        for (MutableTrooper enemy : enemies) {
             if (enemy.getPlayerId() != playerId) {
                 continue;
             }

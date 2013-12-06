@@ -35,7 +35,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 selfType, 0
         );
         String resultString = "null";
-        if(investigationResult != null) {
+        if (investigationResult != null) {
             resultString = String.format("%s %s %s %s", investigationResult.getType(), investigationResult.getX(), investigationResult.getY(), investigationResult.getStance());
         }
         if (expected == null) {
@@ -206,5 +206,36 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         teammateWasDamaged(SOLDIER);
         checkInvestigationNothing();
+    }
+
+    @Test
+    void ifNoEnemyIsSeenPlaceHimNearLastSeenEnemyPos() {
+        setMap(
+                ".S.",
+                ".#."
+        );
+        teammateWasDamaged(SOLDIER);
+        setLastSeenEnemyPosition(2, 0);
+        checkInvestigation(
+                SOLDIER,
+                2, 1, STANDING, true
+        );
+    }
+    @Test
+    void ifNoEnemyIsSeenPlaceHimNearLastSeenEnemyPos2() {
+        setMap(
+                ".S.",
+                ".#."
+        );
+        teammateWasDamaged(SOLDIER);
+        setLastSeenEnemyPosition(0, 0);
+        checkInvestigation(
+                SOLDIER,
+                0, 1, STANDING, true
+        );
+    }
+
+    private void setLastSeenEnemyPosition(int x, int y) {
+        lastSeenEnemyPosition = new Cell(x, y);
     }
 }

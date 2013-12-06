@@ -9,6 +9,7 @@ import java.util.Set;
 
 public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
+    protected Cell lastSeenEnemyPosition;
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
     private Set<Cell> enemyKnowsPosition;
@@ -25,6 +26,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         mediumMoveIndex = 0;
         damagedTeammate = null;
         moveOrder = null;
+        lastSeenEnemyPosition = null;
     }
 
     protected void enemyDoesntKnowWhereWeAre() {
@@ -93,6 +95,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 enemyKnowsPosition,
                 mediumMoveIndex,
                 damagedTeammate,
+                lastSeenEnemyPosition,
                 mapIsStatic
         );
         List<MyMove> result = computer.getPlan();
