@@ -969,7 +969,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private boolean finalsAndHavingBigAdvantage() {
-        if (finals() && teammates.size() + 1 - aliveEnemyCnt() >= 2) {
+        if (finals() && teammates.size() + 1 - aliveEnemyCnt() >= 3) {
             return true;
         }
         return false;
