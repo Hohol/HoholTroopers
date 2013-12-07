@@ -29,13 +29,29 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     MutableTrooper[][] troopers;
     int[][][] visibleCnt;
     static List<Cell3D>[][][] cellsVisibleFrom;
+    static List<Cell3D>[][][][] cellsVisibleFromCache;
     MutableTrooper self;    //for immutable fields only
     boolean mapIsStatic;
     List<MyMove> prevActions;
     Map<Long, Set<TrooperType>> killedEnemies;
+    int initialTeamSize;
+    int mediumMoveIndex;
     private int[][] scoutingValue;
 
-    public AbstractPlanComputer(char[][] map, Utils utils, List<MutableTrooper> teammates, boolean[] visibilities, BonusType[][] bonuses, MutableTrooper[][] troopers, MutableTrooper self, boolean mapIsStatic, List<MyMove> prevActions, Map<Long, Set<TrooperType>> killedEnemies) {
+    public AbstractPlanComputer(
+            char[][] map,
+            Utils utils,
+            List<MutableTrooper> teammates,
+            boolean[] visibilities,
+            BonusType[][] bonuses,
+            MutableTrooper[][] troopers,
+            MutableTrooper self,
+            boolean mapIsStatic,
+            List<MyMove> prevActions,
+            Map<Long, Set<TrooperType>> killedEnemies,
+            int mediumMoveIndex,
+            int initialTeamSize
+    ) {
         m = map[0].length;
         n = map.length;
         this.map = map;
@@ -49,6 +65,8 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         this.mapIsStatic = mapIsStatic;
         this.prevActions = prevActions;
         this.killedEnemies = killedEnemies;
+        this.initialTeamSize = initialTeamSize;
+        this.mediumMoveIndex = mediumMoveIndex;
     }
 
     protected void addAction(MyMove action) {
@@ -316,17 +334,29 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected void prepareCellsVisibleFrom() {
-        if (mapIsStatic && cellsVisibleFrom != null) {
-            return;
+        if (cellsVisibleFromCache == null) {
+            cellsVisibleFromCache = new List[initialTeamSize][][][];
         }
-        cellsVisibleFrom = new List[n][m][Utils.NUMBER_OF_STANCES];
+        if (!mapIsStatic) {
+            cellsVisibleFrom = getCellsVisibleFrom();
+        } else {
+            if (cellsVisibleFromCache[mediumMoveIndex % initialTeamSize] == null) {
+                cellsVisibleFromCache[mediumMoveIndex % initialTeamSize] = getCellsVisibleFrom();
+            }
+            cellsVisibleFrom = cellsVisibleFromCache[mediumMoveIndex % initialTeamSize];
+        }
+    }
+
+    private List<Cell3D>[][][] getCellsVisibleFrom() {
+        List<Cell3D>[][][] r = new List[n][m][Utils.NUMBER_OF_STANCES];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
-                    cellsVisibleFrom[i][j][stance] = getCellsVisibleFrom(i, j, stance);
+                    r[i][j][stance] = getCellsVisibleFrom(i, j, stance);
                 }
             }
         }
+        return r;
     }
 
     protected void prepareVisibleInitially() {

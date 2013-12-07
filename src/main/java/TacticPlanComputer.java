@@ -14,6 +14,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     protected static final int MAX_DIST_MEDIC_SHOULD_TRY_HEAL = 7;
     private static final double INVISIBLE_DAMAGE_QUOTIENT = 0.5;
     private final List<MutableTrooper> enemies;
+    private final String moveOrder;
     private List<MutableTrooper> enemiesWithImaginary;
     private int[][] sqrDistSum;
     List<int[][]> distToTeammatesForHealing;
@@ -37,10 +38,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     int[][][][] actionsEnemyMustSpendToHide;
     boolean[][][][] visibleByEnemy;
     int[][][] apEnemyNeedsToSeeMe;
-    int initialTeamSize;
     Set<Cell> enemyKnowsPosition;
-    int mediumMoveIndex;
-    String moveOrder;
     MutableTrooper investigationResult;
     TrooperType damagedTeammateType;
     Cell lastSeenEnemyPos;
@@ -57,6 +55,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             List<MutableTrooper> teammates,
             List<MutableTrooper> enemies,
             String moveOrder,
+            int initialTeamSize,
             boolean enemyKnowsWhereWeAre,
             MutableTrooper self,
             List<MyMove> prevActions,
@@ -69,19 +68,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             Cell lastSeenEnemyPos,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies, mediumMoveIndex, initialTeamSize);
         this.cur = new TacticState(self);
         this.healForbidden = healForbidden; //todo it is hack. Actually exist situations where even alone medic should heal himself
         this.bonusUseForbidden = bonusUseForbidden;
         this.enemies = enemies;
         this.enemyInitiallyKnowsWhereWeAre = enemyKnowsWhereWeAre;
         this.enemyKnowsPosition = enemyKnowsPosition;
-        initialTeamSize = moveOrder.length();
-        this.mediumMoveIndex = mediumMoveIndex;
-        this.moveOrder = moveOrder;
         this.damagedTeammateType = damagedTeammateType;
         this.lastSeenEnemyPos = lastSeenEnemyPos;
         this.damageDealtToTeammate = damageDealtToTeammate;
+        this.moveOrder = moveOrder;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);

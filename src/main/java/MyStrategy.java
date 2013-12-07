@@ -416,6 +416,7 @@ public final class MyStrategy implements Strategy {
                 teammatesWithoutSelf(),
                 enemies,
                 moveOrder,
+                initialTeamSize,
                 enemyKnowsWhereWeAre,
                 new MutableTrooper(self, -1), //todo remove lastSeenTime from MutableTrooper
                 prevActions,
@@ -484,6 +485,8 @@ public final class MyStrategy implements Strategy {
                 destination,
                 prevActions,
                 killedEnemies,
+                mediumMoveIndex,
+                initialTeamSize,
                 true
         ).getPlan();
     }

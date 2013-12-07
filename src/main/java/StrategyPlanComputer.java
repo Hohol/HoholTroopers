@@ -28,9 +28,11 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
             Cell destination,
             List<MyMove> prevActions,
             Map<Long, Set<TrooperType>> killedEnemies,
+            int mediumMoveIndex,
+            int initialTeamSize,
             boolean mapIsStatic
     ) {
-        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies);
+        super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies, mediumMoveIndex, initialTeamSize);
         this.destination = destination;
         cur = new StrategyState(self);
     }

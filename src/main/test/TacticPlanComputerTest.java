@@ -14,7 +14,6 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
     private Set<Cell> enemyKnowsPosition;
-    protected int mediumMoveIndex;
     private TrooperType damagedTeammate;
     protected MutableTrooper investigationResult;
     private int damageDealtToTeammate;
@@ -89,6 +88,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 teammates,
                 enemies,
                 moveOrder,
+                moveOrder.length(),
                 enemyKnowsWhereWeAre,
                 self,
                 prevActions,

@@ -27,6 +27,8 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 destination,
                 prevActions,
                 killedEnemies,
+                mediumMoveIndex,
+                moveOrder.length(),
                 mapIsStatic
         ).getPlan();
     }

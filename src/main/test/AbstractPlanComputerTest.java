@@ -15,6 +15,7 @@ public abstract class AbstractPlanComputerTest {
     protected List<MutableTrooper> enemies;
     protected List<MyMove> prevActions = new ArrayList<>();
     protected String moveOrder;
+    protected int mediumMoveIndex;
     char[][] map;
     int m;
     int n;

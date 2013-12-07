@@ -100,6 +100,7 @@ public class StrategyState extends AbstractState<StrategyState> {
                 ", maxDistToTeammate=" + maxDistToTeammate +
                 ", distToLeader=" + distToLeader +
                 ", leadersDistToDestination=" + leadersDistToDestination +
+                ", dangerAreaFactor=" + dangerAreaFactor +
                 '}';
     }
 }
