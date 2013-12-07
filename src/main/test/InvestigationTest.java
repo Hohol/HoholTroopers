@@ -168,7 +168,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         setMoveOrder("SRF");
         setMediumMoveIndex(1);
-        teammateWasDamaged(SNIPER, defaultDamageValue);
+        teammateWasDamaged(SNIPER, 65);
         checkInvestigation(SNIPER, 9, 0, STANDING, false);
     }
 
@@ -272,6 +272,47 @@ public class InvestigationTest extends TacticPlanComputerTest {
         setMediumMoveIndex(1);
         checkInvestigation(
                 FIELD_MEDIC, 2, 1, STANDING, false
+        );
+    }
+
+    @Test
+    void sniperCanNotDealDamageLessThan60() {
+        setMap(
+                "R......1.....",
+                ".############",
+                "..###########"
+        );
+        setMoveOrder("RT");
+        setLastSeenEnemyPosition(12, 0);
+        teammateWasDamaged(SNIPER, 20);
+        checkInvestigation(
+                SCOUT, 1, 2, STANDING, false
+        );
+    }
+
+    @Test
+    void soldierDamageMayNotBeLess25() {
+        setMap(
+                "S.",
+                "#."
+        );
+        setMoveOrder("ST");
+        teammateWasDamaged(SOLDIER, 20);
+        checkInvestigation(
+                SCOUT, 1, 1, STANDING, false
+        );
+    }
+
+    @Test
+    void scoutDealsAtLeast20Damage() {
+        setMap(
+                "T.",
+                "#."
+        );
+        setMoveOrder("TC");
+        teammateWasDamaged(SCOUT, 15);
+        checkInvestigation(
+                COMMANDER, 1, 1, STANDING, false
         );
     }
 }

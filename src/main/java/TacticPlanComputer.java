@@ -359,6 +359,15 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         if (damage % 5 != 0) {
             return suspectedType == FIELD_MEDIC;
         }
+        if (suspectedType == SNIPER) {
+            return damage == 65 || damage == 80 || damage == 95;
+        }
+        if (suspectedType == SOLDIER) {
+            return damage >= 25;
+        }
+        if (suspectedType == SCOUT) {
+            return damage >= 20;
+        }
         return true;
     }
 
@@ -827,10 +836,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         cur.enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
         cur.actionsEnemyMustSpendToHide = actionsEnemyMustSpendToHide();
         cur.apEnemyNeedsToSeeMe = getApEnemyNeedsToSeeMe();
-        if (stopOn(MyMove.LOWER_STANCE)) {
-            int x = 0;
-            x++;
-        }
         updateMaxDamageEnemyCanDeal();
 
         if (cur.better(best, selfType)) {
