@@ -89,7 +89,7 @@ public class StrategyState extends AbstractState<StrategyState> {
     }
 
     int getMagic() {
-        return distToDestination * 75 + dangerAreaFactor;
+        return distToDestination * 50 + dangerAreaFactor;
     }
 
     @Override
