@@ -1161,7 +1161,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             numberOfTeammatesWhoCanReachEnemy[cur.x][cur.y] = 0;
 
             for (MutableTrooper ally : teammates) {
-                if (ally.getType() == FIELD_MEDIC) {
+                if (ally.getType() == SNIPER) {
                     continue;
                 }
                 int[][] dist = Utils.bfsByMap(map, ally.getX(), ally.getY());

@@ -282,8 +282,8 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         );
     }
 
-    @Test
-    void testDoNotBlockPathIgnoreMedic() {
+    /*@Test
+    void testDoNotBlockPathIgnoreMedic() { //FUKIN NO. Medic is the best labyrinth fighter
         setMap(
                 "FS......s",
                 ".C......s"
@@ -294,7 +294,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 4,
                 MyMove.shoot(8, 0)
         );
-    }
+    }/**/
 
     @Test
     void testBonusPriority() {
@@ -911,6 +911,19 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SCOUT,
                 12,
                 MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
+        );
+    }
+
+    @Test
+    void sniperIsUsuallyUselessInLabyrinth() {
+        setMap(
+                ".F..",
+                "#R#.",
+                "###s"
+        );
+        check(
+                FIELD_MEDIC,
+                2
         );
     }
 }
