@@ -222,9 +222,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             index += moveOrder.length();
         }
         TrooperType suspectedType2 = typeByMoveIndex(index);
-        if (isVisibleAndNotPhantom(suspectedType1) || isVisibleAndNotPhantom(suspectedType2)) {
+        /*if (isVisibleAndNotPhantom(suspectedType1) || isVisibleAndNotPhantom(suspectedType2)) {
             return;
-        }
+        }/**/
 
         List<TrooperType> suspectedTypes = new ArrayList<>();
         suspectedTypes.add(suspectedType1);
@@ -258,6 +258,28 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         troopers[enemy.getX()][enemy.getY()] = null;
     }
 
+    class InvestigationResult {
+        TrooperType type;
+        int x, y, stance;
+        int minDistToOtherEnemy, steps;
+
+        InvestigationResult(TrooperType type, int x, int y, int stance, int minDistToOtherEnemy, int steps) {
+            this.type = type;
+            this.x = x;
+            this.y = y;
+            this.stance = stance;
+            this.minDistToOtherEnemy = minDistToOtherEnemy;
+            this.steps = steps;
+        }
+
+        public boolean better(InvestigationResult result) {
+            if (steps != result.steps) {
+                return steps < result.steps;
+            }
+            return minDistToOtherEnemy < result.minDistToOtherEnemy;
+        }
+    }
+
     private MutableTrooper getSuspected(List<TrooperType> suspectedTypes) {
         MutableTrooper damagedTeammate = null;
         if (damagedTeammateType == selfType) {
@@ -275,16 +297,17 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         long playerId = anyEnemyId();
         char[][] mapWithoutEnemies = getMapWithoutEnemies();
         int[][][][] bfs = new int[n][m][][];
-        Cell3D bestPos = null;
-        int minDist = Integer.MAX_VALUE;
         HashSet<Cell> set = new HashSet<>();
-        TrooperType bestType = null;
+        InvestigationResult result = null;
         for (TrooperType suspectedType : suspectedTypes) {
             if (!isAlive(playerId, suspectedType)) {
                 continue;
             }
             if (!couldDealThatDamage(suspectedType, damageDealtToTeammate)) {
                 continue;
+            }
+            if (isVisibleAndNotPhantom(playerId, suspectedType)) {
+                return null;
             }
             for (int toX = 0; toX < n; toX++) {
                 for (int toY = 0; toY < m; toY++) {
@@ -324,10 +347,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                                         continue;
                                     }
                                     int d = minManhattanDistToOtherEnemy(playerId, fromX, fromY, suspectedType);
-                                    if (d < minDist) {
-                                        minDist = d;
-                                        bestPos = new Cell3D(fromX, fromY, fromStance);
-                                        bestType = suspectedType;
+                                    InvestigationResult cur = new InvestigationResult(suspectedType, fromX, fromY, fromStance, d, dist[toX][toY]);
+                                    if (result == null || cur.better(result)) {
+                                        result = cur;
                                     }
                                     set.add(new Cell(fromX, fromY));
                                 }
@@ -338,15 +360,15 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             }
         }
 
-        if (bestPos == null) {
+        if (result == null) {
             return null;
         }
 
         return new MTBuilder()
-                .x(bestPos.x)
-                .y(bestPos.y)
-                .stance(TrooperStance.values()[bestPos.stance])
-                .type(bestType)
+                .x(result.x)
+                .y(result.y)
+                .stance(TrooperStance.values()[result.stance])
+                .type(result.type)
                 .playerId(playerId)
                 .lastSeenTime(set.size() == 1 ? mediumMoveIndex : mediumMoveIndex - moveOrder.length())
                 .build();
@@ -404,8 +426,11 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return dist;
     }
 
-    private boolean isVisibleAndNotPhantom(TrooperType suspectedType) {
+    private boolean isVisibleAndNotPhantom(long playerId, TrooperType suspectedType) {
         for (MutableTrooper enemy : enemies) {
+            if (enemy.getPlayerId() != playerId) {
+                continue;
+            }
             if (enemy.getType() == suspectedType && !isPhantom(enemy, mediumMoveIndex, moveOrder)) {
                 return true;
             }

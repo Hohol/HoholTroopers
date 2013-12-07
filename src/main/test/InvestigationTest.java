@@ -123,7 +123,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         theyDontHave(COMMANDER);
         teammateWasDamaged(SCOUT, defaultDamageValue);
-        checkInvestigation(FIELD_MEDIC, 7, 0, STANDING, false);
+        checkInvestigation(SCOUT, 7, 0, STANDING, false);
     }
 
     @Test
@@ -313,6 +313,20 @@ public class InvestigationTest extends TacticPlanComputerTest {
         teammateWasDamaged(SCOUT, 15);
         checkInvestigation(
                 COMMANDER, 1, 1, STANDING, false
+        );
+    }
+
+    @Test
+    void enemyMostLikelyStaysInSameCell() {
+        setMap(
+                "S..r.",
+                "1###.",
+                "....."
+        );
+        teammateWasDamaged(SOLDIER, 25);
+        checkInvestigation(
+                SOLDIER,
+                0,2,PRONE, true
         );
     }
 }

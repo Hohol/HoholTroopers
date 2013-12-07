@@ -289,7 +289,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 "S.",
                 "11"
         );
-        setDestination(0,0);
+        setDestination(0, 0);
         check(
                 SOLDIER,
                 12
@@ -312,20 +312,6 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void avoidDangerArea() {
-        setMap(
-                "##.",
-                "##1",
-                "S.@"
-        );
-        setVisible(2, 0, 1, 2, PRONE);
-        check(
-                SOLDIER,
-                2
-        );
-    }
-
-    @Test
     void testScouting3D() {
         setMap(
                 "..",
@@ -336,20 +322,6 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 SOLDIER,
                 10,
                 MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_SOUTH, MyMove.MOVE_SOUTH, MyMove.MOVE_EAST
-        );
-    }
-
-    @Test
-    void newDangerArea() {
-        setMap(
-            "..........",
-            "1111111111",
-            "S........@"
-        );
-        check(
-                SOLDIER,
-                12,
-                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
         );
     }
 
@@ -366,4 +338,32 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
                 MyMove.MOVE_NORTH
         );
     }
+
+    /*@Test
+    void avoidDangerArea() {
+        setMap(
+                "##.",
+                "##1",
+                "S.@"
+        );
+        setVisible(2, 0, 1, 2, PRONE);
+        check(
+                SOLDIER,
+                2
+        );
+    }
+
+    @Test
+    void newAvoidDangerArea() {
+        setMap(
+                "..........",
+                "1111111111",
+                "S........@"
+        );
+        check(
+                SOLDIER,
+                12,
+                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.LOWER_STANCE, MyMove.LOWER_STANCE
+        );
+    }/**/
 }

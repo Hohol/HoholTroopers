@@ -57,7 +57,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
                         if (isWall(shooterX, shooterY)) {
                             continue;
                         }
-                        int shootRange = 4;
+                        int shootRange = 10;
                         if (!reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange)) {
                             continue;
                         }
@@ -184,7 +184,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
         cur.leadersDistToDestination = getLeadersDistToDestination();
-        cur.stayingInDangerArea = checkDangerArea();
+        cur.dangerAreaFactor= getDangerAreaFactor();
 
         if (cur.better(best, selfType)) {
             Utils.log(cur);
@@ -192,13 +192,14 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         }
     }
 
-    private boolean checkDangerArea() {
+    private int getDangerAreaFactor() {
+        int r = 0;
         for (Cell3D cell : getDangerCells(cur.x, cur.y, cur.stance.ordinal())) {
             if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
-                return true;
+                r++;
             }
         }
-        return false;
+        return r;
     }
 
     private int getDistToLeader() {

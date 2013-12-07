@@ -1,15 +1,18 @@
 import model.TrooperStance;
+
 import static model.TrooperStance.*;
+
 import model.TrooperType;
+
 import static model.TrooperType.*;
 
 public class StrategyState extends AbstractState<StrategyState> {
 
     int distToDestination;
-    int maxDistToTeammate; //if self is leader, it is max of dist to teammates. otherwise it is dist to leader
+    int maxDistToTeammate; //if self is leader, it is max of minDistToOtherEnemy to teammates. otherwise it is minDistToOtherEnemy to leader
     int distToLeader;
     int leadersDistToDestination;
-    boolean stayingInDangerArea;
+    int dangerAreaFactor;
 
     public StrategyState(MutableTrooper self) {
         super(self);
@@ -21,7 +24,7 @@ public class StrategyState extends AbstractState<StrategyState> {
         maxDistToTeammate = cur.maxDistToTeammate;
         distToLeader = cur.distToLeader;
         leadersDistToDestination = cur.leadersDistToDestination;
-        stayingInDangerArea = cur.stayingInDangerArea;
+        this.dangerAreaFactor = cur.dangerAreaFactor;
     }
 
     @Override
@@ -45,10 +48,6 @@ public class StrategyState extends AbstractState<StrategyState> {
         }
         //--
 
-        if(stayingInDangerArea != old.stayingInDangerArea) {
-            return !stayingInDangerArea;
-        }
-
         if (holdingMedikit != old.holdingMedikit) {
             return holdingMedikit;
         }
@@ -66,11 +65,13 @@ public class StrategyState extends AbstractState<StrategyState> {
             return distToLeader < old.distToLeader;
         }
 
-        if (distToDestination != old.distToDestination) {
-            return distToDestination < old.distToDestination;
+        int magic = getMagic();
+        int oldMagic = old.getMagic();
+        if (magic != oldMagic) {
+            return magic < oldMagic;
         }
 
-        if(selfType == SNIPER) {
+        if (selfType == SNIPER) {
             if (stance != old.stance) {
                 return stance == KNEELING;
             }
@@ -87,6 +88,10 @@ public class StrategyState extends AbstractState<StrategyState> {
         return false;
     }
 
+    int getMagic() {
+        return distToDestination * 75 + dangerAreaFactor;
+    }
+
     @Override
     public String toString() {
         return "StrategyState{" +
@@ -95,7 +100,6 @@ public class StrategyState extends AbstractState<StrategyState> {
                 ", maxDistToTeammate=" + maxDistToTeammate +
                 ", distToLeader=" + distToLeader +
                 ", leadersDistToDestination=" + leadersDistToDestination +
-                ", stayingInDangerArea=" + stayingInDangerArea +
                 '}';
     }
 }
