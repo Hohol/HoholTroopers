@@ -643,10 +643,12 @@ public final class MyStrategy implements Strategy {
     }
 
     private void finish() {
-        if (!enemies.isEmpty()) {
-            MutableTrooper t = enemies.iterator().next();
-            lastSeenEnemyPos = new Cell(t.getX(), t.getY());
-            lastSeenEnemyPos2 = lastSeenEnemyPos;
+        for (MutableTrooper enemy : enemies) {
+            if(!TacticPlanComputer.isPhantom(enemy, mediumMoveIndex, moveOrder)) {
+                lastSeenEnemyPos = new Cell(enemy.getX(), enemy.getY());
+                lastSeenEnemyPos2 = lastSeenEnemyPos;
+                break;
+            }
         }
         prevScore = getMyScore();
         prevActions.add(MyMove.of(move));
