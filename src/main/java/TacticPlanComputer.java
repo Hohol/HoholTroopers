@@ -563,10 +563,12 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private int getDistToPrevPos(TrooperType type, int x, int y) {
+        Cell pos;
         if (!lastSeenEnemyPositionByType.containsKey(type)) {
-            return 0;
+            pos = new Cell(n / 2, m / 2);
+        } else {
+            pos = lastSeenEnemyPositionByType.get(type);
         }
-        Cell pos = lastSeenEnemyPositionByType.get(type);
         return Utils.manhattanDist(x, y, pos.x, pos.y);
     }
 
