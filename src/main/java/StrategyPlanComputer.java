@@ -16,7 +16,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     private int[][] distToLeader;
     int[][] leadersDistToDestination;
     List<Cell3D>[][][] dangerArea;
-    private BonusType targetBonus;
 
     public StrategyPlanComputer(
             char[][] map,
@@ -40,50 +39,9 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
     protected void prepare() {
         super.prepare();
         distWithoutTeammates = getDistWithoutTeammates();
-        chooseBonus();
         distToDestination = Utils.bfsByMap(map, destination.x, destination.y);
         chooseLeader();
         prepareDangerArea();
-    }
-
-    private void chooseBonus() {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                BonusType bonus = bonuses[i][j];
-                if (bonus == null) {
-                    continue;
-                }
-                if (someoneNeeds(bonus)) {
-                    targetBonus = bonus;
-                    destination = new Cell(i, j);
-                    return;
-                }
-            }
-        }
-    }
-
-    private boolean someoneNeeds(BonusType bonus) {
-        if (!isHolding(self, bonus)) {
-            return true;
-        }
-        for (MutableTrooper ally : teammates) {
-            if (!isHolding(ally, bonus)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isHolding(MutableTrooper ally, BonusType bonus) {
-        switch (bonus) {
-            case GRENADE:
-                return ally.isHoldingGrenade();
-            case MEDIKIT:
-                return ally.isHoldingMedikit();
-            case FIELD_RATION:
-                return ally.isHoldingFieldRation();
-        }
-        throw new RuntimeException();
     }
 
     private void prepareDangerArea() {
@@ -152,32 +110,38 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         }
     }
 
-    private int getLeadersDistToDestination(int i, int j) {
+    private int getLeadersDistToDestination() {
         if (selfIsLeader()) {
             return 0;
         }
+        int x = cur.x, y = cur.y;
         if (cur.x == destination.x && cur.y == destination.y) {
-            return Utils.UNREACHABLE;
+            return Utils.UNREACHABLE * 2;
         }
-        if (leadersDistToDestination[i][j] == -1) {
-            char buf = map[i][j];
-            map[i][j] = Utils.getCharForTrooperType(selfType);
-            int r = Utils.bfsByMap(map, leader.getX(), leader.getY())[destination.x][destination.y];
-            map[i][j] = buf;
-            leadersDistToDestination[i][j] = r;
+        if (leadersDistToDestination[x][y] == -1) {
+            int r = getDist(map, x, y) + getDist(mapWithoutTeammates, x, y);
+            leadersDistToDestination[x][y] = r;
         }
-        return leadersDistToDestination[i][j];
+        return leadersDistToDestination[x][y];
+    }
+
+    private int getDist(char[][] mapa, int x, int y) {
+        char buf = mapa[x][y];
+        mapa[x][y] = Utils.getCharForTrooperType(selfType);
+        int r = Utils.bfsByMap(mapa, leader.getX(), leader.getY())[destination.x][destination.y];
+        mapa[x][y] = buf;
+        return r;
     }
 
     private int getLeaderIndex(int maxDist) { //returns -1 if self is leader
         int best = -1;
-        int maxPriority = leaderPriorityIncludingBonus(self);
+        int maxPriority = leaderPriority(self.getType());
         for (int i = 0; i < teammates.size(); i++) {
             MutableTrooper ally = teammates.get(i);
             if (distWithoutTeammates.get(i)[cur.x][cur.y] > maxDist) {
                 continue;
             }
-            int prior = leaderPriorityIncludingBonus(ally);
+            int prior = leaderPriority(ally.getType());
             if (prior > maxPriority) {
                 best = i;
                 maxPriority = prior;
@@ -188,14 +152,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     boolean selfIsLeader() {
         return leader == null;
-    }
-
-    public int leaderPriorityIncludingBonus(MutableTrooper trooper) {
-        int r = leaderPriority(trooper.getType());
-        if (targetBonus != null && !isHolding(trooper, targetBonus)) {
-            r += 10;
-        }
-        return r;
     }
 
     private static int leaderPriority(TrooperType type) {
@@ -227,7 +183,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         cur.distToDestination = distToDestination[cur.x][cur.y];
         cur.maxDistToTeammate = getMaxDistToTeammate();
         cur.distToLeader = getDistToLeader();
-        cur.leadersDistToDestination = getLeadersDistToDestination(cur.x, cur.y);
+        cur.leadersDistToDestination = getLeadersDistToDestination();
         cur.stayingInDangerArea = checkDangerArea();
 
         if (cur.better(best, selfType)) {

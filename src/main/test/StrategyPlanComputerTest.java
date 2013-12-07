@@ -354,17 +354,16 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
     }
 
     @Test
-    void moveToBonus() {
+    void dontBlockLeader() {
         setMap(
-                "S.....@",
-                ".......",
-                ".......",
-                "*......"
+                "#.##",
+                "@SFT",
+                "#.##"
         );
         check(
                 SOLDIER,
                 2,
-                MyMove.MOVE_SOUTH
+                MyMove.MOVE_NORTH
         );
     }
 }

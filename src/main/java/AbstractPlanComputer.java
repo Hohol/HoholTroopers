@@ -23,6 +23,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     protected S cur, best;
     protected TrooperType selfType;
     protected boolean[] visibilities;
+    protected char[][] mapWithoutTeammates;
     long recursiveCallsCnt;
     BonusType[][] bonuses;
     MutableTrooper[][] troopers;
@@ -194,6 +195,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
         prepareVisibleInitially();
         prepareCellsVisibleFrom();
         prepareScoutingValue();
+        mapWithoutTeammates = getMapWithoutTeammates();
     }
 
     private void prepareScoutingValue() {
@@ -224,6 +226,16 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected List<int[][]> getDistWithoutTeammates() {
+        List<int[][]> distWithoutTeammates = new ArrayList<>();
+        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
+            MutableTrooper ally = teammates.get(allyIndex);
+            int[][] dist = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
+            distWithoutTeammates.add(dist);
+        }
+        return distWithoutTeammates;
+    }
+
+    private char[][] getMapWithoutTeammates() {
         char[][] mapWithoutTeammates = new char[n][m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
@@ -233,13 +245,7 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
                 }
             }
         }
-        List<int[][]> distWithoutTeammates = new ArrayList<>();
-        for (int allyIndex = 0; allyIndex < teammates.size(); allyIndex++) {
-            MutableTrooper ally = teammates.get(allyIndex);
-            int[][] dist = Utils.bfsByMap(mapWithoutTeammates, ally.getX(), ally.getY());
-            distWithoutTeammates.add(dist);
-        }
-        return distWithoutTeammates;
+        return mapWithoutTeammates;
     }
 
     protected boolean visible(int viewerX, int viewerY, int objectX, int objectY, int stance) {

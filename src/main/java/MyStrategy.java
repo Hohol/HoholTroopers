@@ -57,6 +57,7 @@ public final class MyStrategy implements Strategy {
     Map<TrooperType, Integer> orderIndex = new EnumMap<>(TrooperType.class);
     static boolean wasGrenade;
     static BonusType[][] bonuses;
+    static boolean[][] visited;
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -525,7 +526,35 @@ public final class MyStrategy implements Strategy {
         return self.getActionPoints() >= actionCost;
     }
 
+    private boolean someoneNeeds(BonusType bonus) {
+        if (!isHolding(self, bonus)) {
+            return true;
+        }
+        for (Trooper ally : teammates) {
+            if (!isHolding(ally, bonus)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isHolding(Trooper ally, BonusType bonus) {
+        switch (bonus) {
+            case GRENADE:
+                return ally.isHoldingGrenade();
+            case MEDIKIT:
+                return ally.isHoldingMedikit();
+            case FIELD_RATION:
+                return ally.isHoldingFieldRation();
+        }
+        throw new RuntimeException();
+    }
+
     private void init() {
+        if (visited == null) {
+            visited = new boolean[world.getWidth()][world.getHeight()];
+        }
+        visited[self.getX()][self.getY()] = true;
         if (bonuses == null) {
             bonuses = new BonusType[world.getWidth()][world.getHeight()];
         }
@@ -962,10 +991,34 @@ public final class MyStrategy implements Strategy {
         if (lastSeenEnemyPos != null) {
             destination = lastSeenEnemyPos;
         } else {
-            destination = getNearestLongAgoSeenCell();
+            destination = chooseBonus();
+            if (destination == null) {
+                destination = getNearestLongAgoSeenCell();
+            }
         }
         moveByPlan(getStrategyPlan(destination));
         return true;
+    }
+
+    private Cell chooseBonus() {
+        int minDist = Integer.MAX_VALUE;
+        Cell r = null;
+        Trooper someone = teammates.get(0);
+        for (int i = 0; i < world.getWidth(); i++) {
+            for (int j = 0; j < world.getHeight(); j++) {
+                if (visited[i][j]) {
+                    continue;
+                }
+                if (bonuses[i][j] != null && someoneNeeds(bonuses[i][j])) {
+                    int dist = Utils.manhattanDist(someone.getX(), someone.getY(), i, j);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        r = new Cell(i, j);
+                    }
+                }
+            }
+        }
+        return r;
     }
 
     private boolean tooCurvedPathTo(int x, int y, boolean avoidNarrowPathNearBorder) {
@@ -1155,6 +1208,12 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
+        Collections.sort(r, new Comparator<Trooper>() {
+            @Override
+            public int compare(Trooper o1, Trooper o2) {
+                return Long.compare(o1.getId(), o2.getId());
+            }
+        });
         return r;
     }
 
