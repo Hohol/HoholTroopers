@@ -283,6 +283,9 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             if (!isAlive(playerId, suspectedType)) {
                 continue;
             }
+            if (!couldDealThatDamage(suspectedType, damageDealtToTeammate)) {
+                continue;
+            }
             for (int toX = 0; toX < n; toX++) {
                 for (int toY = 0; toY < m; toY++) {
                     if (isWall(toX, toY)) {
@@ -347,6 +350,16 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 .playerId(playerId)
                 .lastSeenTime(set.size() == 1 ? mediumMoveIndex : mediumMoveIndex - moveOrder.length())
                 .build();
+    }
+
+    private boolean couldDealThatDamage(TrooperType suspectedType, int damage) {
+        if (damage == 60 || damage == 80) { //anyone could throw grenade
+            return true;
+        }
+        if (damage % 5 != 0) {
+            return suspectedType == FIELD_MEDIC;
+        }
+        return true;
     }
 
     private boolean damageCouldBeDoneWithGrenade(int damageDealtToTeammate) {

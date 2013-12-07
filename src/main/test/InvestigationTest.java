@@ -261,4 +261,17 @@ public class InvestigationTest extends TacticPlanComputerTest {
         setLastSeenEnemyPosition(0, 2);
         checkInvestigationNothing();
     }
+
+    @Test
+    void onlyMedicCanDealDamageNotDivisibleBy5() {
+        setMap(
+                "FS.",
+                "##."
+        );
+        teammateWasDamaged(SOLDIER, 27);
+        setMediumMoveIndex(1);
+        checkInvestigation(
+                FIELD_MEDIC, 2, 1, STANDING, false
+        );
+    }
 }
