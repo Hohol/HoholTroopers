@@ -231,6 +231,9 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
 
     @SuppressWarnings("unused")
     boolean stopOn(MyMove... move) { //for debug only
+        if(!MyStrategy.local) {
+            throw new RuntimeException();
+        }
         return Arrays.asList(move).equals(cur.actions);
     }
 
@@ -334,12 +337,12 @@ public abstract class AbstractPlanComputer<S extends AbstractState> {
     }
 
     protected void prepareCellsVisibleFrom() {
-        if (cellsVisibleFromCache == null) {
-            cellsVisibleFromCache = new List[initialTeamSize][][][];
-        }
         if (!mapIsStatic) {
             cellsVisibleFrom = getCellsVisibleFrom();
         } else {
+            if (cellsVisibleFromCache == null) {
+                cellsVisibleFromCache = new List[initialTeamSize][][][];
+            }
             if (cellsVisibleFromCache[mediumMoveIndex % initialTeamSize] == null) {
                 cellsVisibleFromCache[mediumMoveIndex % initialTeamSize] = getCellsVisibleFrom();
             }

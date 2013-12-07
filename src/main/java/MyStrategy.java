@@ -58,6 +58,7 @@ public final class MyStrategy implements Strategy {
     static boolean wasGrenade;
     static BonusType[][] bonuses;
     static boolean[][] visited;
+    static Map<TrooperType, Cell> lastSeenEnemyPosByType = new EnumMap<>(TrooperType.class);
 
     static {
         for (TrooperType type : TrooperType.values()) {
@@ -427,6 +428,7 @@ public final class MyStrategy implements Strategy {
                 damagedTeammate,
                 getLastDamageTaken(damagedTeammate),
                 lastSeenEnemyPos2,
+                lastSeenEnemyPosByType,
                 true
         );
         List<MyMove> r = computer.getPlan();
@@ -644,10 +646,10 @@ public final class MyStrategy implements Strategy {
 
     private void finish() {
         for (MutableTrooper enemy : enemies) {
-            if(!TacticPlanComputer.isPhantom(enemy, mediumMoveIndex, moveOrder)) {
+            if (!TacticPlanComputer.isPhantom(enemy, mediumMoveIndex, moveOrder)) {
                 lastSeenEnemyPos = new Cell(enemy.getX(), enemy.getY());
                 lastSeenEnemyPos2 = lastSeenEnemyPos;
-                break;
+                lastSeenEnemyPosByType.put(enemy.getType(), lastSeenEnemyPos);
             }
         }
         prevScore = getMyScore();

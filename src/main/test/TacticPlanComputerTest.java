@@ -1,10 +1,7 @@
 import model.TrooperStance;
 import model.TrooperType;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
@@ -17,6 +14,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
     private TrooperType damagedTeammate;
     protected MutableTrooper investigationResult;
     private int damageDealtToTeammate;
+    private Map<TrooperType, Cell> lastSeenEnemyPositionByType;
 
     @Override
     protected void setMap(String... smap) {
@@ -28,6 +26,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         damagedTeammate = null;
         moveOrder = null;
         lastSeenEnemyPosition = null;
+        lastSeenEnemyPositionByType = new EnumMap<>(TrooperType.class);
     }
 
     protected void enemyDoesntKnowWhereWeAre() {
@@ -99,6 +98,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 damagedTeammate,
                 damageDealtToTeammate,
                 lastSeenEnemyPosition,
+                lastSeenEnemyPositionByType,
                 mapIsStatic
         );
         List<MyMove> result = computer.getPlan();
@@ -133,5 +133,9 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
     protected void setLastSeenEnemyPosition(int x, int y) {
         lastSeenEnemyPosition = new Cell(x, y);
+    }
+
+    protected void setLastSeenEnemyPosition(TrooperType type, int x, int y) {
+        lastSeenEnemyPositionByType.put(type, new Cell(x, y));
     }
 }

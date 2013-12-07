@@ -43,6 +43,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     TrooperType damagedTeammateType;
     Cell lastSeenEnemyPos;
     private int damageDealtToTeammate;
+    Map<TrooperType, Cell> lastSeenEnemyPositionByType;
 
     public TacticPlanComputer(
             char[][] map,
@@ -66,6 +67,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             TrooperType damagedTeammateType,
             int damageDealtToTeammate,
             Cell lastSeenEnemyPos,
+            Map<TrooperType, Cell> lastSeenEnemyPositionByType,
             boolean mapIsStatic
     ) {
         super(map, utils, teammates, visibilities, bonuses, troopers, self, mapIsStatic, prevActions, killedEnemies, mediumMoveIndex, initialTeamSize);
@@ -79,6 +81,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.lastSeenEnemyPos = lastSeenEnemyPos;
         this.damageDealtToTeammate = damageDealtToTeammate;
         this.moveOrder = moveOrder;
+        this.lastSeenEnemyPositionByType = lastSeenEnemyPositionByType;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);
@@ -517,7 +520,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     }
 
     private MutableTrooper createImaginary(long playerId, TrooperType type) {
-        Cell bestPos = getSupposedImaginaryEnemyPosition(playerId);
+        Cell bestPos = getSupposedImaginaryEnemyPosition(playerId, type);
         if (bestPos == null) {
             return null;
         }
@@ -533,27 +536,38 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         return mt;
     }
 
-    private Cell getSupposedImaginaryEnemyPosition(Long playerId) {
+    private Cell getSupposedImaginaryEnemyPosition(Long playerId, TrooperType type) {
         Cell bestPos = null;
-        int minDist = Integer.MAX_VALUE;
+        int minDistToOtherEnemy = Integer.MAX_VALUE;
+        int minDistToPrevPos = Integer.MAX_VALUE;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 if (!isFree(i, j)) {
                     continue;
-                }/**/
+                }
                 for (int stance = 0; stance < Utils.NUMBER_OF_STANCES; stance++) {
                     if (visibleCnt[i][j][stance] != 0) {
                         continue;
                     }
-                    int dist = minDistToOtherNearestEnemy(playerId, i, j);
-                    if (dist < minDist) {
-                        minDist = dist;
+                    int distToOtherEnemy = minDistToOtherNearestEnemy(playerId, i, j);
+                    int distToPrevPos = getDistToPrevPos(type, i, j);
+                    if (distToOtherEnemy < minDistToOtherEnemy || distToOtherEnemy == minDistToOtherEnemy && distToPrevPos < minDistToPrevPos) {
+                        minDistToOtherEnemy = distToOtherEnemy;
+                        minDistToPrevPos = distToPrevPos;
                         bestPos = new Cell(i, j);
                     }
                 }
             }
         }
         return bestPos;
+    }
+
+    private int getDistToPrevPos(TrooperType type, int x, int y) {
+        if (!lastSeenEnemyPositionByType.containsKey(type)) {
+            return 0;
+        }
+        Cell pos = lastSeenEnemyPositionByType.get(type);
+        return Utils.manhattanDist(x, y, pos.x, pos.y);
     }
 
     private int minDistToOtherNearestEnemy(Long playerId, int i, int j) {

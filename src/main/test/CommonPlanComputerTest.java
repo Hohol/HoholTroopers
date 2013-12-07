@@ -926,4 +926,22 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 2
         );
     }
+
+    @Test
+    void placeImaginaryEnemyNearLastSeenPosition() {
+        setMap(
+                "#..........",
+                ".#########f",
+                "R........1."
+        );
+        setLastSeenEnemyPosition(SNIPER, 10, 2);
+        setMoveOrder("RSTF");
+        theyDontHave(SCOUT);
+        theyDontHave(SOLDIER);
+        check(
+                SNIPER,
+                2,
+                MyMove.MOVE_NORTH
+        );
+    }
 }
