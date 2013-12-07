@@ -5,7 +5,6 @@ import model.*;
  */
 @SuppressWarnings("unused")
 public final class MutableTrooper {
-    private final long id;
     private int x;
     private int y;
 
@@ -37,7 +36,6 @@ public final class MutableTrooper {
     private int lastSeenTime; //todo it does not belong here
 
     public MutableTrooper(Trooper t, int lastSeenTime) {
-        this.id = t.getId();
         this.x = t.getX();
         this.y = t.getY();
         this.playerId = t.getPlayerId();
@@ -49,7 +47,7 @@ public final class MutableTrooper {
         this.maximalHitpoints = t.getMaximalHitpoints();
         this.actionPoints = t.getActionPoints();
         this.initialActionPoints = t.getInitialActionPoints();
-        this.visionRange = (int)(t.getVisionRange() + 0.5);
+        this.visionRange = (int) (t.getVisionRange() + 0.5);
         this.shootingRange = t.getShootingRange();
         this.shootCost = t.getShootCost();
         this.standingDamage = t.getStandingDamage();
@@ -63,7 +61,6 @@ public final class MutableTrooper {
     }
 
     public MutableTrooper(long id, int x, int y, long playerId, int teammateIndex, boolean teammate, TrooperType type, TrooperStance stance, int hitpoints, int maximalHitpoints, int actionPoints, int initialActionPoints, int visionRange, double shootingRange, int shootCost, int standingDamage, int kneelingDamage, int proneDamage, int damage, boolean holdingGrenade, boolean holdingMedikit, boolean holdingFieldRation) {
-        this.id = id;
         this.x = x;
         this.y = y;
         this.playerId = playerId;
@@ -244,12 +241,14 @@ public final class MutableTrooper {
     @Override
     public boolean equals(Object o) {
         MutableTrooper t = (MutableTrooper) o;
-        return getId() == t.getId();
+        return playerId == t.playerId && type == t.type;
     }
 
     @Override
     public int hashCode() {
-        return Long.valueOf(getId()).hashCode();
+        int result = (int) (playerId ^ (playerId >>> 32));
+        result = 31 * result + type.hashCode();
+        return result;
     }
 
     public int getLastSeenTime() {
@@ -274,10 +273,6 @@ public final class MutableTrooper {
 
     public void setY(int y) {
         this.y = y;
-    }
-
-    public final long getId() {
-        return id;
     }
 
     /**

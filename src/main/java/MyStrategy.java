@@ -780,9 +780,9 @@ public final class MyStrategy implements Strategy {
                 }
             }
         }
-        Set<Long> seeRightNowIds = new HashSet<>();
+        Set<MutableTrooper> seeRightNow = new HashSet<>();
         for (Trooper trooper : world.getTroopers()) {
-            seeRightNowIds.add(trooper.getId());
+            seeRightNow.add(new MutableTrooper(trooper, -1));
             unkill(trooper);   //we could previously mistakenly suppose him to be dead
         }
         Iterator<MutableTrooper> it = enemies.iterator();
@@ -792,7 +792,7 @@ public final class MyStrategy implements Strategy {
                 it.remove();
                 continue;
             }
-            if (disappeared(seeRightNowIds, mt)) {
+            if (disappeared(seeRightNow, mt)) {
                 if (!movePhantomEnemy(mt, false)) {
                     it.remove();
                 }
@@ -826,8 +826,8 @@ public final class MyStrategy implements Strategy {
         set.add(mt.getType());
     }
 
-    private boolean disappeared(Set<Long> seeRightNowIds, MutableTrooper mt) {
-        if (seeRightNowIds.contains(mt.getId())) {
+    private boolean disappeared(Set<MutableTrooper> seeRightNow, MutableTrooper mt) {
+        if (seeRightNow.contains(mt)) {
             return false;
         }
         if (!canSeeRightNow[mt.getX()][mt.getY()][mt.getStance().ordinal()]) {
