@@ -403,6 +403,7 @@ public final class MyStrategy implements Strategy {
 
         enemyKnowsWhereWeAre = checkEnemyKnowsWhereWeAre();
 
+        TrooperType damagedTeammate = damagedTeammates.isEmpty() ? null : damagedTeammates.get(0).getType();
         TacticPlanComputer computer = new TacticPlanComputer(
                 createCharMap(),
                 utils,
@@ -421,7 +422,8 @@ public final class MyStrategy implements Strategy {
                 killedEnemies,
                 getEnemyKnowsPositions(),
                 mediumMoveIndex,
-                damagedTeammates.isEmpty() ? null : damagedTeammates.get(0).getType(),
+                damagedTeammate,
+                getLastDamageTaken(damagedTeammate),
                 lastSeenEnemyPos2,
                 true
         );
@@ -432,6 +434,17 @@ public final class MyStrategy implements Strategy {
         }
 
         return r;
+    }
+
+    private int getLastDamageTaken(TrooperType damagedTeammate) {
+        if (damagedTeammate == null) {
+            return 0;
+        }
+        List<Integer> history = hpHistory.get(damagedTeammate);
+        if (history.size() < 2) {
+            return 0;
+        }
+        return history.get(history.size() - 2) - history.get(history.size() - 1);
     }
 
     private Set<Cell> getEnemyKnowsPositions() {
@@ -513,7 +526,7 @@ public final class MyStrategy implements Strategy {
     }
 
     private void init() {
-        if(bonuses == null) {
+        if (bonuses == null) {
             bonuses = new BonusType[world.getWidth()][world.getHeight()];
         }
         if (killedEnemies == null) {
@@ -580,7 +593,7 @@ public final class MyStrategy implements Strategy {
         }
         for (int i = 0; i < world.getWidth(); i++) {
             for (int j = 0; j < world.getHeight(); j++) {
-                if(canSeeRightNow[i][j][0] && !seeBonusRightNow[i][j]) {
+                if (canSeeRightNow[i][j][0] && !seeBonusRightNow[i][j]) {
                     bonuses[i][j] = null;
                 }
             }

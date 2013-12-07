@@ -10,12 +10,14 @@ import java.util.Set;
 public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
 
     protected Cell lastSeenEnemyPosition;
+    protected int defaultDamageValue = 25;
     private boolean enemyKnowsWhereWeAre;
     private Cell3D startCell;
     private Set<Cell> enemyKnowsPosition;
     protected int mediumMoveIndex;
     private TrooperType damagedTeammate;
     protected MutableTrooper investigationResult;
+    private int damageDealtToTeammate;
 
     @Override
     protected void setMap(String... smap) {
@@ -95,6 +97,7 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
                 enemyKnowsPosition,
                 mediumMoveIndex,
                 damagedTeammate,
+                damageDealtToTeammate,
                 lastSeenEnemyPosition,
                 mapIsStatic
         );
@@ -119,11 +122,16 @@ public abstract class TacticPlanComputerTest extends AbstractPlanComputerTest {
         enemyKnowsPosition.add(new Cell(x,y));
     }
 
-    protected void teammateWasDamaged(TrooperType type) {
+    protected void teammateWasDamaged(TrooperType type, int damageValue) {
         damagedTeammate = type;
+        damageDealtToTeammate = damageValue;
     }
 
     protected void setMoveOrder(String moveOrder) {
         this.moveOrder = moveOrder;
+    }
+
+    protected void setLastSeenEnemyPosition(int x, int y) {
+        lastSeenEnemyPosition = new Cell(x, y);
     }
 }

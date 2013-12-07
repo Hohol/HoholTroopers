@@ -877,7 +877,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 "S..",
                 "##."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         ally(SOLDIER).grenade();
         check(
                 SOLDIER,
@@ -891,7 +891,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
         setMap(
                 "F1................"
         );
-        teammateWasDamaged(FIELD_MEDIC);
+        teammateWasDamaged(FIELD_MEDIC, defaultDamageValue);
         check(
                 FIELD_MEDIC,
                 12,

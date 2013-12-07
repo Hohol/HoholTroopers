@@ -44,6 +44,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
     MutableTrooper investigationResult;
     TrooperType damagedTeammateType;
     Cell lastSeenEnemyPos;
+    private int damageDealtToTeammate;
 
     public TacticPlanComputer(
             char[][] map,
@@ -64,6 +65,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             Set<Cell> enemyKnowsPosition,
             int mediumMoveIndex,
             TrooperType damagedTeammateType,
+            int damageDealtToTeammate,
             Cell lastSeenEnemyPos,
             boolean mapIsStatic
     ) {
@@ -79,6 +81,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         this.moveOrder = moveOrder;
         this.damagedTeammateType = damagedTeammateType;
         this.lastSeenEnemyPos = lastSeenEnemyPos;
+        this.damageDealtToTeammate = damageDealtToTeammate;
         enemyIndex = new int[n][m];
         for (int i = 0; i < enemies.size(); i++) {
             MutableTrooper enemy = enemies.get(i);
@@ -287,7 +290,7 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                     }
                     for (int toStance = Utils.NUMBER_OF_STANCES - 1; toStance >= 0; toStance--) {
                         boolean shoot = canShoot(toX, toY, damagedTeammate.getX(), damagedTeammate.getY(), toStance, damagedTeammate.getStance().ordinal(), suspectedType);
-                        boolean grenade = canDamageWithGrenade(toX, toY, damagedTeammate.getX(), damagedTeammate.getY());
+                        boolean grenade = canDamageWithGrenade(toX, toY, damagedTeammate.getX(), damagedTeammate.getY()) && damageCouldBeDoneWithGrenade(damageDealtToTeammate);
                         if (!shoot && !grenade) {
                             continue;
                         }
@@ -344,6 +347,10 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
                 .playerId(playerId)
                 .lastSeenTime(set.size() == 1 ? mediumMoveIndex : mediumMoveIndex - moveOrder.length())
                 .build();
+    }
+
+    private boolean damageCouldBeDoneWithGrenade(int damageDealtToTeammate) {
+        return damageDealtToTeammate == 60 || damageDealtToTeammate == 80;
     }
 
     private boolean canDamageWithGrenade(int toX, int toY, int x, int y) {

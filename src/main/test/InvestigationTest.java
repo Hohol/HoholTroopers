@@ -57,7 +57,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "S.",
                 "#."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigation(
                 SOLDIER,
                 1, 1, STANDING, false
@@ -69,7 +69,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         setMap(
                 "F.1."
         );
-        teammateWasDamaged(FIELD_MEDIC);
+        teammateWasDamaged(FIELD_MEDIC, defaultDamageValue);
         checkInvestigation(
                 FIELD_MEDIC,
                 3, 0, PRONE, false
@@ -87,7 +87,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
     @Test
     void cantFind() {
         setMap("S");
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -99,7 +99,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         theyDontHave(COMMANDER);
         theyDontHave(SCOUT);
-        teammateWasDamaged(SCOUT);
+        teammateWasDamaged(SCOUT, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -111,7 +111,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         theyDontHave(COMMANDER);
         theyDontHave(SCOUT);
-        teammateWasDamaged(FIELD_MEDIC);
+        teammateWasDamaged(FIELD_MEDIC, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -122,7 +122,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "FT......"
         );
         theyDontHave(COMMANDER);
-        teammateWasDamaged(SCOUT);
+        teammateWasDamaged(SCOUT, defaultDamageValue);
         checkInvestigation(FIELD_MEDIC, 7, 0, STANDING, false);
     }
 
@@ -134,7 +134,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         theyDontHave(COMMANDER);
         theyDontHave(SCOUT);
-        teammateWasDamaged(SCOUT);
+        teammateWasDamaged(SCOUT, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -144,7 +144,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "S....s",
                 "......"
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -157,7 +157,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         enemy(SOLDIER).lastSeenTime(0);
         setMediumMoveIndex(100);
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigation(SOLDIER, 7, 1, STANDING, true);
     }
 
@@ -168,7 +168,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         setMoveOrder("SRF");
         setMediumMoveIndex(1);
-        teammateWasDamaged(SNIPER);
+        teammateWasDamaged(SNIPER, defaultDamageValue);
         checkInvestigation(SNIPER, 9, 0, STANDING, false);
     }
 
@@ -182,7 +182,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
         );
         setMoveOrder("RSF");
         setMediumMoveIndex(1);
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigation(SOLDIER, 4, 1, STANDING, true);
     }
 
@@ -192,7 +192,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "S.",
                 "#."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         setMoveOrder("SF");
         theyDontHave(SOLDIER);
         checkInvestigation(FIELD_MEDIC, 1, 1, STANDING, false);
@@ -204,7 +204,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "S...f",
                 "####."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         checkInvestigationNothing();
     }
 
@@ -214,7 +214,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 ".S.",
                 ".#."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         setLastSeenEnemyPosition(2, 0);
         checkInvestigation(
                 SOLDIER,
@@ -228,7 +228,7 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 ".S.",
                 ".#."
         );
-        teammateWasDamaged(SOLDIER);
+        teammateWasDamaged(SOLDIER, defaultDamageValue);
         setLastSeenEnemyPosition(0, 0);
         checkInvestigation(
                 SOLDIER,
@@ -243,14 +243,22 @@ public class InvestigationTest extends TacticPlanComputerTest {
                 "##.###########",
                 ".............."
         );
-        teammateWasDamaged(SNIPER);
+        teammateWasDamaged(SNIPER, 80);
         setLastSeenEnemyPosition(0, 2);
         checkInvestigation(
                 SNIPER, 0, 2, STANDING, true
         );
     }
 
-    private void setLastSeenEnemyPosition(int x, int y) {
-        lastSeenEnemyPosition = new Cell(x, y);
+    @Test
+    void weKnowWhatDamageGrenadeDeals() {
+        setMap(
+                "R.......",
+                "##.#####",
+                "........"
+        );
+        teammateWasDamaged(SNIPER, 25);
+        setLastSeenEnemyPosition(0, 2);
+        checkInvestigationNothing();
     }
 }
