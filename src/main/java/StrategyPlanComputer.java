@@ -7,7 +7,7 @@ import java.util.*;
 
 public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
-    static final int MAX_DIST_TO_TEAMMATE = 5; // 5 was not chosen arbitrary. It is max_sniper_range - soldier_vision_range
+    static final int MAX_DIST_TO_TEAMMATE = 6;
 
     Cell destination;
     int[][] distToDestination;
@@ -196,9 +196,11 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
 
     private int getDangerAreaFactor() {
         int r = 0;
+        List<Cell3D> rList = new ArrayList<>();
         for (Cell3D cell : getDangerCells(cur.x, cur.y, cur.stance.ordinal())) {
             if (visibleCnt[cell.x][cell.y][cell.stance] == 0) {
                 r++;
+                rList.add(cell);
             }
         }
         return r;

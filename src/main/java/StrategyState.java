@@ -61,9 +61,9 @@ public class StrategyState extends AbstractState<StrategyState> {
             return fieldRationsUsed < old.fieldRationsUsed;
         }
 
-        if (distToLeader != old.distToLeader) {
+        /*if (distToLeader != old.distToLeader) {
             return distToLeader < old.distToLeader;
-        }
+        }/**/
 
         int magic = getMagic();
         int oldMagic = old.getMagic();
@@ -89,7 +89,7 @@ public class StrategyState extends AbstractState<StrategyState> {
     }
 
     int getMagic() {
-        return distToDestination * 50 + dangerAreaFactor;
+        return (distToDestination + distToLeader * 4) * 90 + dangerAreaFactor;
     }
 
     @Override
