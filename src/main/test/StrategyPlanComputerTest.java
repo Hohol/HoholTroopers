@@ -98,7 +98,7 @@ public class StrategyPlanComputerTest extends AbstractPlanComputerTest {
         check(
                 SOLDIER,
                 10,
-                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST
+                MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST
         );
     }
 

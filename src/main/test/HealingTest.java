@@ -285,16 +285,21 @@ public class HealingTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testDoNotGoTooFar() {
+    void doNotGoTooFarToHeal() {
         setMap(
-                "F..........R",
-                "S#########..",
-                "C..........."
+                "F......",
+                "S#####.",
+                "C#####.",
+                ".#####.",
+                ".#####.",
+                ".#####.",
+                "......."
         );
         ally(COMMANDER).hp(1);
-        ally(SOLDIER).hp(100);
-        ally(FIELD_MEDIC).hp(100);
-        check(FIELD_MEDIC, 12);
+        check(
+                FIELD_MEDIC,
+                12
+        );
     }
 
     @Test
@@ -302,7 +307,6 @@ public class HealingTest extends TacticPlanComputerTest {
         setMap("SF....C");
         ally(COMMANDER).hp(90);
         ally(SOLDIER).hp(95);
-        ally(FIELD_MEDIC).hp(100);
         ally(FIELD_MEDIC).fieldRation();
         check(FIELD_MEDIC, 8, MyMove.HEAL_WEST, MyMove.EAT_FIELD_RATION, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.MOVE_EAST, MyMove.HEAL_EAST, MyMove.HEAL_EAST);
     }

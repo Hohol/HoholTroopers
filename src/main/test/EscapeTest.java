@@ -94,7 +94,7 @@ public class EscapeTest extends TacticPlanComputerTest {
     void testDifferentTypesOfEnemiesThreatenDifferently() {
         setMap(
                 "...f#",
-                ".....",
+                "....#",
                 "s..F.",
                 "##..."
         );
@@ -270,7 +270,7 @@ public class EscapeTest extends TacticPlanComputerTest {
     @Test
     void testEnemyCanUseFieldRation() {
         setMap(
-                ".S....1...f"
+                ".S....#...f"
         );
         ally(SOLDIER).hp(60);
         enemy(FIELD_MEDIC).fieldRation().grenade();

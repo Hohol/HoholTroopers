@@ -242,9 +242,9 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testDoNotBlockPathForTeammates() {
+    void doNotBlockPathForTeammates() {
         setMap(
-                "S3333",
+                "S####",
                 "C...s"
         );
 
@@ -253,7 +253,10 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 5,
                 MyMove.MOVE_EAST, MyMove.shoot(4, 1)
         );
+    }
 
+    @Test
+    void testDoNotBlockPathForTeammates2() {
         setMap(
                 ".s......SC"
         );
@@ -262,14 +265,10 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 4,
                 MyMove.MOVE_WEST
         );
-
-        //---------------
-
-
     }
 
     @Test
-    void testDoNotBlockPathForTeammates2() {
+    void testDoNotBlockPathForTeammates3() {
         setMap(
                 "..f..C",
                 "3F3...",
@@ -608,10 +607,9 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     @Test
     void maximizeNumberOfStepsEnemyMustMakeToHideFromYou() {
         setMap(
-                "........1",
+                "...######",
                 "R2.....1f"
         );
-        theyDontHave(SNIPER);
         check(
                 SNIPER,
                 8,
