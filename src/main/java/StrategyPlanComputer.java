@@ -59,7 +59,7 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
                         if (isWall(shooterX, shooterY)) {
                             continue;
                         }
-                        int shootRange = 10;
+                        int shootRange = initialTeamSize >= 4 ? 10 : 8;
                         if (!reachable(shooterX, shooterY, targetX, targetY, Math.min(shooterStance, targetStance), shootRange)) {
                             continue;
                         }
