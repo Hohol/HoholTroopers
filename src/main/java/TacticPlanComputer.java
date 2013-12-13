@@ -816,12 +816,13 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
         minStanceForHelp = new int[enemies.size()][n][m];
         maxStanceForHelp = new int[enemies.size()][n][m];
         int[][] distFromMe = Utils.bfsByMap(map, cur.x, cur.y);
+        int[][] distFromMeWithoutTeammates = Utils.bfsByMap(mapWithoutTeammates, cur.x, cur.y);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 if (!isFree(i, j)) {
                     continue;
                 }
-                if (distFromMe[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
+                if (distFromMe[i][j] - distFromMeWithoutTeammates[i][j] > MyStrategy.MAX_DISTANCE_SHOULD_TRY_HELP) {
                     continue;
                 }
                 for (int enemyIndex = 0; enemyIndex < enemies.size(); enemyIndex++) {

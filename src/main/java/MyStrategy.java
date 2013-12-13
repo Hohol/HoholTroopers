@@ -10,7 +10,7 @@ public final class MyStrategy implements Strategy {
     static final boolean local = System.getProperty("ONLINE_JUDGE") == null;
     //static final boolean local = false;
 
-    public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 6;
+    public static final int MAX_DISTANCE_SHOULD_TRY_HELP = 99999;
     private static final String MY_NAME = "Hohol";
 
     final Random rnd = new Random(322);

@@ -155,7 +155,7 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 10,
                 MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
         );
-    }
+    }/**/
 
     @Test
     void testMedicDistPriority() {
@@ -940,6 +940,24 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
                 SNIPER,
                 2,
                 MyMove.MOVE_NORTH
+        );
+    }
+
+    @Test
+    void testBuildingBug() {
+        setMap(
+                "..........",
+                ".#1##1#2#.",
+                ".#.....s1.",
+                "........#.",
+                ".##1##2#1.",
+                ".........S"
+        );
+        enemy(SOLDIER).stance(PRONE);
+        check(
+                SOLDIER,
+                12,
+                MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST, MyMove.MOVE_WEST
         );
     }
 }
