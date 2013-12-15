@@ -134,30 +134,6 @@ public class CommonPlanComputerTest extends TacticPlanComputerTest {
     }
 
     @Test
-    void testHelpDoNotGoTooFar2() {
-        setMap(
-                ".####...........s........####.",
-                ".####..####...##...####..####.",
-                ".......####..####..####.......",
-                ".......####.f####..####.......",
-                ".####..####...##...####..####.",
-                ".####....................####.",
-                ".####............S.......####.",
-                ".####..####..####.F####..####.",
-                ".......####..####..####.......",
-                ".......####..####..####.......",
-                ".......####..####..####.......",
-                "..................C..........."
-        );
-
-        check(
-                COMMANDER,
-                10,
-                MyMove.MOVE_WEST, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH, MyMove.MOVE_NORTH
-        );
-    }/**/
-
-    @Test
     void testMedicDistPriority() {
         setMap(
                 "...f..C",

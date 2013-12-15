@@ -90,13 +90,6 @@ public class StrategyPlanComputer extends AbstractPlanComputer<StrategyState> {
         r.add(new Cell3D(shooterX, shooterY, shooterStance));
     }
 
-    private boolean checkCanShoot(int shooterX, int shooterY, int targetX, int targetY, int shooterStance, int targetStance, TrooperType fieldMedic) {
-        if (!inField(shooterX, shooterY) || shooterStance < 0 || shooterStance >= Utils.NUMBER_OF_STANCES) {
-            return false;
-        }
-        return canShoot(shooterX, shooterY, targetX, targetY, shooterStance, targetStance, FIELD_MEDIC);
-    }
-
     private void chooseLeader() {
         int ind = getLeaderIndex(15);
         if (ind == -1) {
