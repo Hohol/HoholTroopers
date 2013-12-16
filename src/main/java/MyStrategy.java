@@ -40,7 +40,6 @@ public final class MyStrategy implements Strategy {
     static double[][][] wasSeenMinDist;
     static boolean[][][] damagedArea;
     boolean[][][] canSeeRightNow;  //todo it seems this array is not needed at all
-    static List<Cell> suspiciousCells = new ArrayList<>();
     static Cell lastSeenEnemyPos, lastSeenEnemyPos2;
     static int prevScore;
     static boolean scoreMustChange;
@@ -92,14 +91,7 @@ public final class MyStrategy implements Strategy {
             return;
         }
 
-        //detectInvisibleShooters();
-        //printSuspiciousCells();
-
         if (tryFightOrHeal()) {
-            return;
-        }
-
-        if (tryDealWithInvisibleShooters()) {
             return;
         }
 
@@ -156,10 +148,6 @@ public final class MyStrategy implements Strategy {
         print(map);
     }
 
-    private void printSuspiciousCells() {
-        printCells("Suspicious cells", suspiciousCells);
-    }
-
     private char[][] getMapForPrinting() {
         char[][] map = new char[world.getWidth()][world.getHeight()];
         for (char[] row : map) {
@@ -198,53 +186,6 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private boolean tryDealWithInvisibleShooters() {
-        if (suspiciousCells.isEmpty()) {
-            return false;
-        }
-        if (self.getStance() != STANDING) {
-            if (!haveTime(game.getStanceChangeCost())) {
-                return false;
-            }
-            move.setAction(RAISE_STANCE);
-            return true;
-        }
-        Cell cell = null;
-        for (Cell c : suspiciousCells) {
-            if (!tooCurvedPathTo(c.x, c.y, false)) {
-                cell = c;
-                break;
-            }
-        }
-        if (cell == null) {
-            return false;
-        }
-        if (!haveTime(game.getStandingMoveCost())) {
-            return false;
-        }
-        return moveTo(cell.x, cell.y, true);
-    }
-
-    private void detectInvisibleShooters() {
-        if (seeSomeEnemy()) {
-            suspiciousCells.clear();
-            return;
-        }
-
-        removeVisibleCellsFromSuspicious();
-
-        if (!suspiciousCells.isEmpty()) {
-            return;
-        }
-        for (Trooper ally : damagedTeammates) {
-            findSuspiciousCells(ally);
-            if (suspiciousCells.isEmpty()) { //todo dafuk? kiting?
-                continue;
-            }
-            return;
-        }
-    }
-
     private List<Trooper> getDamagedTeammates() {
         List<Trooper> damagedTeammates = new ArrayList<>();
         for (Trooper ally : teammates) {
@@ -259,30 +200,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return damagedTeammates;
-    }
-
-    private void removeVisibleCellsFromSuspicious() {
-        for (int i = suspiciousCells.size() - 1; i >= 0; i--) {
-            Cell c = suspiciousCells.get(i);
-            if (wasSeenOnCurrentBigMove[c.x][c.y][PRONE.ordinal()]) {
-                suspiciousCells.remove(i);
-            }
-        }
-    }
-
-    private void findSuspiciousCells(Trooper trooper) {
-        suspiciousCells.clear();
-        for (int i = 0; i < world.getWidth(); i++) {
-            for (int j = 0; j < world.getHeight(); j++) {
-                if (!isFreeCell(i, j)) {
-                    continue;
-                }
-                if (world.isVisible(utils.getShootRange(SOLDIER, STANDING.ordinal()), i, j, STANDING, trooper.getX(), trooper.getY(), trooper.getStance()) && //todo sniper has greater range
-                        !wasSeenOnCurrentBigMove[i][j][PRONE.ordinal()]) {
-                    suspiciousCells.add(new Cell(i, j));
-                }
-            }
-        }
     }
 
     boolean seeSomeEnemy() {
@@ -1028,14 +945,6 @@ public final class MyStrategy implements Strategy {
         return r;
     }
 
-    private boolean tooCurvedPathTo(int x, int y, boolean avoidNarrowPathNearBorder) {
-        return distTo(x, y, avoidNarrowPathNearBorder) - manhattanDist(x, y) >= 7;
-    }
-
-    private int manhattanDist(int x, int y) {
-        return Utils.manhattanDist(self.getX(), self.getY(), x, y);
-    }
-
     private boolean allTeammatesFullHp() {
         for (Trooper trooper : teammates) {
             if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
@@ -1043,11 +952,6 @@ public final class MyStrategy implements Strategy {
             }
         }
         return true;
-    }
-
-    private int distTo(int x, int y, boolean avoidNarrowPathNearBorder) {
-        int[][] dist = bfs(self.getX(), self.getY(), avoidNarrowPathNearBorder);
-        return dist[x][y];
     }
 
     private Cell getNearestLongAgoSeenCell() {
@@ -1072,37 +976,6 @@ public final class MyStrategy implements Strategy {
         return new Cell(x, y);
     }
 
-    private boolean moveTo(int x, int y, boolean avoidNarrowPathNearBorder) {
-        List<Direction> availableDirs = getFirstStepForMovingTo(x, y, avoidNarrowPathNearBorder);
-        if (availableDirs.isEmpty()) {
-            return false;
-        }
-        moveTo(availableDirs.get(0));
-        return true;
-    }
-
-    private List<Direction> getFirstStepForMovingTo(int fromX, int fromY, int destX, int destY, boolean avoidNarrowPathNearBorder) {
-        int[][] dist = bfs(destX, destY, avoidNarrowPathNearBorder);
-        List<Direction> availableDirs = new ArrayList<>();
-        if (dist[fromX][fromY] != Utils.UNREACHABLE) {
-            for (Direction dir : Utils.dirs) {
-                int toX = fromX + dir.getOffsetX();
-                int toY = fromY + dir.getOffsetY();
-                if (!isFreeCell(toX, toY)) {
-                    continue;
-                }
-                if (dist[toX][toY] == dist[fromX][fromY] - 1) {
-                    availableDirs.add(dir);
-                }
-            }
-        }
-        return availableDirs;
-    }
-
-    private List<Direction> getFirstStepForMovingTo(int toX, int toY, boolean avoidNarrowPathNearBorder) {
-        return getFirstStepForMovingTo(self.getX(), self.getY(), toX, toY, avoidNarrowPathNearBorder);
-    }
-
     @SuppressWarnings("unused")
     private void print(int[][] dist) {
         for (int j = 0; j < dist[0].length; j++) {
@@ -1112,53 +985,6 @@ public final class MyStrategy implements Strategy {
             System.out.println();
         }
         System.out.println();
-    }
-
-    private void moveTo(Direction dir) {
-        move.setAction(MOVE);
-        move.setDirection(dir);
-    }
-
-    private int[][] bfs(int startX, int startY, boolean avoidNarrowPathNearBorder) {
-        Cell startCell = new Cell(startX, startY);
-        Map<Cell, int[][]> cache = avoidNarrowPathNearBorder ? bfsCacheAvoidNarrowPath : bfsCache;
-        int[][] dist = cache.get(startCell);
-        if (dist == null) {
-            dist = bfsInternal(startX, startY, avoidNarrowPathNearBorder);
-            cache.put(startCell, dist);
-        }
-        return dist;
-    }
-
-    private int[][] bfsInternal(int startX, int startY, boolean avoidNarrowPathNearBorder) {
-        int[][] dist;
-        Queue<Integer> qx = new ArrayDeque<>();
-        Queue<Integer> qy = new ArrayDeque<>();
-        dist = createIntMap(Utils.UNREACHABLE);
-        qx.add(startX);
-        qy.add(startY);
-        dist[startX][startY] = 0;
-        while (!qx.isEmpty()) {
-            int x = qx.poll();
-            int y = qy.poll();
-            for (Direction dir : Utils.dirs) {
-                int toX = x + dir.getOffsetX();
-                int toY = y + dir.getOffsetY();
-                if (!inField(toX, toY)) {
-                    continue;
-                }
-                if (dist[toX][toY] != Utils.UNREACHABLE) {
-                    continue;
-                }
-                dist[toX][toY] = dist[x][y] + 1;
-                if (!isFreeCell(toX, toY) || avoidNarrowPathNearBorder && isNarrowPathNearBorder(toX, toY)) {
-                    continue;
-                }
-                qx.add(toX);
-                qy.add(toY);
-            }
-        }
-        return dist;
     }
 
     private int[][] createIntMap(int fillValue) {

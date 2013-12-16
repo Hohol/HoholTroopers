@@ -222,9 +222,6 @@ public class TacticPlanComputer extends AbstractPlanComputer<TacticState> {
             index += moveOrder.length();
         }
         TrooperType suspectedType2 = typeByMoveIndex(index);
-        /*if (isVisibleAndNotPhantom(suspectedType1) || isVisibleAndNotPhantom(suspectedType2)) {
-            return;
-        }/**/
 
         List<TrooperType> suspectedTypes = new ArrayList<>();
         suspectedTypes.add(suspectedType1);
